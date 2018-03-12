@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="application-name" content="OSHMI-Open Substation HMI">
+<meta name="description" content="Point Info Dialog">
+<meta name="author" content="Ricardo L. Olsen">
+<meta name="viewport" content="initial-scale=1.3,maximum-scale=1.3,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes" />
+<title>Point Info</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+<link rel="stylesheet" type="text/css" href="dialogstyle.css">
+<script src="lib/jquery-1.8.3.js"></script>
+<script src="lib/shortcut-2.01b.js"></script>
+<script src="util.js"></script>
+<script src="legacy_options.js"></script>
+<script src="../i18n/messages_i18n.js"></script>
+<script src="config_viewers_default.js"></script>
+<script src="../conf/config_viewers.js"></script>
+<script src="images.js"></script>
+<script>
+
+// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+
+/*global clearInterval: false, clearTimeout: false, document: false, event: false, frames: false, history: false, Image: false, location: false, name: false, navigator: false, Option: false, parent: false, screen: false, setInterval: false, setTimeout: false, window: false, XMLHttpRequest: false */
+/*global opener: false, self: false */
+/*global $: false, Titles: false, Imgs: false, Msg: false, LoadFavicon: false, shortcut: false */
+/*jslint white: true */
+/*jslint sloppy: true */
+/*jslint plusplus: true */
+
+function testOpener()
+{   
+    if ( opener && !opener.closed )
+    {
+      if ( document.getElementById('NPONTO_SUP').textContent === "0" ||
+           opener.NPTO === 0 ||
+           opener.NPTO === undefined
+         )
+      {
+        self.close(); 
+      }
+  
+    if ( ($('#SAIR').position().top + 70) > window.innerHeight )
+      window.resizeBy(0, $('#SAIR').position().top + 70 - window.innerHeight);
+    }
+    else 
+    {
+      self.close();
+    }
+}
+
+function selchg(obj)
+{
+  document.getElementById('EXECUTAR').innerHTML = obj.options[obj.selectedIndex].text;
+}
+
+function init() 
+{ // executa quando termina de carregar o documento
+
+  // desabilita o botão direito 
+  document.oncontextmenu = function() { return false; };
+
+  // vai nos objetos com 'id' e coloca como 'title' a mensagem correspondente de Titles, carrega as imagens (de images.js)        
+  //document.body.background=Imgs.INFBACKGROUND;
+  $('img[id]').attr( 'src', function(index) { return Imgs[this.id]; } );
+  
+  // contorna problema de aumentar estes ícones (parece ser bug do Chromium)
+  // $('#IMGTABULAR').attr( 'width', 32 ); 
+  // $('#IMGTEND').attr( 'width', 32 );
+  
+  $('img[id]').attr( 'title', function(index) { return Titles[this.id]; } );
+  $('div[id]').attr( 'title', function(index) { return Titles[this.id]; } );
+  $('a[id]').attr( 'title', function(index) { return Titles[this.id]; } );
+  $('input[id]').attr( 'title', function(index) { return Titles[this.id]; } );
+  $('button[id]').attr( 'title', function(index) { return Titles[this.id]; } );
+  $('textarea[id]').attr( 'title', function(index) { return Titles[this.id]; } );
+  $('span[id]').attr( 'title', function(index) { return Titles[this.id]; } );
+  $('legend[id]').text( function(index) { return Msg[this.id]; } );
+  $('#CURVTXT').text( Msg.CURVTXT );
+  $('#TENDTXT').text( Msg.TENDTXT );
+  $('#TABULARTXT').text( Msg.TABULARTXT );
+  $('#ANOTACAOTXT').text( Msg.ANOTACAOTXT );
+  $('#DESBLOQTXT').text( Msg.DESBLOQTXT );
+  $('#COMANDAR').text( Msg.COMANDAR );
+  $('#CBMOREINFO').text( Msg.CBMOREINFO );
+  $('#SPPONTOSUP').text( Msg.SPPONTOSUP );
+  $('#ALRINTXT').text( Msg.ALRINTXT );
+  $('#SPLIMSUP').text( Msg.SPLIMSUP + ": " );
+  $('#SPLIMINF').text( Msg.SPLIMINF + ": " );
+  $('#SPLIMHIS').text( Msg.SPLIMHIS + ": " );
+  $('#SPALTVALOR').text( Msg.SPALTVALOR + "  " );
+  $('#SAIR').text( Msg.SAIR );
+ 
+  LoadFavicon(Imgs.FAVICON_ID);
+
+  document.title = "."; // necessario devido a um bug do chromium!
+  document.title = Msg.NomeDialogoInfo + " - " + Msg.NomeProduto;
+
+  window.focus();
+  $('#SAIR').focus();
+  
+  shortcut.add( "esc",
+                function() { self.close(); },
+                { 'type':'keydown', 'propagate':false,	'target':document } );
+  
+  setInterval( testOpener, 1000 );
+  window.opener.WebSAGE.showValsInfo2( 0 );
+  
+  // torna elementos não selecionáveis
+  $("html > head").append("<style> body { user-select:none; -webkit-user-select:none; } </style>");  
+  // acerta tamanho da janela
+  if ( ($('#SAIR').position().top + 70) > window.innerHeight )
+    window.resizeBy(0, $('#SAIR').position().top + 70 - window.innerHeight);
+}
+
+$( init );
+
+</script>  
+
+</head>
+<body style="margin:10px;overflow-y:hidden;">
+<font style="font-family: trebuchet ms,tahoma; font-size: 11pt; lightgray;"> 
+
+<fieldset>
+  <legend id='FSINFO'>Point Info</legend>
+  <span id='SPDESCR_SUP'><span id='DESCR_SUP'>0</span></span><br>
+  <div id='VALOR_HID' style="display:none; color:red;">
+  <strong><span id='VALOR_SUP'>?</span></strong><br>
+  </div>
+  <div id='ESTADO_HID' style="display:none; color:red;">
+  <strong><span id='ESTADO_SUP'>?</span></strong>
+  </div>
+  <span id='SPQUALIF'><small><small><span id='QUALIF'>?</span></small></small></span><br>
+</fieldset>
+
+<fieldset>
+  <legend id='FSBLKANNOT'>Blocking Annotation</legend>
+  <textarea id='ANOTACAO' rows="5" cols="45" style="font-family: tahoma; gray; font-size: 10pt;">&nbsp;</textarea>
+
+  <table style="display:none; text-align: left; width: 100%; font-family: tahoma; font-size: 10pt;" border="0" cellpadding="0" cellspacing="0">
+    <tbody>
+      <tr align='center'>
+        <td style="text-align:left;" ><img id='IMGANOT' border='0' width='32' height='32' ></td>
+        <td style="text-align:left;" colspan="1" rowspan="2"></td>
+      </tr>
+      <tr>
+        <td style="text-align:left;"><span id='ANOTACAOTXT'>?</span></td>
+      </tr>
+    </tbody>
+  </table> 
+
+  <div id='DIVCMDBLKBUT'>
+  <div id='DIVBLKCMD' style='display:none; color:red;'>
+  <input id='CBBLKCMD' type='checkbox'><span id='DESBLOQTXT'>?</span><br>
+  </div>
+  <button id='COMANDAR' style='display:none; font-family:tahoma; cursor:pointer;' tabindex='2' value='0' type='button'>?</button>
+  </div>
+  <span id='SPCMDINTERTRAV' style='display:none; color:red;'>?</span>
+</fieldset>
+
+<fieldset>
+  <legend id='FSANNOT'>Annotation</legend>
+  <textarea id='ANOTACAODOC' rows="8" cols="45" style="font-family: tahoma; gray; font-size: 10pt;">&nbsp;</textarea>
+</fieldset>
+  
+<fieldset>
+  <legend id='FSOPTION'>Options</legend>
+  <a id='TABULAR' style='display:none; cursor:pointer;'>
+  <span id='TABULARTXT'>?</span>
+  </a>
+  <br>
+  <a id='TENDENCIAS' style='display:none; cursor:pointer;'>
+  <span id='TENDTXT'>?</span><br>
+  </a>  
+  <a id='CURVAS' style='display:none; cursor:pointer;'>
+  <span id='CURVTXT'>?</span>
+  </a>
+  <br>
+  <span id='CBMOREINFO' style='cursor:pointer;' onclick="document.getElementById('DIVMOREINFO').style.display='';">?</span>
+  <div  id='DIVMOREINFO' style='display:none;'>
+  &nbsp;&nbsp;<span id='SPPONTOSUP'>?</span> 
+  <span id='NPONTO_SUP' style='user-select:all;'>0</span><br>
+  <br>
+  <div id='DIVINIB'>
+  <input id='CBALRIN' type='checkbox'><span id='ALRINTXT'>?</span><br>
+  </div><br>
+  <div id='LIMCTRLS' style="display:none;">
+  &nbsp;&nbsp;<span id='SPLIMSUP'>?</span><input type='number' id='LIMSUP' size='10' autofocus >&nbsp;<br>
+  &nbsp;&nbsp;<span id='SPLIMINF'>?</span><input type='number' id='LIMINF' size='10'>&nbsp;<br>
+  &nbsp;&nbsp;<span id='SPLIMHIS'>?</span><input type='number' step="0.1" id='HISTER' size='10'>&nbsp;<br>
+  </div>
+  <div id='DIVALTVALOR' style='display:none; color:red;'>
+  <input id='CBALTVALOR' type='checkbox'><span id='SPALTVALOR'>?</span>
+  <input id='NOVOVALOR' type='number' size='10' style='display:none;' autofocus >
+  <div id='DIVALTVALORDIG' style='display:none;'>
+  <input id='rbNovoValor' name='rbNovoValor' type="radio">ON
+  <input id='rbNovoValorOff' name='rbNovoValor' type="radio">OFF
+  </div>
+  </div>
+  </div>
+</fieldset>
+<button id='SAIR' style='font-family:tahoma; cursor:pointer;background-color: green;box-shadow: 0 2px 0 darkgreen, 0 4px 0 forestgreen, 0 6px 0 limegreen, 0 6px 10px lightgreen, 0 6px 11px darkgreen, 0 0 10px green;' onclick='window.focus();window.close();' tabindex='1' value='1' type='button'>?</button>
+<br>
+</font> 
+</body>
+</html>

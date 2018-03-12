@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: IcoMoon  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   data-tags="move"
+   id="svg100"
+   version="1.1"
+   inkscape:version="0.48.1+SAGE v3.03"
+   onload="var src; if (document.documentURI) src = document.documentURI; else if (this.getSrc) src = this.getSrc(); else src = document.location.href + ''; try {parent.preload.load(src);}catch(e) {}"
+   sodipodi:docname="move.svg">
+  <defs
+     id="defs112" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="872"
+     inkscape:window-height="639"
+     id="namedview110"
+     showgrid="false"
+     inkscape:zoom="0.87890625"
+     inkscape:cx="256"
+     inkscape:cy="256"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg100" />
+  <metadata
+     id="metadata102">
+    <license
+       name="CC BY-SA 3.0"
+       href="http://creativecommons.org/licenses/by-sa/3.0/us/"
+       id="license104" />
+    <author
+       name="P.J. Onori"
+       href="http://somerandomdude.com"
+       id="author106" />
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <path
+     d="M 288.00,320.00L 288.00,416.00L 352.00,416.00L 256.00,512.00L 160.00,416.00L 224.00,416.00L 224.00,320.00   zM 224.00,192.00L 224.00,96.00L 160.00,96.00L 256.00,0.00L 352.00,96.00L 288.00,96.00L 288.00,192.00   zM 192.00,288.00L 96.00,288.00L 96.00,352.00L0.00,256.00L 96.00,160.00L 96.00,224.00L 192.00,224.00   zM 320.00,224.00L 416.00,224.00L 416.00,160.00L 512.00,256.00L 416.00,352.00L 416.00,288.00L 320.00,288.00   z"
+     id="path108" />
+  <rect
+     style="fill:#1a1a1a;fill-opacity:1;stroke:#1a1a1a;stroke-width:3.22835994;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     id="rect3173"
+     width="63.666336"
+     height="62.460701"
+     x="223.61406"
+     y="225.15623" />
+</svg>

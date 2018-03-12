@@ -1,0 +1,57 @@
+BODY {
+	FONT-SIZE: 10pt; FONT-FAMILY: Tahoma, Arial, helvetica, sans-serif; TEXT-DECORATION: none
+}
+A {
+	FONT-SIZE: 10pt; FONT-FAMILY: Tahoma, Arial, helvetica, sans-serif; TEXT-DECORATION: underline
+}
+LI {
+	FONT-SIZE: 10pt; FONT-FAMILY: Tahoma, Arial, helvetica, sans-serif; TEXT-DECORATION: none
+}
+A:visited {
+	COLOR: #0000ff
+}
+INPUT {
+	BORDER-RIGHT: 1px solid; BORDER-TOP: 1px solid; FONT-SIZE: 10pt; BORDER-LEFT: 1px solid; BORDER-BOTTOM: 1px solid; BACKGROUND-COLOR: #f5f5f5
+}
+BUTTON {
+	BORDER-RIGHT: 1px solid; BORDER-TOP: 1px solid; FONT-SIZE: 10pt; BORDER-LEFT: 1px solid; BORDER-BOTTOM: 1px solid; BACKGROUND-COLOR: #f5f5f5
+}
+TEXTAREA { FONT-FAMILY: Tahoma, Arial, helvetica, sans-serif;
+	BORDER-RIGHT: 1px solid; BORDER-TOP: 1px solid; FONT-SIZE: 10pt; BORDER-LEFT: 1px solid; BORDER-BOTTOM: 1px solid; BACKGROUND-COLOR: #f5f5f5
+}
+SELECT {
+	FONT-SIZE: 10pt; FONT-FAMILY: Tahoma, Arial, helvetica, sans-serif; BACKGROUND-COLOR: #f5f5f5
+}
+FORM {
+	PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-TOP: 0px
+}
+TD {
+	FONT-SIZE: 10pt; VERTICAL-ALIGN: top; FONT-FAMILY: Tahoma, Arial, helvetica, sans-serif; TEXT-DECORATION: none
+}
+#mo {
+	FONT-WEIGHT: bold; COLOR: #cccccc; BACKGROUND-COLOR: #006699; TEXT-ALIGN: center
+}
+#ma {
+	FONT-WEIGHT: bold; COLOR: #006699; BACKGROUND-COLOR: #cccccc; TEXT-ALIGN: center
+}
+#vn {
+	COLOR: silver
+}
+#ri {
+	TEXT-ALIGN: right
+}
+#tr {
+	BORDER-TOP-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BACKGROUND-COLOR: transparent; BORDER-RIGHT-WIDTH: 0px
+}
+#normal {
+	FONT-SIZE: 10pt
+}
+#small {
+	FONT-SIZE: 8pt
+}
+.scrollit{
+ position: relative;
+ height: 500px;
+ overflow: auto;
+ padding: 1em;
+}

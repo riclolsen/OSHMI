@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1" />
+<meta name="application-name" content="OSHMI-Open Substation HMI" />
+<meta name="description" content="Screen Viewer" />
+<meta name="author" content="Ricardo L. Olsen" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="viewport" content="width=2400,initial-scale=1.3" />
+<title>Screen Viewer</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+<link rel="apple-touch-icon" href="images/tela.png" />
+<style>
+/* From https://projects.lukehaas.me/css-loaders/ */
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+  border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+  border-left: 1.1em solid #ffffff;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+</style>
+<script src="symbol_webreflection.js"></script>
+<script src="util.js"></script>
+<script src="lib/jquery-1.8.3.js"></script>
+<script src="lib/core-1.0.js"></script>
+<script src="lib/shortcut-2.01b.js"></script>
+<script src="lib/snap.svg.js"></script>
+<script src="lib/d3.min.js"></script>
+<script src="lib/radar-chart.js"></script>
+<script src="lib/vega.min.js" charset="utf-8"></script>
+<script src="lib/vega-3.0.8.min.js" charset="utf-8"></script>
+<script src="lib/vega-lite-2.0.3.min.js" charset="utf-8"></script>
+<script src="lib/chroma.js"></script>
+<script src="legacy_options.js"></script>
+<script src="../i18n/messages_i18n.js"></script>
+<script src="config_viewers_default.js"></script>
+<script src="../conf/config_viewers.js"></script>
+<script src="images.js"></script>
+<script>
+  var optval = [];
+  var opttxt = [];  
+  var optfilt = [];  
+  var optgroup = [];
+  var optionhtml = "";  
+  function lista_telas(){};
+</script>
+<script src="../svg/screen_list.js"></script>
+<script>
+// OSHMI/Open Substation HMI - Copyright 2008-2017 - Ricardo L. Olsen
+
+var tela = gup("SELTELA");
+var auxtela = gup("PTELA");
+if ( auxtela != '' )
+  {
+  tela = auxtela;
+  }
+var indtela = gup("INDTELA");
+tela = tela.replace(/%2F/g,'/'); 
+</script>
+<script src="pntserver.js"></script>
+<script src="websage.js"></script>
+<script src="vega_websage.js"></script>
+</head>
+<body bgcolor="#dddddd" style="margin:0px;overflow:hidden;">
+<div id='bardiv' style='display:none;position:fixed;float:left;white-space:nowrap;z-index:1;left:0px;top:0px;;height:40px;width:110%;overflow:hidden;color:white;font-family:tahoma;font-size:12px;font-weight:bold;box-shadow: 2px 2px 2px #888888;'>
+<form name='fmTELA' METHOD='get' style='margin-top:4px'> 
+<map id='immap' name='immap'>
+<area shape="poly" id='ZPDesce'  coords="12,20,20,20,32,32,0,32"  alt="down"   onclick='WebSAGE.zoomPan(7);' style='cursor:pointer;' />
+<area shape="poly" id='ZPEsq'    coords="12,20,12,12,0,0,0,31"    alt="left"   onclick='WebSAGE.zoomPan(3);' style='cursor:pointer;' />
+<area shape="poly" id='ZPSobe'   coords="12,12,20,12,32,0,0,0"    alt="up"     onclick='WebSAGE.zoomPan(1);' style='cursor:pointer;' />
+<area shape="poly" id='ZPDir'    coords="20,12,20,20,32,32,32,0"  alt="right"  onclick='WebSAGE.zoomPan(5);' style='cursor:pointer;' />
+<area shape="poly" id='ZPCentro' coords="12,12,20,12,20,20,12,20" alt="center" onclick='WebSAGE.zoomPan(4);' style='cursor:pointer;' />
+</map>
+&nbsp;
+<span id='NOME_TELA' style='font-family:trebuchet ms,tahoma,arial,helvetica;font-size:22pt;vertical-align:top;display:none;'></span>
+<img id='PRODUTO_ID' align='middle' width='32' height='32' onClick='WebSAGE.g_MostraQualAna=!WebSAGE.g_MostraQualAna;' /> 
+<img id='IMGSEPAR1' align='middle' width='8' height='32' /> 
+<img id='ZOOMIN_ID' align='middle' width='32' height='32' onclick='WebSAGE.zoomPan(2);' style='cursor:pointer;' /> 
+<img id='ZOOMOUT_ID' align='middle' width='32' height='32' onclick='WebSAGE.zoomPan(6);' style='cursor:pointer;' />
+<img id='MOVE_ID' align='middle' width='32' height='32' usemap='#immap'/>
+<img id='IMGSEPAR1' align='middle' width='8' height='32' >
+<img id='ANTETELAID' align='middle' width='16' height='16' style='cursor:pointer;'/>
+<select style='font-family:consolas,courier,monospace;vertical-align:middle;text-shadow: 1px 1px 1px #909090;' name='SELTELA' id='SELTELA' size='1'>
+<option id='SELTELA_OPC1' disabled='disabled'>?</option>
+</select>
+<img id='PROXTELAID' align='middle' width='16' height='16' style='cursor:pointer;'/>
+<img id='IMGSEPAR2' align='middle' width='8' height='32' />
+&nbsp;
+<img id='CORFUNDO_ID' align='middle' width='32' height='32' style='cursor:pointer;display:none;' /> 
+<img id='PLAY_ID'  align='middle' width='32' height='32' style='cursor:pointer;' /> 
+<img id='PAUSE_ID' align='middle' width='32' height='32' style='cursor:pointer;display:none;' /> 
+<img id='TIMEMACHINE_ID' align='middle' width='32' height='32' style='cursor:pointer;display:none;' /> 
+&nbsp;&nbsp;
+<img id='SILENCIA_ID' style='display:none;cursor:pointer;' align='middle' width='32' height='32' onclick='WebSAGE.doSilenciaBeep();' />&nbsp;&nbsp;
+<input id='PLAY'  name='' value='0' type='hidden' style='display:none;'>
+<input id='PTELA' name='' value=''  type='hidden' style='display:none;'>
+<input id='ZPX'   name='' value='0' type='hidden' style='display:none;'>
+<input id='ZPY'   name='' value='0' type='hidden' style='display:none;'>
+<input id='ZPW'   name='' value=''  type='hidden' style='display:none;'>
+<input id='ZPH'   name='' value=''  type='hidden' style='display:none;'>
+<input id='HIDETB'    name='' value='0' type='hidden' style='display:none;'>
+<input id='IDPREFIX1'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX2'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX3'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX4'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX5'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX6'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX7'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX8'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX9'  name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX10' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX11' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX12' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX13' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX14' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX15' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX16' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX17' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX18' name='' value='' type='hidden' style='display:none;'>
+<input id='IDPREFIX19' name='' value='' type='hidden' style='display:none;'>
+</form>
+<div id='timemachinecontrols' style='width:100%;line-height:40px;position:absolute;left:10px;top:-1px;z-index:2;display:none;'>
+<input id='timesldr' type='range' step='1' min='0' max='86399' list='lsthour' value='0' style='width:calc(99% - 520px);min-width:50px;height:25px;vertical-align:middle;'>
+<datalist id='lsthour'>
+<option>0</option>
+<option>3600</option>
+<option>7200</option>
+<option>10800</option>
+<option>14400</option>
+<option>18000</option>
+<option>21600</option>
+<option>25200</option>
+<option>28800</option>
+<option>32400</option>
+<option>36000</option>
+<option>39600</option>
+<option>43200</option>
+<option>46800</option>
+<option>50400</option>
+<option>54000</option>
+<option>57600</option>
+<option>61200</option>
+<option>64800</option>
+<option>68400</option>
+<option>72000</option>
+<option>75600</option>
+<option>79200</option>
+<option>82800</option>
+<option>86399</option>
+</datalist>
+<input type='date' name='dtpk' id='dtpk' step='1' style='position:relative;vertical-align:middle;'>
+<input type='time' name='tmpk' id='tmpk' step='1' style='position:relative;vertical-align:middle;'>
+<img id='TIMEMACHINECLOSE_ID' align='middle' width='16' height='16' style='position:relative;left:10px;cursor:pointer;vertical-align:middle;' /> 
+</div>
+</div>
+
+<div class="loader" id="loader">
+</div>
+
+<div id='svgdiv' style='position:absolute;z-index:0;top:40px;overflow:hidden;'>
+<iframe id='svgid' name='svgid' style='display:none;opacity:0;' frameborder='0'></iframe>
+</div>
+
+<div id='almbox' style='opacity:1;position:absolute;right:0px;top:0px;z-index:3;'><iframe id='almiframe' style='display:none;box-shadow: 2px 2px 2px #888888;' width='370' height='40' frameborder='0'></iframe>
+<div id='DIV_HORA' style='text-align:right;' ><span id='HORA_ATU' onclick='WebSAGE.reload();' style='font-family:tahoma,courier;font-size:10pt;font-weight:bold;color:white;'>&nbsp;</span></div>
+<div id='DIV_STATUS' style='text-align:right;'><span id='SP_STATUS' style='font-family:tahoma,courier;font-size:10pt;font-weight:bold;color:white;'>&nbsp;</span></div>
+</div>
+<div id="previewdiv" style='display:none;position:absolute;left:5px;top:5px;z-index:3;opacity:.95;box-shadow: 2px 2px 2px #888888;' onclick='evt.stopPropagation();evt.preventDefault();'>
+<iframe id='previewframe' width='700' height='480' frameborder='2'></iframe>
+</div>
+<div id='VEGACHARTS' style='display:none'></div>
+<script>
+
+$('#svgdiv').css( 'background-color', VisorTelas_BackgroundSVG );   
+$('#bardiv').css( 'background-color', ScreenViewer_ToolbarColor );   
+document.getElementById('svgid').src = tela;
+document.getElementById('svgid').height = ScreenViewer_SVGMaxHeight;
+document.getElementById('svgid').width = ScreenViewer_SVGMaxWidth;
+document.getElementById('svgdiv').height = ScreenViewer_SVGMaxHeight;
+document.getElementById('svgdiv').width = ScreenViewer_SVGMaxWidth;
+document.getElementById('ZPW').ScreenViewer_SVGMaxWidth;
+document.getElementById('ZPH').ScreenViewer_SVGMaxHeight;
+
+document.getElementById('SELTELA').onchange = 
+  function() 
+   { 
+   document.body.onbeforeunload=""; 
+   if ( WebSAGE.g_seltela.selectedIndex != 0 ) 
+     {
+     if ( document.getElementById("PLAY").value == 1 )
+       document.getElementById("PLAY").name="PLAY";
+     this.form.submit();
+     } 
+   };
+
+// After the complete load of all files, wait a little more time, then enable SVG rendering and init.
+$('#svgid').load( function() { setTimeout( '$("#svgid").css("display", ""); WebSAGE.init();$("#loader").css("display", "none");', 50 ); } );
+</script>
+
+</body>
+</html>

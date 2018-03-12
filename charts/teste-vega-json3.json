@@ -1,0 +1,117 @@
+{
+  "width": 400,
+  "height": 200,
+  "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+  "data": [
+    {
+      "name": "table",
+      "url": "/htdocs/sqlite_oshmi.php?QUERY=select s.nponto as pnt, s.estado as y, s.data*1000 as x, p.descricao as descr, p.estacao as estacao from soe s join dumpdb p on s.nponto=p.nponto where s.data>strftime('%s','now')-60*15 order by s.data desc limit 1000&HMAC=aca80fe54f018054da8c585ad7c7c41cacbc47c0",
+      "update_period" : 20
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "time",
+      "range": "width",
+      "zero": false,
+      "domain": {"data": "table", "field": "x"}
+    },
+    {
+      "name": "c",
+      "type": "ordinal",
+      "range": "category20"
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "nice": true,
+      "range": "height",
+      "domain":  [0, 3]
+    }
+  ],
+  "axes": [
+    { 
+      "type": "x", 
+      "scale": "x",
+      "ticks": 15,      
+      "format":"%H:%M",
+      "grid": true,
+      "properties": { 
+          "grid": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}},
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 9},
+              "fontStyle": {"value": "normal"},
+              "fontWeight": {"value": 300}
+              },
+          "axis": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }  
+          }
+    },
+    { 
+      "type": "y", 
+      "scale": "y" , 
+      "ticks": 3,      
+      "format": "0.0f", 
+      "grid": true,
+      "properties": {
+          "grid": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}},
+          "axis": {
+              "stroke": {"value": "#00eeee"}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 10},
+              "fontStyle": {"value": "normal"},
+              "fontWeight": {"value": 300}
+              },
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }                  
+          }
+    }
+  ],
+  "marks": [
+    {
+      "type": "symbol",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "size": {"value": 5},
+          "interpolate": {"value": "none"},
+          "x": {"scale": "x", "field": "x"},
+          "y": {"scale": "y", "field": "y"},
+          "stroke": {"scale": "c", "field": "pnt"}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "interpolate": {"value": "none"},
+          "x": {"scale": "x", "field": "x", "offset": 4},
+          "y": {"scale": "y", "field": "y", "offset": -3},
+          "fill": {"scale": "c", "field": "pnt"},
+          "text": {"template": "{{ datum.estacao}}-{{ datum.descr | truncate:40}}"},
+          "align": {"value": "left"},
+          "font": {"value": "arial narrow"},
+          "fontSize": {"value": 8},
+          "angle": {"value": -30},
+          "fontWeight": {"value": "normal"},
+          "baseline": {"value": "middle"}
+        }
+      }
+    }    
+  ]
+}

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="application-name" content="OSHMI-Open Substation HMI">
+<meta name="description" content="Command Dialog">
+<meta name="author" content="Ricardo L. Olsen">
+<meta name="viewport" content="initial-scale=1.3,maximum-scale=1.3,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes" />
+<title>Command</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+<link rel="stylesheet" type="text/css" href="dialogstyle.css">
+<link rel="stylesheet" href="lib/animations.css">
+<script src="lib/jquery-1.8.3.js"></script>
+<script src="lib/shortcut-2.01b.js"></script>
+<script src="util.js"></script>
+<script src="legacy_options.js"></script>
+<script src="../i18n/messages_i18n.js"></script>
+<script src="config_viewers_default.js"></script>
+<script src="../conf/config_viewers.js"></script>
+<script src="images.js"></script>
+<script>
+
+// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+
+/*global clearInterval: false, clearTimeout: false, document: false, event: false, frames: false, history: false, Image: false, location: false, name: false, navigator: false, Option: false, parent: false, screen: false, setInterval: false, setTimeout: false, window: false, XMLHttpRequest: false */
+/*global opener: false, self: false */
+/*global $: false, Titles: false, Imgs: false, Msg: false, LoadFavicon: false, shortcut: false, CommandDialog_Background: false */
+/*jslint white: true */
+/*jslint sloppy: true */
+/*jslint plusplus: true */
+
+var toutMaxCnt = 35;
+var cntAck = 0;
+var cnttout = toutMaxCnt;
+
+// altera o texto do botão de comando conforme opção selecionada
+function selchg()
+{
+var obj = document.getElementById( "COMANDO" );
+if ( obj.selectedIndex != -1 )
+  {
+  document.getElementById('EXECUTAR').innerHTML = obj.options[obj.selectedIndex].text + " !";
+  document.getElementById('EXECUTAR').style.display = "";
+  document.getElementById('EXECUTAR').disabled = false;
+  }
+}
+
+// altera o texto do botão de comando conforme o valor digitado
+function anachg()
+{
+  document.getElementById('EXECUTAR').innerHTML = document.getElementById( "COMANDOANA" ).value + " !";
+  document.getElementById('EXECUTAR').style.display = "";
+  document.getElementById('EXECUTAR').disabled = false;
+}
+
+function testOpener()
+{
+selchg(); // faço o ajuste do texto do botão de comando repetidas vezes pois às vezes não trocava o texto quando era feito uma única vez.
+
+if ( opener && !opener.closed )
+  {
+  if ( document.getElementById('CNPONTO_SUP' ).textContent === "0" ||
+       opener.CNPTO === 0 ||
+       opener.CNPTO === undefined
+     )
+    {
+      self.close(); 
+    }
+  }
+else 
+  {
+  self.close();
+  }
+}
+
+function ack_cmd()
+{
+  cntAck++;
+
+  if ( cntAck > 5 )
+    {
+    setTimeout( window.close, 10 );
+    return;
+    }
+
+  if ( document === undefined )
+     {
+       return;
+     }
+     
+  var idtxt = "TXTACK_CMD";   
+     
+  if ( document.getElementById(idtxt) === undefined )
+     {
+       return;    
+     }
+ 
+  if ( document.getElementById(idtxt).innerHTML )
+    {
+      document.getElementById(idtxt).innerHTML = window.opener.ComandoAck;
+    }
+  else    
+    {
+      document.getElementById(idtxt).nextSibling.data = window.opener.ComandoAck; 
+    }
+
+  window.opener.WebSAGE.ackComando();
+ 
+  setTimeout( ack_cmd, 1000 );
+}
+
+function tout_cmd()
+{
+var i;
+var st = '<';
+
+for ( i = 0; i < cnttout; i++ )
+  {
+    st = st + '-';
+  }
+st = st + '>';
+
+  if ( document === undefined )
+     {
+       return;
+     }
+     
+  var idtxt = "TXTTOUT_CMD";   
+
+  if ( document.getElementById( idtxt ) ===  undefined )
+     {
+       return;    
+     }
+
+  if ( document.getElementById( idtxt ).innerHTML )
+    {
+      document.getElementById( idtxt ).innerHTML = st;
+    }
+  else    
+    {
+      document.getElementById( idtxt ).nextSibling.data = st; 
+    }
+
+cnttout--;
+if ( cnttout )
+  {
+    setTimeout( tout_cmd, 1000 );
+  }
+else
+  {
+    window.close();
+  }
+  
+if ( ($('#SAIR').position().top + 70) > window.innerHeight )
+  window.resizeBy(0, $('#SAIR').position().top + 70 - window.innerHeight);
+}
+
+function init() { // executa quando termina de carregar o documento
+
+  // desabilita o botão direito 
+  document.oncontextmenu = function() { return false; };
+
+  // vai nos objetos com 'id' e coloca como 'title' a mensagem correspondente de Titles (de messages.js)        
+  //document.body.background = Imgs.CMDBACKGROUND;
+  //document.body.bgColor = CommandDialog_Background;
+  $('legend[id]').text( function(index) { return Msg[this.id]; } );
+  $('#SPPASSO2').text( Msg.SPPASSO2 );
+  $('#CBMOREINFO').text( Msg.CMDMOREINFO );
+  $('#SPPONTOSUP').text( Msg.SPPONTOSUP );
+  $('#SPPONTOCMD').text( Msg.SPPONTOCMD );
+  $('#SAIR').text( Msg.CANCELAR );
+  $('#CBMOREINFO').attr( 'title', Titles.CBMOREINFO );
+  $('#COMANDO').attr( 'title', Titles.COMANDO );
+  $('#EXECUTAR').attr( 'title', Titles.EXECUTAR );
+  $('#SAIR').attr( 'title', Titles.CANCELAR );
+  LoadFavicon( Imgs.FAVICON_ID );
+
+  document.title = "."; // necessario devido a um bug do chromium!
+  document.title = Msg.NomeDialogoCmd + " - " + Msg.NomeProduto;
+  
+  window.focus();
+  $('#SAIR').focus();
+
+  shortcut.add( "esc",
+                function() { self.close(); },
+                { 'type':'keydown', 'propagate':false,	'target':document } );
+
+  setInterval( testOpener, 1000 );
+  window.opener.WebSAGE.showValsCmd2( 0 );
+  setTimeout( tout_cmd, 2000 );
+
+  // torna elementos não selecionáveis
+  $("html > head").append("<style> body { user-select:none; -webkit-user-select:none; } </style>");
+  setTimeout( 'document.getElementById("forceread").style.display="none";document.getElementById("fc_mod").className="pulse";document.getElementById("fc_info").className="pulse";document.getElementById("fc_mod").style.opacity="1";document.getElementById("fc_info").style.opacity="1";', 3800 );
+  if ( ($('#SAIR').position().top + 70) > window.innerHeight )
+    window.resizeBy(0, $('#SAIR').position().top + 70 - window.innerHeight);
+}
+
+// Executa comando e prepara para mostra o ack do comando
+function executa_cmd()
+{
+if ( document.getElementById('COMANDO').style.display != "none" )
+  window.opener.WebSAGE.executaComando( document.getElementById('COMANDO').selectedIndex + 1 );
+else  
+  window.opener.WebSAGE.executaComando( document.getElementById('COMANDOANA').value );
+
+document.getElementById('COMANDO').disabled = true;  
+document.getElementById('COMANDOANA').disabled = true;  
+document.getElementById("SAIR").style.visibility = "hidden";
+document.getElementById("EXECUTAR").style.visibility = "hidden";
+
+cntAck = 0;
+setTimeout( window.opener.WebSAGE.ackComando, 200 );
+setTimeout( ack_cmd, 1000 );
+if ( cnttout > 5 )
+   {
+     cnttout = 6; 
+   }
+}
+
+$( init );
+
+</script>  
+
+</head>
+<body style="margin:10px;overflow:hidden">
+<div id='forceread' onclick='this.style.display="none";' class='fadeOut' style='animation-fill-mode:forwards;-webkit-animation-fill-mode:forwards;animation-delay:3.0s;-webkit-animation-delay:3.0s;position:absolute;top:0;left:0;text-align:center;width:100%;height:100%;background-color:lightslategray;font-family:trebuchet ms,tahoma; font-size: 16pt; text-shadow: 0 0 0.3em lightgray;'>
+</div>
+<font style="font-family:trebuchet ms,tahoma; font-size: 12pt;">
+<fieldset>
+  <legend id='FSCMDINFO'>Command Info</legend>
+
+  <strong>
+  <div id='fc_inst' class='fadeIn' style='font-size:16pt;text-align:center;animation-fill-mode:forwards;-webkit-animation-fill-mode:forwards;animation-delay: 0s;-webkit-animation-delay: 0s;opacity: 0.0'>?</div>
+  <div id='fc_mod' class='fadeIn' style='font-size:20pt;text-align:center;animation-fill-mode:forwards;-webkit-animation-fill-mode:forwards;animation-delay: 0.75s;-webkit-animation-delay: 0.75s;opacity: 0.0'>?</div>
+  <div id='fc_info' class='fadeIn' style='font-size:18pt;text-align:center;animation-fill-mode:forwards;-webkit-animation-fill-mode:forwards;animation-delay: 1.5s;-webkit-animation-delay: 1.5s;opacity: 0.0'>?</div>
+  <span id='CDESCR_SUP' style="display:none;">0</span>
+  </strong>
+  
+</fieldset>
+  
+<fieldset>
+  <legend id='FSCMDACTION'>Command Action</legend>
+  
+  <small><small><span id='SPPASSO2'>?</span></small></small><br> 
+  <br>
+  <select id="COMANDO" onclick="setTimeout('selchg()',100);cnttout = toutMaxCnt;" onchange="setTimeout('selchg()',150);cnttout = toutMaxCnt;" size="2" style="display:none; padding: 2px;height:54px; font-family:tahoma; font-size:14pt;">
+  <option id="CMD_OFF">COMANDO_OFF</option>
+  <option id="CMD_ON">COMANDO_ON</option>
+  </select>
+  <input id="COMANDOANA" type="number" size=9 style="display:none;font-family:tahoma; font-size:14pt;" onkeydown="setTimeout('anachg()',100);cnttout = toutMaxCnt;" onchange="setTimeout('anachg()',150);cnttout = toutMaxCnt;">
+  </input>
+  &nbsp;&nbsp;&nbsp;<button id="EXECUTAR" disabled="disabled" style="display:none; font-family:tahoma; font-size:14pt; cursor:pointer;" onclick="executa_cmd();" tabindex="1" value="1" type="button"></button>
+  <span id='TXTACK_CMD' style='color:red'>&nbsp;</span><br>
+  
+</fieldset>
+
+<fieldset>
+  <legend id='FSCMDOPTION'>Info</legend>
+  
+  <small><small><span id="CBMOREINFO" style='cursor:pointer;' onclick="document.getElementById('DIVMOREINFO').style.display='';">?</span></small></small>
+  <div  id='DIVMOREINFO' style='display:none;'>
+  <span id='SPPONTOCMD'>?</span><br>
+  <small><small><span id='CNPONTO_SUP' style='user-select:all;'>0</span><br></small></small>
+  <span id='SPPONTOSUP'>?</span><br>
+  <small><small><span id='NPONTO_SUP' style='user-select:all;'>0</span><br></small></small>
+  <span id='DESCR_SUP'>?</span><br>
+  <div id='VALOR_HID' style="display:none;">
+  <span id='VALOR_SUP'>?</span>
+  </div>
+  <div id='ESTADO_HID' style="display:none;">
+  <span id='ESTADO_SUP'>?</span>
+  </div>
+  </div>
+</fieldset>
+  <span id='TXTTOUT_CMD'>&nbsp;</span>
+  <button id="SAIR" style='font-family:tahoma; cursor:pointer;background-color: green;box-shadow: 0 2px 0 darkgreen, 0 4px 0 forestgreen, 0 6px 0 limegreen, 0 6px 10px lightgreen, 0 6px 11px darkgreen, 0 0 10px green;' onclick="window.focus();window.close();" tabindex="0" value="0" type="button">?</button>
+</font> 
+</body>
+</html>

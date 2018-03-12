@@ -1,0 +1,130 @@
+{
+  "width": 400,
+  "height": 200,
+  "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {"x": 1,  "y": "PNT#1",  "bay" : "BAY#1"}, 
+        {"x": 2,  "y": "PNT#2",  "bay" : "BAY#2"},
+        {"x": 3,  "y": "PNT#3",  "bay" : "BAY#3"}, 
+        {"x": 4,  "y": "PNT#4",  "bay" : "BAY#4"},
+        {"x": 5,  "y": "PNT#5",  "bay" : "BAY#5"}, 
+        {"x": 6,  "y": "PNT#6",  "bay" : "BAY#6"},
+        {"x": 7,  "y": "PNT#7",  "bay" : "BAY#7"}, 
+        {"x": 8,  "y": "PNT#8",  "bay" : "BAY#8"},
+        {"x": 9,  "y": "PNT#9",  "bay" : "BAY#9"}, 
+        {"x": 10, "y": "PNT#10", "bay" : "BAY#10"}
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "range": "width",
+      "zero": false,
+      "domain": {"data": "table", "field": "x"}
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "nice": true,
+      "domain": {"data": "table", "field": "y"}
+    }
+  ],
+  "axes": [
+    { 
+      "type": "x", 
+      "scale": "x",  
+      "ticks": "none", 
+      "properties": { 
+          "axis": {
+              "stroke": {"value": "#000000"}
+              }
+          }
+    },
+    { 
+      "type": "y", 
+      "scale": "y" , 
+      "format": "0.0f", 
+      "grid": true,
+      "properties": {
+          "grid": {
+              "stroke": {"value": "#000000"}, "strokeWidth": {"value": 1.5}
+              },
+          "axis": {
+              "stroke": {"value": "#000000"}
+              },
+          "labels": {
+              "fill": {"value": "#000000"},
+              "font": {"value": "tahoma"},
+              "fontSize": {"value": 14},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300}
+              },
+          "ticks": {
+              "stroke": {"value": "#000000"}, "strokeWidth": {"value": 1.0}
+              }                  
+          }
+    }
+  ],
+  "marks": [
+    {
+      "type": "area",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "interpolate": {"value": "monotone"},
+          "x": {"scale": "x", "field": "x"},
+          "y": {"scale": "y", "field": "y"},
+          "y2": {"scale": "y", "value": 0},
+          "fill": {"value": "#2ca05a"},
+          "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}
+        },
+        "update": {
+          "fillOpacity": {"value": 1}
+        },
+        "hover": {
+          "fillOpacity": {"value": 0.5}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "interpolate": {"value": "monotone"},
+          "x": {"scale": "x", "field": "x"},
+          "y": {"scale": "y", "field": "y"},
+          "y2": {"scale": "y", "value": 0},
+          "fill": {"value": "#000000"},
+          "font": {"value": "tahoma"},
+          "fontSize": {"value": 15},
+          "fontStyle": {"value": "oblique"},
+          "fontWeight": {"value": 300},
+          "text": { "template": "{{datum.y|number:'.0f'}}" }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "interpolate": {"value": "monotone"},
+          "x": {"scale": "x", "field": "x"},
+          "y": {"scale": "y", "value": 0, "offset": 20},
+          "font": {"value": "open sans"},
+          "fontSize": {"value": 14},
+          "fontStyle": {"value": "oblique"},
+          "fontWeight": {"value": 300},
+          "text": { "template": "{{datum.bay|left:4}}" }
+        }
+      }
+    }
+  ]
+}

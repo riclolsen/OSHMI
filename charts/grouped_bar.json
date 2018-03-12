@@ -1,0 +1,170 @@
+{
+  "width": 300,
+  "height": 200,
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {"category":"US1", "unit":"G1", "position":0, "value":"PNT#1"},
+        {"category":"US1", "unit":"G2", "position":1, "value":"PNT#2"},
+        {"category":"US1", "unit":"G3", "position":2, "value":"PNT#3"},
+        {"category":"US1", "unit":"G4", "position":3, "value":"PNT#4"},
+        {"category":"US1", "unit":"G5", "position":4, "value":"PNT#5"},
+        {"category":"US1", "unit":"G6", "position":5, "value":"PNT#6"},
+        {"category":"US2", "unit":"G1", "position":0, "value":"PNT#7"},
+        {"category":"US2", "unit":"G2", "position":1, "value":"PNT#8"},
+        {"category":"US2", "unit":"G3", "position":2, "value":"PNT#9"},
+        {"category":"US2", "unit":"G4", "position":3, "value":"PNT#10"},
+        {"category":"US3", "unit":"G1", "position":0, "value":"PNT#11"},
+        {"category":"US3", "unit":"G2", "position":1, "value":"PNT#12"},
+        {"category":"US3", "unit":"G3", "position":2, "value":"PNT#13"},
+        {"category":"US3", "unit":"G4", "position":3, "value":"PNT#14"}
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "cat",
+      "type": "ordinal",
+      "domain": {"data": "table", "field": "category"},
+      "range": "height",
+      "padding": 0.2
+    },
+    {
+      "name": "val",
+      "type": "linear",
+      "domain": {"data": "table", "field": "value"},
+      "range": "width",
+      "round": true,
+      "nice": true
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {"data": "table", "field": "position"},
+      "range": "category20"
+    }
+  ],
+  "axes": [
+    { 
+      "type": "y", 
+      "scale": "cat", 
+      "tickSize": 0, 
+      "tickPadding": 8 ,
+      "properties": { 
+          "labels": {
+              "dx": {"value": -12},
+              "dy": {"value": 0},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 14},
+              "fontStyle": {"value": "normal"},
+              "fontWeight": {"value": 300},
+              "fill": {"value": "#00eeee"}
+              },
+          "axis": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }  
+          }
+    },
+    { 
+      "type": "x", 
+      "scale": "val",
+      "grid": true,
+      "properties": { 
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, 
+              "strokeWidth": {"value": 0.7}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 12},
+              "fontStyle": {"value": "normal"},
+              "fontWeight": {"value": 300}
+              },
+          "grid": {
+              "stroke": {"value": "#164450"}, "strokeWidth": {"value": 0.9}
+              },
+          "axis": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }  
+          }
+      }
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "from": {
+        "data": "table",
+        "transform": [{"type":"facet", "groupby": ["category"]}]
+      },
+      "properties": {
+        "enter": {
+          "y": {"scale": "cat", "field": "key"},
+          "height": {"scale": "cat", "band": true}
+        }
+      },
+      "scales": [
+        {
+          "name": "pos",
+          "type": "ordinal",
+          "range": "height",
+          "domain": {"field": "position"}
+        }
+      ],
+      "marks": [
+        {
+          "name": "bars",
+          "type": "rect",
+          "properties": {
+            "enter": {
+              "y": {"scale": "pos", "field": "position"},
+              "height": {"scale": "pos", "band": true},
+              "x": {"scale": "val", "field": "value"},
+              "x2": {"scale": "val", "value": 0},
+              "fill": {"scale": "color", "field": "position"}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {"mark": "bars"},
+          "properties": {
+            "enter": {
+              "x": {"field": "x", "value": 0, "offset": -2},
+              "y": {"field": "y", "offset": 0},
+              "dy": {"field": "height", "mult": 0.5},
+              "fill": {"value": "#00eeee"},
+              "align": {"value": "right"},
+              "baseline": {"value": "middle"},
+              "text": {"field": "datum.unit"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 10},
+              "fontStyle": {"value": "normal"},
+              "fontWeight": {"value": 300}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {"mark": "bars"},
+          "properties": {
+            "enter": {
+              "x": {"field": "x2", "offset": 2},
+              "y": {"field": "y", "offset": 0},
+              "dy": {"field": "height", "mult": 0.5},
+              "fill": {"value": "#00eeee"},
+              "align": {"value": "left"},
+              "baseline": {"value": "middle"},
+              "text": {"field": "datum.value"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 10},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,711 @@
+OSHMI - Open Substation HMI
+    Copyright 2008-2018 - Ricardo L. Olsen
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+    
+The system will install to "c:\oshmi\".
+
+Acknowledgements:
+
+  Inkscape: https://inkscape.org
+  Inkscape + SAGE: https://sourceforge.net/projects/sage-scada
+  Chromium: by "The Chromium Authors". 
+  Chromium binaries: http://chromium.woolyss.com
+  ICCP Client by Fernando Covatti: https://github.com/fcovatti/iccp
+  Opendnp3: https://www.automatak.com/opendnp3/
+  Libmodbus: http://libmodbus.org/
+  QT: http://www.qt.io
+  Lua Language: https://www.lua.org
+  The Indy Project: http://www.indyproject.org
+  FIPS-180-1 compliant SHA-1 implementation by Paul Bakker http://polarssl.org
+  NSIS (Nullsoft Scriptable Install System): http://nsis.sourceforge.net/Main_Page
+  Open Sans Fonts by Steve Matteson
+  Source Sans Pro by Adobe Systems Incorporated. License: http://scripts.sil.org/OFL
+  JQuery: http://jquery.com
+  JQuery UI: http://jqueryui.com
+  Shortcut: http://www.openjs.com/scripts/events/keyboard_shortcuts
+  Core JS: http://www.sitepoint.com
+  Modernzr: http://www.modernizr.com
+  Flot: http://www.flotcharts.org
+  Snap SVG: http://snapsvg.io
+  Pergola: http://www.dotuscomus.com/pergola
+  X3DOM: http://www.x3dom.org
+  Chroma.js: https://github.com/gka/chroma.js
+  TabSystem: http://www.developer-x.com
+  CSS Animation Cheat Sheet: http://www.justinaguilar.com/animations
+  D3JS: http://d3js.org
+  Radar-chart-d3: https://github.com/alangrafu/radar-chart-d3
+  Vega A Visualization Grammar: https://vega.github.io/vega
+  NSSM - The Non-Sucking Service Manager: http://nssm.cc
+  NGINX - http://nginx.org
+  PHP - http://php.net
+  WGet - http://www.gnu.org/software/wget
+  SQLite - https://www.sqlite.org
+  Some icons from: http://keyamoon.com/icomoon and http://raphaeljs.com/icons
+  CSS Loaders from Luke Haas - https://projects.lukehaas.me/css-loaders/
+  
+-------------------------------------------------------------------
+
+QUICKSTART:
+
+To quickly run the system after installed, open the OSHMI desktop folder and:
+
+  - On the OSHMI desktop folder: execute _Start_OSHMI.
+ OR 
+  - Execute the "Webserver" program.
+  - Next open the Screen Viewer and the Events Viewer using the icons on the OSHMI folder.
+ OR
+  - Execute the "HMIShell" program.
+  - Next open the Screen Viewer and the Events Viewer using the HMIShell.
+
+The default password for HMIShell is "oshmi".
+
+The system is preconfigured to run a simulation with an example point list and screens.
+To simulate a command, click on a breaker and push the "Command" button then choose an action like "open" or "close" and push the action button.
+To stop the system click on the "Stop_All" icon on the OSHMI folder.
+To edit and create new SVG screens, download and use Inkscape+SAGE 0.481 + SAGE 3.03.. Screens are in "c:\oshmi\svg\".
+OSHMI configuration files are in "c:\oshmi\conf\".
+For more info about configuration please read the OSHMI Configuration Manual.
+
+By default, the system is configured to allow access only by the local machine.
+To allow other IP addresses edit the "c:\oshmi\conf\nginx_access_control.conf" file.
+
+-------------------------------------------------------------------
+
+Recommended utils (can be downloaded running the "download_external_progs.bat" script that is located inside the "extprogs" folder):
+ - Inkscape 0.481 + SAGE 3.03. (To edit/create SVG screens) 
+     https://sourceforge.net/projects/sage-scada/files/SAGE%20v3.03/inkscape0481_sage303.exe/download
+ - SysInternals (useful systems utilities)
+     http://technet.microsoft.com/en-us/sysinternals/default
+     http://live.sysinternals.com/
+ - Notepad++ (text editor): http://notepad-plus-plus.org/
+ - Visual Studio Code: https://code.visualstudio.com/
+     
+Recommended OS's:
+ - Windows 10 Pro/Home/Enterprise, 32 or 64 bits.
+ - Windows 8/8.1 Pro/Home, 32 or 64 bits.
+ - Windows 7 Pro/Home, 32 or 64 bits.
+
+Please use an updated OS.
+
+If you encounter errors related to Windows Universal C Runtime (CRT), see:
+  https://support.microsoft.com/help/2999226/update-for-universal-c-runtime-in-windows
+
+Can also run on:
+ - Linux (under Wine, experimental).
+
+Not anymore compatible, recommended or supported:
+ - Windows Vista 32/64 bits (require an old version of Chromium not included).
+ - Windows XP 32/64 bits (require an old version of Chromium not included).
+   On XP and Vista it is possible to use OSHMI Version 3.17 with Chromium version 49:
+     https://sourceforge.net/projects/oshmiopensubstationhmi/files/oshmi_setup_v.3.17.exe/download
+     https://sourceforge.net/projects/oshmiopensubstationhmi/files/chromium_browser_for_win_xp.zip/download
+ 
+User interface can be used on:
+ - IOS 7+ devices.
+ - Android 4.1+ devices.
+ - Any device with Chrome, Firefox, Opera or Safari.
+
+-------------------------------------------------------------------
+
+To compile the source code on Windows you will need the folowing environments:
+
+Webserver, HMIShell, Mon_Proc and Sim_TR:
+ - Borland C++ Builder 5.
+ - Indy 9 Components - http://www.indyproject.org/download/Files/Indy9.html.
+
+QTester104:
+ - QT 5.9.2 or newer.
+
+-------------------------------------------------------------------
+
+Notes for version 4.12:
+
+Export tools for historical data:
+ - OData and JSON: optimized queries, now produces results much faster.
+ - New tools for CSV export of historical and SOE data.
+
+Webserver.exe:
+ - Fixed problem of historical recording of calculation of communication state.
+
+Screen Viewer:
+ - Recover HIDETB (hide toolbar) parameter when reloading page.
+
+-------------------------------------------------------------------
+
+Notes for version 4.11:
+
+Events Viewer:
+ - Better sorting of events order when field timetags are disabled.
+ - Signficantly optimized queries when events are not aggregated.
+
+Screen Viewer:
+ - Fixed qualifier flags treatment for some rare cases.
+
+SQLite:
+ - Updated to version 3.22.0.
+
+Chromium:
+ - Updated to version 64.0.3282.140.
+
+PHP:
+ - Updated to version 7.2.2.
+
+-------------------------------------------------------------------
+
+Notes for version 4.10:
+
+Screen Editor:
+ - New embedded Screen Editor: Inkscape 0.92.2 + SAGE 4.15 32bit custom built for OSHMI.
+   Startable by the Inkscape SAGE icon on Desktop.
+   Separate installation from other Inkscape or Inkscape+SAGE versions.
+   Installed to c:\oshmi\inkscape directory.
+   Other Inkscape SAGE versions 0.48+3.03 or 0.91+4.16 still compatible.
+   Sources added to the Mercurial repository.
+
+Screen Viewer:
+ - Possibility to tag screens using prefixes, so the same screen can be used with data 
+   from different origins (same tag suffix, but different prefix).
+ - Updated Radar Chart library.
+ - Corrected bug drawing some Vega-Lite charts.
+ - Vega: updated to version 3.0.8.
+ - Vega-Lite: updated to version 2.0.3.
+ - Updated code to handle dynamic embedding option.
+ - Possibility to obtain more point info for Vega markup.
+ - Possibility to embed Vega/Vega-Lite JSON specification in the SVG file.
+   Just put the code directly in the "prompt" field of the dialog instead of a URL.
+
+Curves Viewer:
+ - Better copy to clipboard function.
+
+Tabular, Alarms and Events Viewers:
+ - New button to copy data to clipboard (suitable to Excel).
+
+DNP3 Driver:
+ - Updated to version 0.4.
+ - Can now restart integrity poll queues when detect absence of data in a connection.
+
+-------------------------------------------------------------------
+
+Notes for version 4.9:
+
+Modbus driver:
+ - Integrated in the installer.
+ - Supports Modbus/TCP, multiple IEDs, digital and setpoint commands.
+ - Source code kept in a separate project: https://modbus-driver-for-oshmi.sourceforge.io/.
+
+Configuration Manual:
+ - Updated install instructions.
+
+Webserver:
+ - Updated to support command sending to optional Modbus driver UDP port.
+
+Other:
+ - Scripts for creating an IEC60870-5-104 circular buffer logs using Wireshark as Windows service.
+ - Included MSVC++ Redistributable 2017.
+
+-------------------------------------------------------------------
+
+Notes for version 4.8:
+
+Config Manager Worksheet v1.0 (c:\ohsmi\conf\oshmi_config_manager.xlsm):
+ - New Excel worksheet with macros to manage configuration.
+ - Can import, manipulate and export point_list.txt file.
+
+QTester104:
+ - Updated to version 1.23.
+ - Source code changed to UTF-8.
+ - Now logs up to 30000 lines to a circular buffer.
+ - More detailed log of received values.
+ - Now logs sent frames.
+ - Use of colors in log windows.
+ - Use Consolas font when available.
+
+Viewers:
+ - Use of Meta tag for better compatibility with IE/Edge browsers.
+
+Chromium:
+ - Updated to version 62.0.3202.94 32bit, no sync, no WebRTC, no Widevine.    
+
+Demo screens:
+ - New demo screen Brasil, with Vega charts, RSS, JSON import, Internet data integrations.
+ - New demo screen Office with isometric perspective, Vega charts and animations.
+
+-------------------------------------------------------------------
+
+Notes for version 4.7:
+
+DNP3 Driver:
+ - Incoporated in the installer.
+ - Source code kept in a separate project: https://dnp3-driver-for-oshmi.sourceforge.io/.
+
+QTester104: 
+ - Updated to version 1.22, buit with QT 5.9.2.
+ - Not anymore compatible with XP or Vista.
+
+Screen Viewer:
+ - Added support for Vega version 3 and Vega-Lite version 2 visualizations.
+ - Fixed SHIFT+ENTER shortcut that allows to save screenshot as SVG.
+ - New default colors for inhibited alarm tags (gray/lightgray).
+ - Inverted priority for annotation tags when both conditions are present: command blocked > inhibited alarm.
+ - Fixed incompatibility with old version Chromium that runs on XP/Vista.
+ - Changed the default color of measurements.
+ - Fixed Tooltips problem with parent object.
+ - Fixed problem with backslashes on annotations.
+
+Events Viewer:
+ - Highlight (bold) for priority zero acknowledged events.
+ - Now is shown the priority color (faded) for acknowledged alarms.
+
+Point Info Dialog (faceplate):
+ - New non-blocking annotation field.
+ - Redesigned dialog.
+
+Point Command Dialog:
+ - Redesigned dialog.
+
+SQLite:
+ - Updated to version 3.21.0.
+  
+Historical Database:
+ - Processing of SQL files for historical data now dinamically changes the usage of write cache to speedup 
+   database inserts when the performance is slow enough to occur accumulation of SQL files.
+ - Script for database files maintenance (\oshmi\db\db_maintenance.bat).
+    
+Chromium:
+ - Updated to version 60.0.3112.101 32b, no sync, no WebRTC, no Widevine.    
+  
+PHP:
+ - Enabled PHP Zend Extension OpCache for better performance.
+  
+Webserver.exe:
+ - Better handling of range limits settings.
+ - Better handling of delayed range alarms.
+ 
+HMIShell:
+ - Can now set the desktop background color (does not work in Windows 10 without Win Shell).
+ - New button to start desktop Sticky Notes (Win7) or installed externally as c:\oshmi\stickynotes\stikynot.exe.
+ - Fixed opening of Docs Viewer from client HMI.
+ 
+Webserver.exe:
+ - Log (un)inhibited (disable/enable) alarms for points (c:\oshmi\logs\alm_inhibit.log).
+
+-------------------------------------------------------------------
+
+Notes for version 4.6:
+
+Data Export:
+  - Connectivity to Tableau and MS PowerBI via OData.
+  - Connectivity to Tableau Desktop/Tableau Public Edition via Web Data Connector (WDC).
+  - Connectivity to MS PowerBI via JSON.
+  See configuration manual.
+
+OSHMI Desktop Folder:
+  - Corrected link to Logs Viewer.
+  - New link to easily start OSHMI (starts Webserver, Screen and Alarms Viewers).
+  - Removed link to open configuration files in PSPad.
+
+Config Files:
+  - Included examples of self-signed certificate files nginx.cnf and nginx.key that can be used to enable secure https browsing.
+    Command to regenerate (recommended!) those certificate files: 
+    c:\OpenSSL-Win32\bin\openssl req -config "c:\OpenSSL-Win32\openssl.cnf" -x509 -nodes -sha256 -days 36500 -newkey rsa:4096 -keyout /oshmi/conf/nginx.key -out /oshmi/conf/nginx.crt -extensions v3_req
+    Example openssl.cnf is also included.
+    Install OpenSSL for Windows to use this functionality.
+    To browse securely in Chromium export certificate as p7b file and import as "Trusted Root Certificate Authorities".
+    See: http://www.nullalo.com/en/chrome-how-to-install-self-signed-ssl-certificates/.
+  - New config files c:\oshmi\conf\nginx_http.conf and  c:\oshmi\conf\nginx_https.conf for easing edit and preservation of configuration on updates.
+  - https disabled by default.
+    
+HMIShell:
+  - Compiled for Pentium Pro instruction set instead of plain 386.
+  - Avoid errors on initialization when used as Windows Shell.
+
+Curves Viewer:
+ - Removed incompatibilities with PHP7.
+ - Set correct charset headers.
+ 
+Events Viewer:
+ - Prioritity zero events not shown in italic anymore, just colored bold for better readability.
+
+Alarms Viewer:
+ - Prioritity zero alarms not shown in italic anymore, just colored bold for better readability.
+
+Trend Viewer:
+ - Better and faster initial curve complete from historical and real time data.
+
+Viewers:
+ - Added "mobile-web-app-capable" meta tag.
+ - Altered shortcuts to other viewers in Point Info Dialog.
+
+PHP:
+ - Updated to 7.1.6.
+
+Nginx:
+ - Updated to 1.12.0.
+
+-------------------------------------------------------------------
+
+Notes for version 4.5:
+
+Webserver:
+  - Solved bug reading HIST section of hmi.ini.
+
+SQLite:
+  - Updated to version 3.19.3.
+
+Screen Viewer:
+  - Fixed bug on opacity handling of alarmed blinking objects.
+  - Better image map for the pan control.
+
+Chromium:
+  - Updated to version 59.0.3071.109 32b,no sync,no WebRTC,no Widevine.
+
+-------------------------------------------------------------------
+
+Notes for version 4.4:
+
+Screen Viewer:
+  - New function to make objects draggable.
+  - Direct commands in screen with no confirmation.
+  - Take advantage of requestAnimationFrame() browser functionality when available.
+
+Webserver:
+  - Notification of values variation after analog command issued for faster Viewer's updates.
+  - Temporized alarms for analog points limits violations.
+  - Safer point list reading.
+  - Compiled for Pentium Pro instruction set instead of plain 386.
+  
+Events Viewer:
+  - New icons for modes.
+  - Don't show lines side by side anymore when the width is big enough.
+
+Tabular Viewer:
+  - Corrected alignment of digital alarms next to analog alarms.
+  
+Viewers:
+  - Log of commands in the localStorage of the browser.
+  
+Other:
+  - Logout/Turnoff/Reboot scripts redirected to etc dir, will not be rewritten on updates.
+  - Logout script in etc dir can be configured to work correctly with services configuration.
+
+-------------------------------------------------------------------
+
+Notes for version 4.3:
+
+Webserver:
+  - Support for analog commands.
+  - Corrected bug importing units of measure.
+  - Configurable lifetime for historical data.
+  - Log of IP address origin of commands.
+  - Logging of annotations.
+  - Logging of remote user login/logout.
+  
+Screen, Tabular and Events Viewers, Command Dialog:
+  - Support for analog commands.
+  - Timeout for commands resets when option selected or analog value changed.
+
+QTester104:
+  - Updated to version 1.21.
+  - Corrected bug of wrong month set on commands with time.
+  - Support for analog commands comming from OSHMI Webserver BDTR converter.
+
+SQLite:
+  - Updated to version 3.18.0.
+  
+HMIShell:
+  - Added log files viewer.
+  - Login/Logout log of user.
+  
+OSHMI Shortcuts Folder:
+  - Added shortcuts to Docs and Logs Viewers.
+
+Chromium:
+  - Updated to version 57.0.2987.133.
+
+-------------------------------------------------------------------
+
+Notes for version 4.2:
+
+QTester104:
+  - Updated to version 1.19.
+  - Corrected bug on select before operate commands present in OSHMI 4.0 and 4.1.
+  - Removed resctriction of slave address up to 255: now it can be up to 65535.
+
+SQLite:
+  - Updated to version 3.17.0.
+
+-------------------------------------------------------------------
+
+Notes for version 4.1:
+
+Events Viewer:
+  - New mechanism to configure a relationship between notifications and screens.
+    When the user clicks a trip notification it can be opened the respective screen of the occurrence location.
+    It is necessary to configure a function in conf/config_viewers.js like EventsViewer_NotificationClick on config_viewers_default.js.
+
+Screen Viewer:
+  - Loading effect shown while loading and preprocessing SVG file.
+  - Some behind the scenes changes on window event processing.
+  - F10 shortcut to animated hide/show toolbar. 
+    Mouse-over small visible piece of hidden toolbar to show it again.
+
+Tabular Viewer:
+  - Analog values aligned to the right.
+
+SQLite:
+  - Updated to version 3.16.2 (better performance and some bugs corrected).
+
+-------------------------------------------------------------------
+
+Notes for version 4.0:
+
+Screen Viewer:
+  - Added the descriptive charts library Vega (version 2.6.3) that opens unlimited real time charts capability.
+  - Arc graphic.
+  - D3JS Updated to version 3.5.17.
+  - No more compatibility with old style screens, the only editor now supported is Inkscape+SAGE.
+  - Faster screen loading and processing due to the previous item.
+  - Point faceplate annotation field with more space.
+
+QTester104:
+  - Updated to version 1.17.
+  - Support for setting ASDU address for commands.
+
+SQLite:
+  - Updated to version 3.15.2.
+
+-------------------------------------------------------------------
+
+Notes for version 3.17:
+
+QTester104:
+  - Updated to version 1.16.
+  - Copy of values to clipboard.
+  - Better logs.
+  - Support for Clock Sync Command.
+  - Split bar for Log/Points Widgets.
+  - Show timetag values.
+
+SQLite:
+  - Updated to version 3.15.
+
+Chromium:
+  - Updated to version 56.0.2890.0.
+
+-------------------------------------------------------------------
+
+Notes for version 3.16:
+
+QTester104:
+  - Updated to version 1.15.
+  - Support for analog commands.
+
+SQLite:
+  - Updated to version 3.14.2.
+
+-------------------------------------------------------------------
+
+Notes for version 3.15:
+
+Webserver.exe:
+  - New formula for evaluating the communication state with a station using point statuses.
+
+-------------------------------------------------------------------
+
+Notes for version 3.14:
+
+Webserver.exe:
+  - Corrected bug affecting the lua stack that was causing problems after many commands issued.
+
+-------------------------------------------------------------------
+
+Notes for version 3.13:
+
+Webserver.exe:
+  - Tag link suppport for screens.
+  - By default beeps only for alarms up to priority 2 (0, 1, and 2).
+  - Interception of commands and tag addressing in Lua scripts.
+  - Corrected bug related to tag to point number conversion.
+
+Screen Viewer:
+  - Support for tag linking (in addition to number linking).
+  - Tooltips with point details on mouseover objects.
+  - Restored broken Time Machine function.
+  - Do not show inhibited alarms on alarm box.
+  - Included chroma.js library.
+
+QTester104 Updated to version 1.14:
+  - Better redundancy control.
+  - Configurable periodic General Interrogation.
+
+Browser:
+  - Modified configuration to allow desktop notifications.
+  
+Events Viewer:
+  - Modified for restoring broken Desktop Notifications.
+  - Avoid feezing when the events database becomes unresponsive.
+  
+Tabular Viewer:
+  - Shows points with inhibited alarm in a distinct color (brightened) text.
+  
+SQLite:
+  - Updated to version 3.13.
+  
+NGINX:
+  - Configured to allow access and auto listing files to "docs" folder. 
+    Links to documents in this folder can now be created in screens.
+    
+HMIShell:
+  - Button of "Help" now shows list of PDF documents from "docs" folder.
+  
+Installer:
+  - Removed install of pdf viewer, now it's only used the internal Chromium PDF Viewer.
+
+-------------------------------------------------------------------
+
+Notes for version 3.12:
+
+Screen Viewer:
+  - Expanded the processing of SVG tags to include circle, use, line, polyline, polygon.
+
+-------------------------------------------------------------------
+
+Notes for version 3.11:
+
+HMIShell:
+  - Corrected problem when starting HMIShell.
+  
+MonProc:
+  - Added option to specify a complete command line to execute a process.
+
+-------------------------------------------------------------------
+
+Notes for version 3.10:
+
+QTester104:
+  - Updated to version 1.13. Added copy of log to clipboard.
+
+-------------------------------------------------------------------
+
+Notes for version 3.9:
+
+Webserver:
+  - Removed limit of the number of synchonized alarms for redundant HMI's.
+
+Screen Viewer:
+  - Color interpolation on animations.
+  - Screenshot to SVG file (SHIFT+ENTER).
+  - Better mouse event handlers.
+  - More options to plot measures.
+  - Avoid showing some errors from alarm box not yet created.
+
+Alarms and Events Viewers:
+  - New form of highlighting priority 0 alarms.
+
+Chromium:
+  - Updated to version 50.0.2628.0.
+  
+SQLite:
+  - Updated to version 3.10.2
+
+-------------------------------------------------------------------
+
+Notes for version 3.8:
+
+ICCP Client:
+  - Corrected bug related to redundancy control.
+
+-------------------------------------------------------------------
+
+Notes for version 3.7:
+
+QTester104:
+  - Updated to version 1.12. Added the possibility to stay simultaneously connected to 2 redundant RTU's.
+
+Tabular Viewer:
+  - Corrected shortcut [F8] to ack all alarms.
+  - Scrollbar to show many substation alarm filters
+
+-------------------------------------------------------------------
+
+Notes for version 3.6:
+
+QTester104:
+  - Updated to version 1.11. Added the possibility of scannig a redundant RTU.
+  
+SQLite:
+  - Updated to version 3.8.11.1.
+  
+Webserver:
+  - Avoid closing by request on logout when running as a service.
+  
+Installer:
+  - Changed to avoid overwriting bat files on "bin" and "etc" folders.
+
+-------------------------------------------------------------------
+
+Notes for version 3.5:
+
+HMIShell:
+  - Can now be configured to beep. Useful for running webserver as a service
+    or for a client HMI (with no webserver running).
+
+-------------------------------------------------------------------
+
+Notes for version 3.4:
+
+QTester104:
+  - Updated to version 1.10.
+
+-------------------------------------------------------------------
+
+Notes for version 3.3:
+
+QTester104:
+  - Updated to version 1.08.
+
+-------------------------------------------------------------------
+
+Notes for version 3.2:
+
+QTester104:
+  - Updated to version 1.07.
+
+-------------------------------------------------------------------
+
+Notes for the version 3.1:
+
+Tabular Visor:
+  - Now includes event points.
+  
+ICCP Client:
+  - Updated to version 1.8.1.
+  
+QTester104:
+  - Compiled with QT 5.4.
+  
+SQLite:
+  - Updated to version 3.8.10.2
+
+-------------------------------------------------------------------
+
+Notes for version 3.0 (first public release):
+
+Includes:
+ - Chromium 42.0.2309.0.
+ - NGINX 1.0.11.
+ - PHP 5.4.17.
+ - SQLite 3.8.8.2
+ - NSSM 2.24

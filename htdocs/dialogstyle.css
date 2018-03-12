@@ -1,0 +1,149 @@
+/* From https://codepen.io/andrwrbnsn/pen/qdYKqN */
+@import url("lib/normalize.css");
+*,
+*:before,
+*:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+:root {
+  background-color: lightslategray;
+  color: white;
+}
+
+form {
+  width: 40%;
+  max-width: 350px;
+  margin: 0 auto 20px;
+}
+
+fieldset {
+  background: #202d33;
+  border-radius: 4px;
+  border: none;
+  border-top: 2px solid tomato;
+  margin-bottom: 15px;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, .3);
+  padding: 5px 10px;
+}
+
+legend {
+  font-weight: bold;
+  margin-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-style: italic;
+}
+
+.number {
+  background: tomato;
+  margin-right: 10px;
+  padding: 6px 4px 4px;
+}
+
+h1 {
+  margin: 60px 0;
+  text-align: center;
+  font-size: 3em;
+  color: tomato;
+  text-shadow: 0 1px 0 #ea553a, 0 3px 0 #b72b12, 0 7px 0 #420900, 0 5px 10px #0b3f3b, 0 5px 11px #ff546a, 0 0 20px tomato;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+textarea,
+select {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  font-size: 16px;
+  height: auto;
+  margin: 0;
+  outline: 0;
+  padding: 5px;
+  width: 100%;
+  background-color: #e8eeef;
+  color: #2E4049;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
+  margin-bottom: 5px;
+}
+
+input[type="checkbox"] {
+  margin: 0 4px 8px 0;
+}
+
+input[type="radio"] {
+  margin: 0 2px 0 15px;
+}
+
+label {
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+button {
+  display: block;
+  width: 30%;
+  margin: 5px auto 0;
+  margin-bottom: 5px;
+  padding: 5px 15px;
+  background-color: tomato;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .5);
+  box-shadow: 0 2px 0 #ea553a, 0 4px 0 #b72b12, 0 6px 0 #420900, 0 6px 10px #0b3f3b, 0 6px 11px #ff546a, 0 0 10px tomato;
+}
+
+button:hover {
+  text-shadow: 0 3px 2px rgba(0, 0, 0, .5);
+}
+
+button:disabled {
+  color: slategray;
+  background-color: darkslategray;
+  text-shadow: none;
+  box-shadow: none;
+  text-decoration:line-through;
+}
+
+button:hover:disabled {
+  color: slategray;
+  background-color: darkslategray;
+  box-shadow: none;
+  text-shadow: none;
+  text-decoration:line-through;
+}
+
+button:active {
+  box-shadow: 0 0px 0 #ea553a, 0 1px 0 #b72b12, 0 2px 0 #420900, 0 2px 10px #0b3f3b, 0 2px 11px #ff546a, 0 0 20px tomato;
+  outline: 0;
+}
+
+button:focus {
+  outline: 0;
+}
+
+@media (max-width: 840px) {
+  form {
+    width: 70%;
+  }
+}
+
+@media (max-width: 490px) {
+  form {
+    width: 100%;
+  }
+  button {
+    width: 50%;
+  }
+}

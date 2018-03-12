@@ -1,0 +1,59 @@
+StickyNotes/
+scripts/
+inkscape/
+inkscape_symbols/
+browser/
+browser-data/
+conf/
+lixo/
+logs/
+nbproject/
+nginx_php/
+trunk/
+.hg/
+.vscode/
+
+
+# Prerequisites
+*.d
+
+*.log
+*.sl3
+*.pdf
+*.chm
+*.ttf
+*.~*
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.tds
+*.dll
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+

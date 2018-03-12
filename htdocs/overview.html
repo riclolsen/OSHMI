@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="application-name" content="OSHMI-Open Substation HMI">
+<meta name="description" content="Overview">
+<meta name="author" content="Ricardo L. Olsen">
+<meta name="viewport" content="width=850, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Overview</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+<link rel="apple-touch-icon" href="images/oshmi.png" />
+ <script src="lib/jquery-2.1.1.js"></script>
+<link rel="stylesheet" href="lib/ui-1.9.2/themes/smoothness/jquery-ui.css">
+<script src="lib/ui-1.9.2/jquery.ui.core.js"></script>
+<script src="lib/ui-1.9.2/jquery.ui.widget.js"></script>
+<script src="lib/ui-1.9.2/jquery.ui.mouse.js"></script>
+<script src="lib/ui-1.9.2/jquery.ui.resizable.js"></script>
+<script src="lib/ui-1.9.2/jquery.ui.draggable.js"></script>
+</head>
+<body style='margin:0px;' >
+<div style='float:none;'>
+<div id="resizeDiv1" style='width:440px;height:350px;float:left;'>
+<iframe id='ifr1' src="http://127.0.0.1:51909/htdocs/screen.html?SELTELA=../svg/kor1.svg&ZPX=0&ZPY=0&ZPW=7920&ZPH=4950&HIDETB=1" width=100% height=100%></iframe>
+</div>
+<div id="resizeDiv2" style='width:440px;height:350px;float:left;'>
+<iframe id='ifr2' src="http://127.0.0.1:51909/htdocs/screen.html?SELTELA=../svg/kaw2.svg&ZPX=0&ZPY=0&ZPW=5280&ZPH=3300&HIDETB=1" width=100% height=100%></iframe>
+</div>
+<div id="resizeDiv3" style='width:440px;height:350px;float:left;'>
+<iframe id='ifr3' src="http://127.0.0.1:51909/htdocs/screen.html?SELTELA=../svg/knh2.svg&ZPX=0&ZPY=0&ZPW=5280&ZPH=3300&HIDETB=1" width=443 height=350></iframe>
+</div>
+<div id="resizeDiv4" style='width:440px;height:350px;float:left;'>
+<iframe id='ifr4' src="http://127.0.0.1:51909/htdocs/screen.html?SELTELA=../svg/kik3.svg&ZPX=0&ZPY=0&ZPW=5280&ZPH=3300&HIDETB=1" width=443 height=350></iframe>
+</div>
+</div>
+<script>
+$('#resizeDiv1').resizable( { alsoResize: "#ifr1" } );
+$('#resizeDiv2').resizable( { alsoResize: "#ifr2" } );
+$('#resizeDiv3').resizable( { alsoResize: "#ifr3" } );
+$('#resizeDiv4').resizable( { alsoResize: "#ifr4" } );
+</script>
+</body>
+</html>

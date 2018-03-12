@@ -1,0 +1,198 @@
+<html lang="en">
+<head>
+<meta charset="ISO-8859-1" />
+<meta name="application-name" content="OSHMI-Open Substation HMI">
+<meta name="description" content="About OSHMI">
+<meta name="author" content="Ricardo L. Olsen">
+<title>About OSHMI</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+
+<style>
+* { padding: 0; margin: 0; }
+
+body, html
+{
+	width: 100%;
+	height: 100%;
+	font-family: arial, verdana, sans-serif;
+	font-weight: 700;
+	color: #ff6;
+	background-color: #000;
+	overflow: hidden; 
+}
+/*
+@-webkit-keyframes intro {
+	0% { opacity: 1; }
+	90% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+@-moz-keyframes intro {
+	0% { opacity: 1; }
+	90% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+@-ms-keyframes intro {
+	0% { opacity: 1; }
+	90% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+@-o-keyframes intro {
+	0% { opacity: 1; }
+	90% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+@keyframes intro {
+	0% { opacity: 1; }
+	90% { opacity: 1; }
+	100% { opacity: 0; }
+}
+*/
+h1
+{
+	position: absolute;
+	width: 2.6em;
+	left: 50%;
+	top: 25%;
+	font-size: 10em;
+	text-align: center;
+	margin-left: -1.3em;
+	line-height: 0.8em;
+	letter-spacing: -0.05em;
+	color: #000;
+	text-shadow: -2px -2px 0 #ff6, 2px -2px 0 #ff6, -2px 2px 0 #ff6, 2px 2px 0 #ff6;
+	opacity: 0;
+	z-index: 1;
+	-webkit-animation: logo 5s ease-out 0.1s;
+	-moz-animation: logo 5s ease-out 0.1s;
+	-ms-animation: logo 5s ease-out 0.1s;
+	-o-animation: logo 5s ease-out 0.1s;
+	animation: logo 5s ease-out 0.1s;
+}
+
+h1 sub
+{
+	display: block;
+	font-size: 0.3em;
+	letter-spacing: 0;
+	line-height: 0.8em;
+}
+
+@-webkit-keyframes logo {
+	0% { -webkit-transform: scale(1); opacity: 1; }
+	50% { opacity: 1; }
+	100% { -webkit-transform: scale(0.1); opacity: 0; }
+}
+
+@-moz-keyframes logo {
+	0% { -moz-transform: scale(1); opacity: 1; }
+	50% { opacity: 1; }
+	100% { -moz-transform: scale(0.1); opacity: 0; }
+}
+
+@-ms-keyframes logo {
+	0% { -ms-transform: scale(1); opacity: 1; }
+	50% { opacity: 1; }
+	100% { -ms-transform: scale(0.1); opacity: 0; }
+}
+
+@-o-keyframes logo {
+	0% { -o-transform: scale(1); opacity: 1; }
+	50% { opacity: 1; }
+	100% { -o-transform: scale(0.1); opacity: 0; }
+}
+
+@keyframes logo {
+	0% { transform: scale(1); opacity: 1; }
+	50% { opacity: 1; }
+	100% { transform: scale(0.1); opacity: 0; }
+}
+
+/* the interesting 3D scrolling stuff */
+#titles
+{
+	position: absolute;
+	width: 18em;
+	height: 50em;
+	bottom: 0;
+	left: 50%;
+	margin-left: -9em;
+	font-size: 350%;
+	text-align: justify;
+  
+	-webkit-transform-origin: 50% 100%;
+	-moz-transform-origin: 50% 100%;
+	-ms-transform-origin: 50% 100%;
+	-o-transform-origin: 50% 100%;
+	transform-origin: 50% 100%;
+	-webkit-transform: perspective(300px) rotateX(25deg);
+	-moz-transform: perspective(300px) rotateX(25deg);
+	-ms-transform: perspective(300px) rotateX(25deg);
+	-o-transform: perspective(300px) rotateX(25deg);
+	transform: perspective(300px) rotateX(25deg);
+  
+}
+
+#titles:after
+{
+	position: absolute;
+	content: ' ';
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 1%;
+	background-image: url('images/oshmi.svg');
+    opacity:.2;
+	pointer-events: none;
+}
+
+#titles p
+{
+	text-align: justify;
+	margin: 0.8em 0;
+}
+
+#titles p.center
+{
+	text-align: center;
+}
+
+#titles a
+{
+	color: #ff6;
+	text-decoration: underline;
+}
+
+</style>
+<script src="lib/jquery-1.7.2.js"></script>
+</head>
+<body>
+
+<h1>OSHMI<sub> Release Notes</sub></h1>
+
+<marquee id="titles" style="text-align:left" direction="up" behavior="scroll" scrollamount="0" scrolldelay="85" >
+
+<script>
+// OSHMI/Open Substation HMI - Copyright 2008-2017 - Ricardo L. Olsen
+
+$("html > head").append("<style> body { user-select:none; -webkit-user-select:none; } </style>");
+
+// Based Craig Buckler's code from https://www.sitepoint.com/css3-starwars-scrolling-text/
+setTimeout(  function (){
+	$.get('../release_notes.txt', function(data) {
+	  document.getElementById("titles").innerText=data;
+	  document.getElementById("titles").scrollAmount=12
+	  document.getElementById("titles").start();
+	});
+	}, 3000);
+document.oncontextmenu = function() {return false;};
+
+
+</script>
+
+</body>
+</html>
+

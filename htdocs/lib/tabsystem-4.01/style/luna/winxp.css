@@ -1,0 +1,90 @@
+.tabsystem {
+ border: none;
+ width: 100%;
+ scrollbar-3dlight-color:#666;
+ scrollbar-arrow-color:#eee;
+ scrollbar-base-color:#ffffff;
+ scrollbar-darkshadow-color:#ffffff;
+ scrollbar-face-color:#eeeeee;
+ scrollbar-highlight-color:#eeeeee;
+ scrollbar-shadow-color:#666;
+}
+
+.tabsystem .tabcontainer ul, li {
+ list-style-type: none;
+ display: inline;
+ margin: 0; padding: 0;
+ border: none;
+}
+
+.tabsystem .firstHeading {
+ display: block;
+ text-align: right;
+ border: 1px #bbb dotted;
+ border-width: 0px 0px 1px 0px;
+ padding-bottom: .5em;
+ margin-bottom: 1em;
+}
+
+.tabsystem .tabcontainer {
+ margin:0;padding:0;
+ background-color: #fff;
+ border: none;
+ float: left;
+ filter: none;
+}
+
+.tabsystem .tabpage {
+ background: #fff;
+ padding: 2em 2em;
+ font: 14px Verdana;
+ color: black;
+ border: 1px solid rgb( 145, 155, 156 );
+ clear: both;
+ filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr='#ffffff', EndColorStr='#eeeeee');
+}
+
+.tabsystem .tabcontainer .tab {
+ background-image: url( "tab.png" );
+ position:	relative;
+ top: 0;
+ display: inline;
+ float: left;
+ overflow: hidden;	
+ margin: 1px 1px 1px 0px;
+ padding: 2px 0px 0px 0px;
+ border: 0;
+ z-index: 1;
+ font: 11px Tahoma;
+ white-space: nowrap;
+ text-align: center;
+ width: 70px;
+ height: 18px;
+}
+
+.tabsystem .tabcontainer .tab-hover {
+ margin: 1px 1px 1px 0px;
+ background-image: url( "tab.hover.png" );
+ width: 70px;
+ height: 18px;
+}
+
+.tabsystem .tabcontainer .tab-active{
+ position:	relative;
+ top: 1px;
+ display: inline;
+ float: left;
+ overflow: hidden;	
+ margin: 1px 1px 1px 0px;
+ padding: 2px 0px 0px 0px;
+ border: 0;
+ z-index: 1;
+ font: 11px Tahoma;
+ white-space: nowrap;
+ text-align: center;
+ width: 74px;
+ height: 18px;
+ background-image: url( "tab.active.png" );
+ letter-spacing: 0px;
+ text-decoration: none;
+}

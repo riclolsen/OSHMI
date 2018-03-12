@@ -1,0 +1,78 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v3.0.json",
+  "width": 400,
+  "height": 200,
+  "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+  "signals": [
+    {
+      "name": "interpolate",
+      "value": "linear",
+      "bind": {
+        "input": "select",
+        "options": [
+          "basis",
+          "cardinal",
+          "catmull-rom",
+          "linear",
+          "monotone",
+          "natural",
+          "step",
+          "step-after",
+          "step-before"
+        ]
+      }
+    }
+  ],
+  "data": [
+    {
+      "name": "table",
+      "url": "/htdocs/sqlite_oshmi.php?QUERY=select nponto as pnt, valor as y, data*1000 as x from hist where nponto = 139 and data>strftime('%s','now')-60*60 order by data desc limit 1000&HMAC=1c4ef1cd4aa02939b50f461aa3a2d464ca76b813",
+      "update_period" : 20
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "time",
+      "range": "width",
+      "zero": false,
+      "domain": {"data": "table", "field": "x"}
+    },
+    {
+      "name": "c",
+      "type": "ordinal",
+      "range": ["#00eeee", "#4575b4", "#dcfab9", "#d9a6ff", "#e0f3f8", "#ffffbf", "#ffc794", "#fee090"]
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "nice": true,
+      "range": "height",
+      "domain":  [-150, 150]
+    }
+  ],
+  "axes": [
+      {"orient": "bottom", "scale": "x"},
+      {"orient": "left", "scale": "y"}
+  ],
+  "marks": [  
+    {
+      "type": "line",
+      "from": {"data": "table"},
+      "encode": {
+        "enter": {
+          "x": {"scale": "x", "field": "x"},
+          "y": {"scale": "y", "field": "y"},
+          "stroke": {"scale": "c", "field": "pnt"}
+        },
+        "update": {
+          "interpolate": {"signal": "interpolate"},
+          "fillOpacity": {"value": 1}
+        },
+        "hover": {
+          "fillOpacity": {"value": 0.5}
+        }
+      }
+    }
+  ]
+}

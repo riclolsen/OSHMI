@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>961</width>
+    <height>465</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item row="5" column="0" colspan="7">
+     <widget class="QSplitter" name="splitter">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QListWidget" name="lwLog">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <family>Courier New</family>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOn</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOn</enum>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::NoSelection</enum>
+       </property>
+       <property name="resizeMode">
+        <enum>QListView::Adjust</enum>
+       </property>
+       <property name="layoutMode">
+        <enum>QListView::SinglePass</enum>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="twPontos">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </widget>
+    </item>
+    <item row="1" column="5">
+     <widget class="QLineEdit" name="leMasterAddress"/>
+    </item>
+    <item row="2" column="4">
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>Command Type</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="4">
+     <widget class="QLineEdit" name="leLinkAddress"/>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Command Address</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QPushButton" name="pbGI">
+      <property name="text">
+       <string>GI</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5">
+     <widget class="QLabel" name="label_8">
+      <property name="text">
+       <string>Command Duration</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="5">
+     <widget class="QComboBox" name="cbCmdDuration">
+      <item>
+       <property name="text">
+        <string>0 = no additional definition</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>1 = short pulse</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>2 = long pulse</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>3 = persistent output</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="1" column="6">
+     <widget class="QLabel" name="lbStatus">
+      <property name="text">
+       <string>Connection State</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="6">
+     <widget class="QCheckBox" name="cbSBO">
+      <property name="text">
+       <string>SBO</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Command Value</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="leIPRemoto"/>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="pbSendCommandsButton">
+      <property name="text">
+       <string>Send Command</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QLineEdit" name="leCmdAddress">
+      <property name="toolTip">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="2">
+     <widget class="QLineEdit" name="leCmdValue"/>
+    </item>
+    <item row="3" column="4">
+     <widget class="QComboBox" name="cbCmdAsdu">
+      <item>
+       <property name="text">
+        <string>45: Single - C_SC_NA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>46: Double - C_DC_NA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>47: Reg. Step - C_RC_NA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>58: Single with time tag - C_SC_TA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>59: Double with time tag - C_DC_TA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>60: Reg. Step with time tag - C_RC_TA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>48: Set-point normalised value - C_SE_NA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>49: Set-point scaled value - C_SE_NB_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>50: Set-point short floating point value - C_SE_NC_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>61: Set-point normalised value with time tag - C_SE_TA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>62: Set-point scaled value with time tag - C_SE_TB_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>63: Set-point short floating point value with time tag - C_SE_TC_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>103: Clock Syncronization - C_CS_NA_1</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QCheckBox" name="cbAutoScroll">
+      <property name="text">
+       <string>AutoScroll</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QCheckBox" name="cbLog">
+      <property name="text">
+       <string>Log Messages</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="5">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Local Link Address (OA)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Remote IP Address</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="6">
+     <widget class="QLabel" name="lbMode">
+      <property name="text">
+       <string>Mode</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="4">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Remote Link Address (CA)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QLabel" name="lbCopyright">
+      <property name="font">
+       <font>
+        <italic>true</italic>
+       </font>
+      </property>
+      <property name="text">
+       <string>v1.22 © 2010-2017 Ricardo L. Olsen</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QPushButton" name="pbConnect">
+      <property name="text">
+       <string>Connect</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2">
+     <widget class="QPushButton" name="pbCopyClipb">
+      <property name="text">
+       <string>Copy Clip.Log</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="6">
+     <widget class="QPushButton" name="pbCopyVals">
+      <property name="text">
+       <string>Copy Clip.Vals</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
+     <widget class="QLineEdit" name="leASDUAddr">
+      <property name="toolTip">
+       <string>Put here the ASDU address for commands.
+If empty will use remote link address.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>ASDU Addr.</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>961</width>
+     <height>17</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

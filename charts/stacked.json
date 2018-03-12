@@ -1,0 +1,143 @@
+{
+  "width": 300,
+  "height": 200,
+  "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {"x": 0, "y": "PNT#1",  "c":0, "bay" : "LT1" },  
+        {"x": 0, "y": "PNT#2",  "c":1, "bay" : "LT2" },
+        {"x": 1, "y": "PNT#3",  "c":0, "bay" : "LT3" }, 
+        {"x": 1, "y": "PNT#4",  "c":1, "bay" : "LT4" },
+        {"x": 2, "y": "PNT#5",  "c":0, "bay" : "LT5" },  
+        {"x": 2, "y": "PNT#6",  "c":1, "bay" : "LT6" }
+      ]
+    },
+    {
+      "name": "stats",
+      "source": "table",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": ["x"],
+          "summarize": [{"field": "y", "ops": ["sum"]}]         
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "ordinal",
+      "range": "width",
+      "domain": {"data": "table", "field": "x"}
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "nice": true,
+      "domain": [0,350]
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "range": [ "#216778", "#2c89a0", "#dcfab9", "#d9a6ff", "#e0f3f8", "#ffffbf", "#ffc794", "#fee090"],
+      "domain": {"data": "table", "field": "c"}
+    }
+  ],
+  "axes": [
+    { "type": "y", 
+      "scale": "y",
+      "grid": true,
+      "properties": {
+          "grid": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}
+              },
+          "axis": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 9},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300}
+              },
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }                  
+          }
+    }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {
+        "data": "table",
+        "transform": [
+          {"type": "stack", "groupby": ["x"], "sortby": ["c"], "field": "y"}
+        ]
+      },
+      "properties": {
+        "enter": {
+          "x": {"scale": "x", "field": "x"},
+          "width": {"scale": "x", "band": true, "offset": -1},
+          "y": {"scale": "y", "field": "layout_start"},
+          "y2": {"scale": "y", "field": "layout_end"},
+          "fill": {"scale": "color", "field": "c"}
+        },
+        "update": {
+          "fillOpacity": {"value": 1}
+        },
+        "hover": {
+          "fillOpacity": {"value": 0.5}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "table",
+        "transform": [
+          {"type": "stack", "groupby": ["x"], "sortby": ["c"], "field": "y"}
+        ]
+      },
+      "properties": {
+        "enter": {
+          "x": {"scale": "x", "field": "x", "offset": 10},
+          "y": {"scale": "y", "field": "layout_start"},
+          "y2": {"scale": "y", "field": "layout_end", "offset": -5},
+          "fill": {"value": "#87cdde"},
+          "text": { "template": "{{datum.y|number:'.0f'}}" },
+          "font": {"value": "open sans"},
+          "fontStyle": {"value": "oblique"},
+          "fontSize": {"value": 12},
+          "fontWeight": {"value": "normal"}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "table",
+        "transform": [
+          {"type": "stack", "groupby": ["x"], "sortby": ["c"], "field": "y"}
+        ]
+      },
+      "properties": {
+        "enter": {
+          "x": {"scale": "x", "field": "x", "offset": 60},
+          "y": {"scale": "y", "field": "layout_start"},
+          "y2": {"scale": "y", "field": "layout_end", "offset": 18},
+          "fill": {"value": "#164450"},
+          "text": { "template": "{{datum.bay|left:4}}" },
+          "font": {"value": "open sans"},
+          "fontSize": {"value": 12},
+          "fontWeight": {"value": "600"}
+        }
+      }
+    }
+  ]
+}

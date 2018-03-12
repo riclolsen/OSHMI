@@ -1,0 +1,80 @@
+.tabsystem {
+ border: none;
+ width: 100%;
+ border: 1px #bbb solid;
+ border-width: 0px 0px 1px 0px;
+ background: #eee;
+ font: 10px verdana;
+ padding-bottom: 0.5em;
+ font-style: italic;
+ scrollbar-3dlight-color:#666;
+ scrollbar-arrow-color:#eee;
+ scrollbar-base-color:#ffffff;
+ scrollbar-darkshadow-color:#ffffff;
+ scrollbar-face-color:#eeeeee;
+ scrollbar-highlight-color:#eeeeee;
+ scrollbar-shadow-color:#666;
+}
+
+.tabsystem .tabcontainer ul, li {
+ list-style-type: none;
+ display: inline;
+ margin: 0; padding: 0;
+ border: none;
+}
+
+.tabsystem .tabcontainer {
+ background: #cde;
+ float: left;
+ width: 100%;
+ border: 1px #666 solid;
+ border-bottom-width: 0px;
+ border-right-width: 0px;
+ filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr='#bbbbbb', EndColorStr='#ffffff');
+}
+
+.tabsystem .firstHeading {
+ display: block;
+ text-align: right;
+ border: 1px #bbb dotted;
+ border-width: 0px 0px 1px 0px;
+ padding-bottom: .5em;
+ margin-bottom: 1em;
+ font: 20px verdana;
+ font-weight: bold;
+ color: #ddd;
+ letter-spacing: 4px;
+}
+
+.tabsystem .tabpage {
+ background: #fff;
+ padding: 1em;
+ font: 12px verdana;
+ color: black;
+ border: 1px solid rgb( 145, 155, 156 );
+ clear: both;
+}
+
+.tabsystem .tabcontainer .tab {
+ position:	relative;
+ top: 0;
+ display: inline;
+ float: left;
+ overflow: hidden;	
+ border: 0;
+ z-index: 1;
+ font: 12px verdana;
+ white-space: nowrap;
+ text-align: center;
+ padding: 5px;
+ margin: 0.2em;
+}
+
+.tabsystem .tabcontainer .tab-hover {
+ color: blue;
+}
+
+.tabsystem .tabcontainer .tab-active{
+ font-weight: bold;
+ text-decoration: underline;
+}

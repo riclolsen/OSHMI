@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: IcoMoon  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   data-tags="calendar, schedule, date, time"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48+devel r12830"
+   onload="var src; if (document.documentURI) src = document.documentURI; else if (this.getSrc) src = this.getSrc(); else src = document.location.href + ''; try {parent.preload.load(src);}catch(e) {}"
+   sodipodi:docname="calendar.svg">
+  <defs
+     id="defs10" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="640"
+     inkscape:window-height="480"
+     id="namedview8"
+     showgrid="false"
+     inkscape:zoom="0.4609375"
+     inkscape:cx="215.9604"
+     inkscape:cy="256"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
+  <metadata
+     id="metadata4">
+    <license
+       name="CC BY-SA 3.0"
+       href="http://creativecommons.org/licenses/by-sa/3.0/" />
+    <author
+       name="Keyamoon"
+       href="http://keyamoon.com/" />
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <path
+     d="m 160,178.1695 64,0 0,59.38982 -64,0 z m 96,0 64,0 0,59.38982 -64,0 z m 96,0 64,0 0,59.38982 -64,0 z m -288,178.16948 64,0 0,59.38984 -64,0 z m 96,0 64,0 0,59.38984 -64,0 z m 96,0 64,0 0,59.38984 -64,0 z m -96,-89.08475 64,0 0,59.38984 -64,0 z m 96,0 64,0 0,59.38984 -64,0 z m 96,0 64,0 0,59.38984 -64,0 z m -288,0 64,0 0,59.38984 -64,0 z M 416,0 l 0,29.694916 -64,0 L 352,0 128,0 l 0,29.694916 -64,0 L 64,0 0,0 l 0,475.11864 480,0 L 480,0 416,0 Z m 32,445.42373 -416,0 0,-326.64407 416,0 0,326.64407 z"
+     id="path6"
+     inkscape:connector-curvature="0" />
+</svg>

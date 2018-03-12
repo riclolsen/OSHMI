@@ -1,0 +1,146 @@
+{
+  "width": 100,
+  "height": 200,
+  "padding": "auto",
+  "data": [
+    {
+      "name": "source",
+      "values": [
+        {"x": 1,"y": "PNT#1","bay": "BAY#1"},
+        {"x": 2,"y": "PNT#2","bay": "BAY#2"},
+        {"x": 3,"y": "PNT#3","bay": "BAY#3"}
+      ]
+    },
+    {
+      "name": "layout",
+      "source": "source"
+    }
+  ],
+  "marks": [
+    {
+      "name": "root",
+      "type": "group",
+      "from": {"data": "layout"},
+      "properties": {
+        "update": {
+          "width": {"field": "cellWidth"},
+          "height": {"value": 200}
+        }
+      },
+      "marks": [
+        {
+          "type": "rect",
+          "properties": {
+            "update": {
+              "xc": {"scale": "x","field": "x"},
+              "width": {"value": 21,"offset": -1},
+              "y": {"scale": "y","field": "y"},
+              "y2": {"field": {"group": "height"}},
+              "fill": {"value": "#2c89a0"}
+            }
+          },
+          "from": {"data": "source"}
+        },
+        {
+          "type": "text",
+          "from": {"data": "source"},
+          "properties": {
+            "enter": {
+              "interpolate": {"value": "monotone"},
+              "x": {"scale": "x", "field": "x", "offset": -10},
+              "y": {"scale": "y", "field": "y", "offset": -3},
+              "y2": {"scale": "y", "value": 0},
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 13},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300},
+              "text": { "template": "{{datum.y|number:'.0f'}}" }
+            }
+          }
+        }
+        
+      ],
+      "scales": [
+        {
+          "name": "x",
+          "type": "ordinal",
+          "domain": {"data": "source","field": "x","sort": true},
+          "rangeMin": 0,
+          "rangeMax": {"data": "layout","field": "cellWidth"},
+          "round": true,
+          "clamp": true,
+          "bandWidth": 21,
+          "fill": {"value": "#00eeee"},
+          "padding": 1,
+          "points": true
+        },
+        {
+          "name": "y",
+          "type": "linear",
+          "domain": {"data": "source","field": "y","sort": true},
+          "rangeMin": 200,
+          "rangeMax": 0,
+          "round": true,
+          "fill": {"value": "#00eeee"},
+          "clamp": true,
+          "nice": true
+        }
+      ],
+      "axes": [
+        {
+          "type": "x",
+          "scale": "x",
+          "grid": false,
+          "ticks": 5,
+          "title": "",
+          "properties": {
+            "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              },
+            "axis": {
+              "stroke": {"value": "#00eeee"}
+              },
+            "labels": {
+              "angle": {"value": 270},
+              "align": {"value": "right"},
+              "baseline": {"value": "middle"},
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 12},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300},
+              "text": {"template": "{{ datum.data | truncate:25}}"}
+            }
+          }
+        },
+        {
+          "type": "y",
+          "scale": "y",
+          "format": "s",
+          "grid": true,
+          "layer": "back",
+          "properties": {
+            "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              },
+            "axis": {
+              "stroke": {"value": "#00eeee"}
+              },
+            "grid": {
+               "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}
+               },
+            "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 12},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300}
+            }
+          },
+          "title": ""
+        }
+      ]
+    }
+  ]
+}

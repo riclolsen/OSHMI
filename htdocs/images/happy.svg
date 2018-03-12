@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 15.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg1014"
+   inkscape:version="0.48.3.1 r9886"
+   onload="var src; if (document.documentURI) src = document.documentURI; else if (this.getSrc) src = this.getSrc(); else src = document.location.href + ''; try {parent.preload.load(src);}catch(e) {}"
+   sodipodi:docname="happy.svg"><metadata
+   id="metadata1098"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+   id="defs1096" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="873"
+   inkscape:window-height="745"
+   id="namedview1094"
+   showgrid="false"
+   inkscape:zoom="0.56835938"
+   inkscape:cx="259.5189"
+   inkscape:cy="256"
+   inkscape:window-x="53"
+   inkscape:window-y="24"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="svg1014" />
+
+
+<g
+   id="g670"
+   transform="matrix(0.87285223,0,0,0.89690722,35.189003,22.872852)"><g
+     id="Layer_2">
+	<g
+   id="g1086">
+		<path
+   id="path1088"
+   d="M 256,0 C 114.615,0 0,114.615 0,256 0,397.385 114.613,512 256,512 397.385,512 512,397.385 512,256 512,114.615 397.385,0 256,0 z m 0,480 C 132.288,480 32,379.712 32,256 32,132.288 132.288,32 256,32 379.712,32 480,132.288 480,256 480,379.712 379.712,480 256,480 z"
+   inkscape:connector-curvature="0" />
+		
+		
+	</g>
+</g><path
+     transform="translate(8.7972508,15.835052)"
+     d="m 186.50171,143.39519 c 0,15.06162 -12.60372,27.27147 -28.1512,27.27147 -15.54748,0 -28.1512,-12.20985 -28.1512,-27.27147 0,-15.06162 12.60372,-27.27148 28.1512,-27.27148 15.54748,0 28.1512,12.20986 28.1512,27.27148 z"
+     sodipodi:ry="27.271477"
+     sodipodi:rx="28.151203"
+     sodipodi:cy="143.39519"
+     sodipodi:cx="158.35051"
+     id="path102"
+     style="opacity:0.77433627;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:20;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     sodipodi:type="arc" /><path
+     sodipodi:type="arc"
+     style="opacity:0.77433627;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:20;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     id="path104"
+     sodipodi:cx="158.35051"
+     sodipodi:cy="143.39519"
+     sodipodi:rx="28.151203"
+     sodipodi:ry="27.271477"
+     d="m 186.50171,143.39519 c 0,15.06162 -12.60372,27.27147 -28.1512,27.27147 -15.54748,0 -28.1512,-12.20985 -28.1512,-27.27147 0,-15.06162 12.60372,-27.27148 28.1512,-27.27148 15.54748,0 28.1512,12.20986 28.1512,27.27148 z"
+     transform="translate(193.53952,17.594502)" /><path
+     transform="matrix(0.6233018,0,0,1.7397785,99.355319,-281.33477)"
+     sodipodi:end="3.1258245"
+     sodipodi:start="0"
+     d="m 387.07904,351.01031 c 0,16.03334 -59.86768,29.03093 -133.71822,29.03093 -73.02845,0 -132.55011,-12.72029 -133.70159,-28.57318 l 133.70159,-0.45775 z"
+     sodipodi:ry="29.030928"
+     sodipodi:rx="133.71822"
+     sodipodi:cy="351.01031"
+     sodipodi:cx="253.36082"
+     id="path106"
+     style="opacity:0.77433627;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:20;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+     sodipodi:type="arc" /></g></svg>

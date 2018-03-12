@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="application-name" content="OSHMI-Open Substation HMI">
+  <meta name="description" content="Trend Viewer">
+  <meta name="author" content="Ricardo L.Olsen">
+  <title>Visor de Tendências</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+  <script src="lib/jquery-1.5.1.js"></script>
+  <script src="lib/flot-0.7/jquery.flot.js"></script>
+  <script src="lib/flot-0.7/jquery.flot.crosshair.js"></script>
+  <script src="lib/flot-0.7/jquery.flot.selection.js"></script>
+  <script src="lib/flot-0.7/jquery.flot.navigate.js"></script>
+  <script src="lib/shortcut-2.01b.js"></script>
+  <script src="util.js"></script>
+  <script src="legacy_options.js"></script>
+  <script src="config_viewers_default.js"></script>
+  <script src="../conf/config_viewers.js"></script>
+  <script src="../i18n/messages_i18n.js"></script>
+  <script src="images.js"></script>
+</head>
+<body style="font-family:sans-serif; margin:0; overflow:hidden;" bgcolor="#F0F0F0">
+    
+<table border="0">
+<tr>
+<td>
+    <div id="placeholder" style="font-family:sans-serif; width:600px; height:300px;"></div>
+</td>
+<td>
+    <div id="yctrls" style="width:60px;">
+    <input class="yaxisleft"    id="yaxisleft"    type="button" value="&uarr;" ><br />
+    <input class="yaxisright"   id="yaxisright"   type="button" value="&darr;" ><br />
+    <input class="yaxiszoomout" id="yaxiszoomout" type="button" value="z-"     ><br />
+    <input class="yaxiszoomin"  id="yaxiszoomin"  type="button" value="z+"     ><br />
+    <input class="yaxisminus"   id="yaxisminus"   type="button" value="<"      ><br />
+    <input class="yaxisplus"    id="yaxisplus"    type="button" value=">"      ><br /><br />
+    <input class="yaxispoints"  id="yaxispoints"  type="button" value="*"      ><br />
+    <input class="yaxiscolor"   id="yaxiscolor"   type="button" value="Cor"    ><br />
+    </div>
+</td>
+</tr>
+<tr>
+<td align="left">
+    <div id="xctrls">
+    <input class="xaxisleft"    id="xaxisleft"    type="button" value="&larr;" >
+    <input class="xaxisright"   id="xaxisright"   type="button" value="&rarr;" >
+    <input class="xaxiszoomout" id="xaxiszoomout" type="button" value="z-"     >
+    <input class="xaxiszoomin"  id="xaxiszoomin"  type="button" value="z+"     >
+    <input class="xaxisminus"   id="xaxisminus"   type="button" value="<"      >
+    <input class="xaxisplus"    id="xaxisplus"    type="button" value=">"      >
+    </div>
+</td>
+<td>
+    <div id="xyctrls">
+    <input class="plotreset"    id="plotreset"    type="button" value="&#8634;">
+    </div>
+</td>
+</tr>
+<tr>
+<td align="left">
+<div id="bottomctrls"
+<strong><span id='atualizacao'>...</span></strong>
+<input class="dataUpdate" type="button" value="Poll for data" style='display:none;' >
+</div>
+</td>
+<td>
+</td>
+</tr>
+</table>    
+    
+<script src="pntserver.js"></script>    
+<script id="source">
+"use strict";
+
+// Este script permite acompanhar a curva de uma medida analógica ao longo do tempo (histórico e tempo real).
+// É utilizada a biblioteca plugin do jQuery, flot.
+// 
+// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+
+/*jslint browser: true, bitwise: true, devel: true */
+/*jslint regexp: true */
+/*jslint white: true */
+/*jslint sloppy: true */
+/*jslint plusplus: true */
+/*jslint eqeq: true */
+/*jslint continue: true */
+/*global $: false, gup: false, hvalues: false, Imgs: false, Msg: false, PNTServer: false, LoadFavicon: false, shortcut: false */
+/*global L: true, V: true, F: true, T: true, TAGS: true, DCRS: true, STONS: true, STOFS: true, Data: true, NUM_VAR: true, NUM_VAR_ANT: true, HA_ALARMES: true, HA_ALARMES_ANT: true  */
+/*global Data: true, NPTO: true, ID: true, ESTACAO: true  */
+/*global DESC: true, ST_ON: true, ST_OFF: true, CNPTO: true, CID: true, CDESC: true, CST_ON: true, CST_OFF: true  */
+/*global LIMSUPS: true, LIMINFS: true, LIMS: true, LIMI: true, HISTER: true, ALRIN: true, ANOT: true, VLNOR: true, ESTALM: true, UNIDADE: true  */
+
+// desabilita o botão direito 
+document.oncontextmenu = function() { return false; };
+// torna elementos não selecionáveis pelo arraste do mouse
+$("html > head").append("<style> body { user-select:none; -webkit-user-select:none; } <\/style>");
+
+var NPONTO = gup("NPONTO");
+
+var L = [];  // aqui o servidor colocará lista de eventos 
+var V = []; // aqui o servidor colocará os valores dos pontos
+var F = []; // aqui o servidor colocará os flags dos pontos
+var T = []; // aqui o servidor colocará os tag de tempo de anormalidade dos pontos
+var Data = '';        // aqui o servidor colocará hora da atualização
+var HA_ALARMES = 0;   // aqui o servidor informa que há alarme sonoro ativo
+var NPTO, ID, ESTACAO, DESC, ST_ON, ST_OFF, CNPTO, CID, CDESC, CST_ON, CST_OFF;
+var LIMS, LIMI, HISTER, ALRIN, ANOT, VLNOR, ESTALM, UNIDADE;
+var LIMSUPS = []; // Analog superior limits for points
+var LIMINFS = []; // Analog inferior limits for points
+
+// marca a valor e hora da útima atualização do gráfico
+var LAST_V = -99999.99999;
+var LAST_TM = 0;
+
+var cor_cnt = 0;
+var segue_tempo = 1;
+
+var series = [];
+series.push( { label: '', data: [] } );
+series.push( { label: '', data: [] } );
+series.push( { label: '', data: [] } );
+
+// opções para o gráfico
+var options = {
+        legend: { backgroundOpacity: 0.3 },
+        crosshair: { mode: "x" },
+//      selection: { mode: "x" },
+        lines: { show: true },
+        points: { show: true },
+        grid: { hoverable: true, autoHighlight: false },
+        xaxis: { min: (new Date()).getTime()-(new Date()).getTimezoneOffset() * 60 * 1000 - 50 * 60 * 1000 , 
+                 max: (new Date()).getTime()-(new Date()).getTimezoneOffset() * 60 *1000 + 10 * 60 * 1000 , 
+//      xaxis: { min: (new Date()).getTime()-(new Date()).getTimezoneOffset()*60*1000-2*60*1000 , 
+//               max: (new Date()).getTime()+3600000-(new Date()).getTimezoneOffset()*60*1000 , 
+                 mode: "time", 
+                 timeFormat: "%H:%M:%S" },
+        yaxis: { /*tickDecimals: 0 , tickSize: 1000, min: -500, max: 500*/  },
+        zoom: {
+            interactive: true
+        },
+        pan: {
+            interactive: true
+        }        
+    };
+
+
+var iteration = 0;
+var plot;
+var placeholder = $("#placeholder");
+
+if ( gup("HIDECTRLS") == 1 )
+  {
+  document.getElementById("xctrls").style.display = "none";
+  document.getElementById("yctrls").style.display = "none";
+  document.getElementById("xyctrls").style.display = "none";
+  //document.getElementById("bottomctrls").style.display = "none";
+  }
+
+// insere dados históricos no gráfico
+function histdata(){
+var idc, dt;
+
+  for ( idc in hvalues )
+    {
+      if ( hvalues.hasOwnProperty( idc ) )  
+        {
+        dt = new Date();
+        series[0].data.push( [ hvalues[idc].unxtime - dt.getTimezoneOffset() * 60 * 1000, hvalues[idc].valor ] );
+        plot = $.plot( $("#placeholder"), series, options );
+        $.getScript( PNTServer + '?P=' + NPONTO + '&B=pushdata' );
+        }
+    }
+}
+
+// recebe valores do ponto através do webserver
+function pushdata(){
+  var dt, tm, SQ, Q; 
+  
+  if ( series[0].data.length > 20000 )
+     { series[0].data.shift(); }
+  dt = new Date();
+  tm = dt.getTime() - dt.getTimezoneOffset() * 60 * 1000;
+  
+  SQ = '';
+  Q = F[NPONTO];
+  
+  if ( Q & 0x80 )
+    { SQ += ", " + Msg.QFalhado; }
+  if ( Q & 0x10 )
+    { SQ += ", " + Msg.QSubst; }
+  if ( ( Q & 0x0C ) == 0x04 )
+    { SQ += ", " + Msg.QCalculado; }
+  else  
+  if ( ( Q & 0x0C ) == 0x0C )
+    { SQ += ", " + Msg.QManual; }
+  else  
+  if ( ( Q & 0x0C ) == 0x08 )
+    { SQ += ", " + Msg.QNuncaAtu; }
+  if ( Q & 0x100 )
+    { SQ += ", " + Msg.QAlarmado; }
+  if ( Q & 0x400 )
+    { SQ += ", " + Msg.QAlmInib; }
+  if ( Q & 0x1000 )
+    { SQ += ", " + Msg.QCongelado; }
+  if ( Q & 0x200 )
+    { SQ += ", " + Msg.QAnotacao; }
+  if ( Q & 0x800 )
+    { SQ += ", " + Msg.QLimiteViol; }
+
+  $("#atualizacao").text( Msg.ValorAtual + " = " + V[NPONTO] + ' ' + UNIDADE + SQ );
+
+  // atualiza o gráfico só quando mudar valor ou quando passar 5 minutos
+  if ( V[NPONTO] != LAST_V || ( tm - 5*60*1000 ) > LAST_TM  )
+     {
+     series[0].data.push( [ tm, V[NPONTO] ] );
+     LAST_V = V[NPONTO];
+     LAST_TM = tm;
+
+    // quando a hora atual for maior que a mostrada, pular 10 minutos para a frente
+    if ( segue_tempo ) 
+      {
+        if ( plot.getAxes().xaxis.max < dt.getTime() - dt.getTimezoneOffset() * 60 * 1000 + 5 * 60 * 1000 ) 
+         { 
+         options.xaxis.max = plot.getAxes().xaxis.max + 10 * 60 * 1000;
+         options.xaxis.min = plot.getAxes().xaxis.min + 10 * 60 * 1000;
+         }   
+      }
+  
+    plot = $.plot( $("#placeholder"), series, options );
+    }
+}
+
+// recebe as informações do ponto do webserver
+function info(){
+   var dt;
+   
+   document.title = Msg.NomeVisorTendencias + ' - ' + Msg.NomeProduto + ' - ' + Msg.VersaoProduto + ' - ' + ID; 
+
+   series[0].label = ESTACAO + " : " + DESC + '= ?';
+     
+     if ( LIMI > -99999 )
+     {    
+       dt = new Date();
+       series[2].label = Msg.SPLIMINF;	
+       series[2].data.push( [ dt.getTime() - dt.getTimezoneOffset() * 60 * 1000 - 50 * 60 * 1000, LIMI ] );
+       series[2].data.push( [ dt.getTime() - dt.getTimezoneOffset() * 60 * 1000 + 24 * 60 * 60 * 1000, LIMI ] );
+     }
+     if ( LIMS < 99999 )
+     {    
+       dt = new Date();
+       series[1].label = Msg.SPLIMSUP;	
+       series[1].data.push( [ dt.getTime() - dt.getTimezoneOffset() * 60 * 1000 - 50 * 60 * 1000, LIMS ] );
+       series[1].data.push( [ dt.getTime() - dt.getTimezoneOffset() * 60 * 1000 + 24 * 60 * 60 * 1000, LIMS ] );
+     }
+}
+
+// busca informações sobre o ponto
+$.getScript( PNTServer + '?I=' + NPONTO + "&B=info" );
+
+$( function (){
+var legends, updateLegendTimeout, latestPosition, utm;
+
+// busca em messages.js os textos para as hints dos botões
+$('input[id]').attr( 'title', function(index) { return Msg[this.id]; } );
+
+LoadFavicon( Imgs.FAVICONTEND );
+
+shortcut.add( "right",
+              function() { $("#xaxisright").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "left",
+              function() { $("#xaxisleft").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "up",
+              function() { $("#yaxisleft").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "down",
+              function() { $("#yaxisright").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "1",
+              function() { $("#yaxisminus").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "2",
+              function() { $("#yaxisplus").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "", // mais
+              function() { $("#yaxiszoomin").click(); },
+              { 'type':'keydown', 'propagate':false, 'target':document, 'keycode':107 } );
+shortcut.add( "", // menos
+              function() { $("#yaxiszoomout").click(); },
+              { 'type':'keydown', 'propagate':false, 'target':document, 'keycode':109 } );
+shortcut.add( "3",
+              function() { $("#yaxiscolor").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "0",
+              function() { $("#plotreset").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( "", // dividido
+              function() { $("#plotreset").click(); },
+              { 'type':'keydown', 'propagate':false, 'target':document, 'keycode':101 } );
+shortcut.add( "", // dividido
+              function() { $("#xaxiszoomout").click(); },
+              { 'type':'keydown', 'propagate':false, 'target':document, 'keycode':111 } );
+shortcut.add( "", // vezes
+              function() { $("#xaxiszoomin").click(); },
+              { 'type':'keydown', 'propagate':false, 'target':document, 'keycode':106 } );
+shortcut.add( ",",
+              function() { $("#xaxisminus").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+shortcut.add( ".",
+              function() { $("#xaxisplus").click(); },
+              { 'type':'keydown', 'propagate':true, 'target':document } );
+
+    series[0].label = NPONTO + '= ?';
+    series[0].color = 2;
+    series[1].label = '';
+    series[1].color = 'rgb(230, 200, 200)';
+    series[1].shadowSize = 0;
+    series[2].label = '';
+    series[2].color = 'rgb(200, 200, 230)';
+    series[2].shadowSize = 0;
+
+    plot = $.plot( placeholder, series, options );
+
+    // acerta o tamanho dos botões e prepara as funções para tratar o click
+    $("input.xaxisleft").width(50);
+    $("input.xaxisleft").click(function () {
+        segue_tempo = 0;
+        options.xaxis.min = options.xaxis.min - 10 * 60 * 1000;
+        options.xaxis.max = options.xaxis.max - 10 * 60 * 1000;
+        plot = $.plot(placeholder, series, options);
+        });
+
+    $("input.xaxisright").width(50);
+    $("input.xaxisright").click(function () {
+        segue_tempo = 0;
+        options.xaxis.min = options.xaxis.min + 10 * 60 * 1000;
+        options.xaxis.max = options.xaxis.max + 10 * 60 * 1000;
+        plot = $.plot( placeholder, series, options );
+        });
+
+    $("input.xaxiszoomin").width(50);
+    $("input.xaxiszoomin").click(function () {
+        if ( options.xaxis.min < options.xaxis.max - 10 * 60 * 1000)
+          {
+          segue_tempo = 0;
+          options.xaxis.min = options.xaxis.min + 10 * 60 * 1000;
+          options.xaxis.max = options.xaxis.max - 10 * 60 * 1000;
+          plot = $.plot( placeholder, series, options );
+          }
+        });
+
+    $("input.xaxiszoomout").width(50);
+    $("input.xaxiszoomout").click(function (){
+        segue_tempo = 0;
+        options.xaxis.min = options.xaxis.min - 10 * 60 * 1000;
+        options.xaxis.max = options.xaxis.max + 10 * 60 * 1000;
+        plot = $.plot( placeholder, series, options );
+        });
+
+    $("input.xaxisplus").width(50);
+    $("input.xaxisplus").click(function (){
+        placeholder.width( placeholder.width() + 100 );
+        plot = $.plot( placeholder, series, options );
+        });
+
+    $("input.xaxisminus").width(50);
+    $("input.xaxisminus").click(function (){
+        if ( placeholder.width() > 400 )
+          { placeholder.width( placeholder.width() - 100 ); }
+        plot = $.plot( placeholder, series, options );
+        });
+
+    $("input.yaxisleft").width(50);
+    $("input.yaxisleft").click(function (){
+       options.yaxis.min = plot.getAxes().yaxis.min - (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/2;
+       options.yaxis.max = plot.getAxes().yaxis.max - (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/2;
+       plot = $.plot( placeholder, series, options );
+       });
+
+    $("input.yaxisright").width(50);
+    $("input.yaxisright").click(function (){
+       options.yaxis.min = plot.getAxes().yaxis.min + (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/2;
+       options.yaxis.max = plot.getAxes().yaxis.max + (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/2;
+       plot = $.plot( placeholder, series, options );
+       });
+
+    $("input.yaxiszoomin").width(50);
+    $("input.yaxiszoomin").click(function (){
+       options.yaxis.min = plot.getAxes().yaxis.min + (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/4;
+       options.yaxis.max = plot.getAxes().yaxis.max - (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/4;
+       plot = $.plot( placeholder, series, options );
+       });
+
+    $("input.yaxiszoomout").width(50);
+    $("input.yaxiszoomout").click(function (){
+       options.yaxis.min = plot.getAxes().yaxis.min - (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/2;
+       options.yaxis.max = plot.getAxes().yaxis.max + (plot.getAxes().yaxis.max-plot.getAxes().yaxis.min)/2;
+       plot = $.plot( placeholder, series, options );
+       });
+
+    $("input.yaxisplus").width(50);
+    $("input.yaxisplus").click(function (){
+       placeholder.height( placeholder.height() + 50 );
+       plot = $.plot( placeholder, series, options );
+       });
+
+    $("input.yaxisminus").width(50);
+    $("input.yaxisminus").click(function (){
+       if ( placeholder.height() > 100 )
+         { placeholder.height( placeholder.height() - 50 ); }
+       plot = $.plot( placeholder, series, options );
+       });
+
+    $("input.yaxiscolor").width(50);
+    $("input.yaxiscolor").click(function (){
+       series[0].color = ++cor_cnt%20;
+       plot = $.plot( placeholder, series, options );
+       });
+
+    $("input.yaxispoints").width(50);
+    $("input.yaxispoints").click(function (){
+     if ( !options.points.show && options.lines.show )
+        {
+        options.points.show = true;
+        options.lines.show = true;
+        }
+     else  
+     if ( options.points.show && options.lines.show )
+        {
+        options.points.show = true;
+        options.lines.show = false;
+        }
+     else  
+     if ( options.points.show && !options.lines.show )
+        {
+        options.points.show = false;
+        options.lines.show = true;
+        }        
+     plot = $.plot( placeholder, series, options );
+     });
+
+    $("input.plotreset").width(50);
+    $("input.plotreset").click(function (){ 
+        segue_tempo=1;
+        options.xaxis.min = (new Date()).getTime()-(new Date()).getTimezoneOffset() * 60 * 1000 - 50 * 60 * 1000;
+        options.xaxis.max = (new Date()).getTime()-(new Date()).getTimezoneOffset() * 60 * 1000 + 10 * 60 * 1000;
+        options.yaxis.min = undefined;
+        options.yaxis.max = undefined;
+        plot = $.plot( placeholder, series, options );
+        });
+
+    // busca dados históricos para inserir
+    utm = (new Date()).getTime() - 2 * 60 * 60 * 1000;
+    $.getScript( "timepntserver.php" + '?P=' + NPONTO + "&U=" + utm/1000 + "&F=S" + "&B=histdata" );
+
+    // initiate a recurring data update
+    $("input.dataUpdate").click(function (){
+
+        function fetchData(){
+
+            ++iteration;
+            
+            $.getScript( PNTServer + '?P=' + NPONTO + '&B=pushdata' );
+
+        setTimeout( fetchData, 10000 );
+        }
+        
+    setTimeout( fetchData, 8000 );   
+    });
+    
+    legends = $("#placeholder .legendLabel");
+    legends.each( function (){
+        // fix the widths so they don't jump around
+        $(this).css('width', $(this).width());
+        });
+     
+    updateLegendTimeout = null;
+    latestPosition = null;
+    
+    function updateLegend(){
+        var pos, axes, i, j, dataset, y, p1, p2, sseries;
+        updateLegendTimeout = null;
+        
+        pos = latestPosition;
+        
+        axes = plot.getAxes();
+        if ( pos.x < axes.xaxis.min || pos.x > axes.xaxis.max ||
+             pos.y < axes.yaxis.min || pos.y > axes.yaxis.max )
+           { return; }
+ 
+        dataset = plot.getData();
+        for ( i = 0; i < 1 /*dataset.length*/; ++i ){
+            sseries = dataset[i];
+ 
+            // find the nearest points, x-wise
+            for ( j = 0; j < sseries.data.length; ++j )
+               {
+                 if ( sseries.data[j][0] > pos.x )
+                   { break; }
+               }
+            
+            // now interpolate
+            p1 = sseries.data[j - 1];
+            p2 = sseries.data[j];
+            if ( p1 === null && p2 === null )
+              { return; }
+            
+            if ( p1 === null || p1 === undefined )
+               { y = p2[1]; }
+            else 
+            if ( p2 === null || p2 === undefined )
+               { y = p1[1]; }
+            else
+               { y = p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]); }
+ 
+            legends = $("#placeholder .legendLabel");
+            legends.eq(i).text( sseries.label.replace(/\=.*/, "= " + y.toFixed(2)) + ' ' + UNIDADE );
+            series[i].label = legends.eq(i).text();
+        }
+    }
+    
+    // atualiza legenda 
+    $("#placeholder").bind("plothover", function ( event, pos, item ){
+        latestPosition = pos;
+        if ( !updateLegendTimeout )
+           { updateLegendTimeout = setTimeout( updateLegend, 50 ); }
+    });    
+   
+    // faz o zoom pela seleção
+    placeholder.bind( "plotselected", function ( event, ranges ){
+        $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+
+        options.xaxis.min = ranges.xaxis.from;
+        options.xaxis.max = ranges.xaxis.to;
+        plot = $.plot( placeholder, series, options );
+    });
+
+    placeholder.bind("plotunselected", function ( event ){
+        $("#selection").text("");
+    });
+    
+// dispara a atualização dos dados    
+$("input.dataUpdate").click();
+});
+
+</script>
+    
+</body>
+</html>

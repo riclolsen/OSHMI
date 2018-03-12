@@ -1,0 +1,136 @@
+{
+  "width": 600,
+  "height": 200,
+  "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+  "data": [
+    {
+      "name": "table",
+      "values": [ "HIS#1" ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "time",
+      "range": "width",
+      "zero": false,
+      "domain": {"data": "table", "field": "x"}
+    },
+    {
+      "name": "c",
+      "type": "ordinal",
+      "range": ["#00eeee", "#4575b4", "#dcfab9", "#d9a6ff", "#e0f3f8", "#ffffbf", "#ffc794", "#fee090"]
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "nice": true,
+      "range": "height",
+      "zero": false,
+      "domain": [700, 900]
+    }
+  ],
+  "axes": [
+    { 
+      "type": "x", 
+      "scale": "x",
+      "ticks": 5,      
+      "format":"%H:%M",
+      "grid": true,
+      "properties": { 
+          "grid": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}},
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 14},
+              "fontStyle": {"value": "normal"},
+              "fontWeight": {"value": 300}
+              },
+          "axis": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }  
+          }
+    },
+    { 
+      "type": "y", 
+      "scale": "y" , 
+      "format": "0.0f", 
+      "grid": true,
+      "properties": {
+          "grid": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}},
+          "axis": {
+              "stroke": {"value": "#00eeee"}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 14},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300}
+              },
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }                  
+          }
+    }
+  ],
+  "marks": [
+    {
+      "type": "area",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "size": {"value": 1},
+          "interpolate": {"value": "none"},
+          "x": {"scale": "x", "field": "x"},
+          "y": {"scale": "y", "field": "y"},
+          "y2": {"scale": "y", "value": 700},
+          "fill": {"value": "#216778"},
+          "fillOpacity": {"value": 0.1},
+          "stroke": {"scale": "c", "field": "pnt"},
+          "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+          "data": "table",
+          "transform": [{
+                "type": "aggregate", 
+                "summarize": [
+                    {
+                    "field": "y", 
+                    "ops": ["max", "min", "mean"], 
+                    "as": ["ymax", "ymin", "ymed"]
+                    },
+                    {
+                    "field": "x", 
+                    "ops": ["max", "min", "mean"], 
+                    "as": ["xmax", "xmin", "xmed"]
+                    }
+                    ]
+                }]
+          },      
+      "properties": {
+        "update": {
+          "interpolate": {"value": "none"},
+          "x": {"scale": "x", "field": "xmax"},
+          "y": {"scale": "y", "value": "710"},
+          "align": {"value": "right"},
+          "fill": {"value": "#2c89a0"},
+          "font": {"value": "open sans"},
+          "fontSize": {"value": 20},
+          "fontStyle": {"value": "normal"},
+          "fontWeight": {"value": 300},
+          "text": { "template": " Máx: {{datum.ymax|number:'.1f'}} - Mín: {{datum.ymin|number:'.1f'}} - Méd: {{datum.ymed|number:'.1f'}} :" }
+        }
+      }
+    }
+  ]
+}

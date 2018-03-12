@@ -1,0 +1,64 @@
+.tabsystem {
+ border: none;
+ width: 100%;
+}
+
+.tabsystem .tabcontainer ul, li {
+ list-style-type: none;
+ display: inline;
+ margin: 0; padding: 0;
+ border: none;
+}
+
+.tabsystem .tabcontainer {
+ background: inherit;
+ float: left;
+ filter: none;
+ border: none;
+}
+
+.tabsystem .tabpage {
+ background: #fff;
+ padding: 1em;
+ font: 11px Tahoma;
+ color: black;
+ border: 1px solid rgb( 145, 155, 156 );
+ clear: both;
+ background: #eee;
+ border: 2px outset;
+}
+
+.tabsystem .tabcontainer .tab {
+ position:	relative;
+ top: 0;
+ display: inline;
+ float: left;
+ overflow: hidden;	
+ margin: 1px 1px 1px 0px;
+ padding: 2px 0px 0px 0px;
+ z-index: 1;
+ font: 11px Tahoma;
+ white-space: nowrap;
+ text-align: center;
+ width: 70px;
+ height: 18px;
+ background: #bbb;
+ border: 2px inset;
+ border-bottom-width: 0px;
+}
+
+.tabsystem .tabcontainer .tab-hover {
+ width: 70px;
+ height: 18px;
+}
+
+.tabsystem .tabcontainer .tab-active{
+ margin: 1px 1px 1px 0px;
+ padding: 2px 0px 0px 0px;
+ top: 2px;
+ width: 70px;
+ height: 18px;
+ background: #eee;
+ border: 2px outset;
+ border-bottom-width: 0px;
+}

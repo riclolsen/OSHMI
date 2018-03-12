@@ -1,0 +1,1 @@
+c:\oshmi\bin\hidec cmd /c "c:\oshmi\browser\chrome" --user-data-dir=c:\oshmi\browser-data --disable-popup-blocking --process-per-site --no-sandbox --no-proxy-server --app=http://127.0.0.1:51909/htdocs/listlogs.php

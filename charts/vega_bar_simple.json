@@ -1,0 +1,143 @@
+{
+  "width": 1100,
+  "height": 180,
+  "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+  "data": [
+    {
+      "name": "table",
+      "values": [
+        {"x": 1,  "y": "PNT#1", "bay" : "BAY#1"},
+        {"x": 2,  "y": "PNT#2", "bay" : "BAY#2"},
+        {"x": 3,  "y": "PNT#3", "bay" : "BAY#3"},
+        {"x": 4,  "y": "PNT#4", "bay" : "BAY#4"},
+        {"x": 5,  "y": "PNT#5", "bay" : "BAY#5"},
+        {"x": 6,  "y": "PNT#6", "bay" : "BAY#6"},
+        {"x": 7,  "y": "PNT#7", "bay" : "BAY#7"},
+        {"x": 8,  "y": "PNT#8", "bay" : "BAY#8"},
+        {"x": 9,  "y": "PNT#9", "bay" : "BAY#9"},
+        {"x": 10,  "y": "PNT#10", "bay" : "BAY#10"},
+        {"x": 11,  "y": "PNT#11", "bay" : "BAY#11"},
+        {"x": 12,  "y": "PNT#12", "bay" : "BAY#12"},
+        {"x": 13,  "y": "PNT#13", "bay" : "BAY#13"},
+        {"x": 14,  "y": "PNT#14", "bay" : "BAY#14"},
+        {"x": 15,  "y": "PNT#15", "bay" : "BAY#15"},
+        {"x": 16,  "y": "PNT#16", "bay" : "BAY#16"}
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "ordinal",
+      "range": "width",
+      "domain": {"data": "table", "field": "x"}
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "domain": {"data": "table", "field": "y"},
+      "nice": true
+    }
+  ],
+  "axes": [
+    {
+      "type": "x", 
+      "scale": "x",
+          "properties": {
+            "ticks": {
+              "stroke": {"value": "none"}, "strokeWidth": {"value": 0.7}
+              },
+            "axis": {
+              "stroke": {"value": "#00eeee"}
+              },
+            "labels": {
+              "angle": {"value": 0},
+              "align": {"value": "right"},
+              "baseline": {"value": "middle"},
+              "fill": {"value": "none"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 12},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300},
+              "text": {"template": "{{ datum.data | truncate:25}}"}
+            }
+          }      
+    },
+    {
+      "type": "y", 
+      "grid": true,
+      "scale": "y",
+          "properties": {
+            "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              },
+            "axis": {
+              "stroke": {"value": "#00eeee"}
+              },
+            "grid": {
+               "stroke": {"value": "#164450"}, "strokeWidth": {"value": 0.9}
+               },
+            "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 12},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300}
+            }
+          }
+    }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "x": {"scale": "x", "field": "x", "offset": 10},
+          "width": {"scale": "x", "band": true, "offset": -10},
+          "y": {"scale": "y", "field": "y"},
+          "y2": {"scale": "y", "value": 0},
+          "fill": {"value": "#2c89a0"}
+        }
+      }
+    },
+        {
+          "type": "text",
+          "from": {"data": "table"},
+          "properties": {
+            "enter": {
+              "interpolate": {"value": "monotone"},
+              "x": {"scale": "x", "field": "x", "offset": 22},
+              "y": {"scale": "y", "field": "y", "offset": 18},
+              "y2": {"scale": "y", "value": 0},
+              "align": {"value": "left"},
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 17},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300},
+              "text": { "template": "{{datum.y|number:'.0f'}}%" }
+            }
+          }
+        },
+    {
+      "type": "text",
+      "from": {"data": "table"},
+      "properties": {
+        "enter": {
+          "x": {"scale": "x", "field": "x", "offset": 40},
+          "y": {"scale": "y", "value": 0, "offset": 0},
+          "angle": {"value": -30},
+          "align": {"value": "right"},
+          "baseline": {"value": "top"},
+          "fill": {"value": "#00eeee"},
+          "font": {"value": "open sans"},
+          "fontSize": {"value": 14},
+          "fontWeight": {"value": 300},
+          "text": { "template": "{{datum.bay}}" }
+        }
+      }
+    }
+  ]
+}

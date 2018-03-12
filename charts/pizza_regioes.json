@@ -1,0 +1,93 @@
+{
+  "width": 200,
+  "height": 200,
+  "data": [
+    {
+      "name": "correntes",
+      "values": [
+        {"x": 1,  "y": "PNT#1", "bay" : "BAY#1"},
+        {"x": 2,  "y": "PNT#2", "bay" : "BAY#2"},
+        {"x": 3,  "y": "PNT#3", "bay" : "BAY#3"},
+        {"x": 4,  "y": "PNT#4", "bay" : "BAY#4"},
+        {"x": 5,  "y": "PNT#5", "bay" : "BAY#5"},
+        {"x": 6,  "y": "PNT#6", "bay" : "BAY#6"},
+        {"x": 7,  "y": "PNT#7", "bay" : "BAY#7"},
+        {"x": 8,  "y": "PNT#8", "bay" : "BAY#8"}
+      ],
+      "transform": [{"type": "pie", "field": "y", "sort": "true"}]
+    } ],
+  "scales": [
+    {
+      "name": "r",
+      "type": "sqrt",
+      "domain": {"data": "correntes", "field": "y"},
+      "range": [20, 100]
+    },
+    {
+      "name": "c",
+      "type": "ordinal",
+      "range": ["#74add1", "#4575b4", "#dcfab9", "#d9a6ff", "#e0f3f8", "#ffffbf", "#ffc794", "#fee090"]
+    }
+  ],  
+  "marks": [
+     {
+      "type": "arc",
+      "from": {"data": "correntes"},
+      "properties": {
+        "enter": {
+          "x": {"field": {"group": "width"}, "mult": 0.5},
+          "y": {"field": {"group": "height"}, "mult": 0.5},
+          "startAngle": {"field": "layout_start"},
+          "endAngle": {"field": "layout_end"},
+          "innerRadius": {"value": 20},
+          "outerRadius": {"scale": "r", "field": "y"},
+          "fill": {"scale": "c", "field": "x"}
+        },
+        "update": {
+          
+        },
+        "hover": {
+          "fill": {"value": "pink"}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "correntes"},
+      "properties": {
+        "enter": {
+          "x": {"field": {"group": "width"}, "mult": 0.5},
+          "y": {"field": {"group": "height"}, "mult": 0.5},
+          "radius": {"scale": "r", "field": "y", "offset": -18},
+          "theta": {"field": "layout_mid"},
+          "align": {"value": "center"},
+          "baseline": {"value": "middle"},
+          "fill": {"value": "#002d75"},
+          "font": {"value": "open sans"},
+          "fontSize": {"value": 18},
+          "fontStyle": {"value": "oblique"},
+          "text": { "template": "{{datum.y|number:'.0f'}}" }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "correntes"},
+      "properties": {
+        "enter": {
+          "x": {"field": {"group": "width"}, "mult": 0.5},
+          "y": {"field": {"group": "height"}, "mult": 0.5},
+          "radius": {"scale": "r", "field": "y", "offset": "23"},
+          "theta": {"field": "layout_mid"},
+          "align": {"value": "center"},
+          "baseline": {"value": "middle"},
+          "fill": {"value": "#00eeee"},
+          "font": {"value": "open sans"},
+          "fontSize": {"value": 14},
+          "fontWeight": {"value": 300},
+          "text": { "template": "{{datum.bay|left:9}}" }
+        }
+      }
+    }
+  ]
+}

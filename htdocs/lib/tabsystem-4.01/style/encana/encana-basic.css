@@ -1,0 +1,215 @@
+html, body {
+ background: #555;
+ font-size-adjust: 0.58;
+ line-height: 1.8em;
+ font-family: Georgia, sans-serif;
+ color: #333;
+ text-align: left;
+ padding: 0;
+ margin: 0;
+ text-align: justify;
+}
+
+blockquote{
+ background-color: #eee;
+ padding: 1em;
+}
+
+.scrollit{
+ position: relative;
+ height: 300px;
+ overflow: auto;
+ padding: 1em;
+}
+
+h1,#after {
+ border: 0px #bbb dotted;
+ color: #000;
+ letter-spacing: -2px;
+ border-bottom-width: 1px;
+ padding-bottom: 1em;
+ padding-top: 1em;
+ text-align: right;
+ margin-bottom: 2em;
+ letter-spacing: 4px;
+ color:#444;
+}
+
+#after{
+ border-width: 1px 0px 0px 0px;
+ letter-spacing: 0px;
+ text-align: left;
+ padding: 1em;
+ background-image: none;
+}
+
+a{
+ color: blue;
+ text-decoration: none;
+}
+
+a:hover{
+ text-decoration: underline;
+}
+
+abbr,acronym{
+ border: 0px #999 dotted;
+ border-bottom-width: 1px;
+ font-style: italic;
+ font-weight: bold;
+}
+
+ul{
+
+ padding: 1em;
+}
+
+pre {
+ color: blue;
+}
+
+pre.highlight {
+ background-color: #eee;
+}
+
+img {
+ margin: 0 auto;
+}
+
+.logo{
+ position: relative;
+ margin-bottom: 6em;
+ padding: 0;
+ border: none;
+ text-align: left;
+
+
+}
+
+ul {
+padding: 0;
+margin: 0 30px 0 30px;
+list-style: circle inside;
+}
+
+li {
+padding: 6px 0 6px 8px;
+margin: 0;
+border-bottom: solid 1px #eee;
+}
+
+a {
+text-decoration: none;
+background: transparent;
+color: #39526b;
+border-bottom: dotted 1px #39526b;
+}
+
+a:hover {
+background: transparent;
+color: #5a84b5;
+border-bottom: dotted 1px #5a84b5;
+}
+
+a:active {
+border-bottom: solid 1px #5a84b5;
+}
+
+.menu {
+ float: left;
+ width: 100px;
+ list-style: none outside;
+ padding: 0;
+ background: #5a84b5;
+ color: #000;
+ border: solid 1px #000;
+ border-bottom-width: 0px;
+ border-top-style: dotted;
+ margin: 1em;
+}
+
+.menu li {
+ padding: 0;
+ margin: 0;
+ border: none;
+ display: inline;
+}
+
+.menu li a {
+display: block;
+padding: 2px 6px 2px 6px;
+margin: 0;
+background: #9BBCCD;
+color: #000;
+ letter-spacing: 2px;
+ font-size: 12px;
+
+}
+
+.menu li a:hover {
+background: #92C7E3;
+
+ text-decoration: none;
+}
+
+.menu li.top{
+ background: #555;
+ color: #fff;
+ font-weight: bold;
+ display:block;
+ padding: 1em;
+ border: 2px #000 solid;
+ text-align: center;
+}
+
+#main,#after {
+ 
+ width: 650px;
+ border: 1px black solid;
+ padding: 2em;
+ background: #fff;
+ margin: 2em auto;
+ background-image: url( "../../images/encana.gif" );
+background-repeat: no-repeat;
+background-position: 2em 2em;
+}
+
+#after{
+ margin-bottom: 5em;
+ background-color: #fff;
+
+ text-align: right;
+ font-style: italic;
+}
+
+a:hover {
+ text-decoration: none;
+}
+
+#ctrl{
+ margin: 4em 0em;
+ font: 10px verdana;
+}
+
+#ctrl button{
+ border: 1px #ddd solid;
+ background: #fff;
+}
+
+.noShift{
+ width: 95% !important;
+}
+
+.tabsystem .noborder{
+ border-width: 1px 0px 0px 0px !important;
+}
+
+.tabpage .square li {
+ display: block;
+ list-style-type: square;
+ list-style-position: outside;
+}
+
+.tabsystem .firstHeading {
+ display: none;
+}

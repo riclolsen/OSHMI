@@ -1,0 +1,113 @@
+#
+# SSLeay example properties file.
+# This is mostly being used for generation of certificate requests.
+#
+
+RANDFILE        = .rnd
+
+####################################################################
+[ ca ]
+default_ca    = CA_default        # The default ca section
+
+####################################################################
+[ CA_default ]
+
+dir        = c:\\OpenSSL-Win32\\\bin\\demoCA    # Where everything is kept
+certs        = $dir\\certs                # Where the issued certs are kept
+crl_dir    = $dir\\crl                # Where the issued crl are kept
+database    = $dir\\index.txt            # database index file.
+new_certs_dir    = $dir\\newcerts            # default place for new certs.
+
+certificate    = $dir\\cacert.pem                # The CA certificate
+serial        = $dir\\serial                # The current serial number
+crl        = $dir\\crl.pem                # The current CRL
+private_key    = $dir\\private\\cakey.pem       # The private key
+RANDFILE    = $dir\\private\\private.rnd     # private random number file
+
+x509_extensions    = x509v3_extensions    # The extentions to add to the cert
+default_days        = 365            # how long to certify for
+default_crl_days    = 30            # how long before next CRL
+default_md        = md5            # which md to use.
+preserve        = no            # keep passed DN ordering
+
+# A few difference way of specifying how similar the request should look
+# For type CA, the listed attributes must be the same, and the optional
+# and supplied fields are just that :-)
+policy        = policy_match
+
+# For the CA policy
+[ policy_match ]
+countryName            = match
+stateOrProvinceName        = match
+organizationName        = match
+organizationalUnitName    = optional
+commonName            = supplied
+emailAddress            = optional
+
+# For the ’anything’ policy
+# At this point in time, you must list all acceptable ’object’
+# types.
+[ policy_anything ]
+countryName        = optional
+stateOrProvinceName    = optional
+localityName        = optional
+organizationName    = optional
+organizationalUnitName    = optional
+commonName            = supplied
+emailAddress            = optional
+
+####################################################################
+[ req ]
+default_bits        = 4096
+default_keyfile     = privkey.pem
+distinguished_name    = req_distinguished_name
+attributes        = req_attributes
+distinguished_name     = req_distinguished_name
+req_extensions         = v3_req
+x509_extensions        = v3_ca
+
+[ req_distinguished_name ]
+countryName            = Country Name (2 letter code)
+countryName_min        = 2
+countryName_max        = 2
+
+stateOrProvinceName        = State or Province Name (full name)
+
+localityName            = Locality Name (eg, city)
+
+0.organizationName        = Organization Name (eg, company)
+
+organizationalUnitName    = Organizational Unit Name (eg, section)
+
+commonName            = Common Name (eg, your website’s domain name)
+commonName_max        = 64
+
+emailAddress            = Email Address
+emailAddress_max        = 40
+
+[ req_attributes ]
+challengePassword        = A challenge password
+challengePassword_min    = 4
+challengePassword_max    = 20
+
+[v3_req]
+# subjectAltName = DNS:localhost, IP:127.0.0.1
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+#DNS.2 = your_host_name
+IP.1 = 127.0.0.1
+# IP.2 = other_ip
+
+[ v3_ca ]
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always,issuer:always
+subjectAltName         = email:oshmi@oshmi.com
+issuerAltName          = issuer:copy
+
+[ x509v3_extensions ]
+

@@ -1,0 +1,23 @@
+{
+  "width": 200,
+  "height": 200,
+  "data": 
+    {
+     "name": "table",
+     "values": [
+        {"x": 1,  "y": "PNT#1", "bay" : "BAY#1"},
+        {"x": 2,  "y": "PNT#2", "bay" : "BAY#2"},
+        {"x": 3,  "y": "PNT#3", "bay" : "BAY#3"},
+        {"x": 4,  "y": "PNT#4", "bay" : "BAY#4"},
+        {"x": 5,  "y": "PNT#5", "bay" : "BAY#5"},
+        {"x": 6,  "y": "PNT#6", "bay" : "BAY#6"},
+        {"x": 7,  "y": "PNT#7", "bay" : "BAY#7"}
+        ]
+    } 
+    ,
+      "mark": "bar",
+      "encoding": {
+        "x": {"type": "ordinal","field": "x"},
+        "y": {"type": "quantitative","field": "y"}
+      }
+}

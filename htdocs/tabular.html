@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="application-name" content="OSHMI-Open Substation HMI">
+<meta name="description" content="Tabular Viewer">
+<meta name="author" content="Ricardo L. Olsen">
+<meta name="viewport" content="width=850, user-scalable=no" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Visor Tabular</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
+<link rel="apple-touch-icon" href="images/tabular.png" />
+<style>
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url(lib/SourceSansPro-Regular.woff2) format('woff2');
+}
+</style>
+<script src="util.js"></script>
+<script src="lib/jquery-1.8.3.js"></script>
+<script src="lib/core-1.0.js"></script>
+<script src="lib/shortcut-2.01b.js"></script>
+<script src="lib/chroma.js"></script>
+<script src="fan.js"></script>
+<script src="legacy_options.js"></script>
+<script src="../i18n/messages_i18n.js"></script>
+<script src="config_viewers_default.js"></script>
+<script src="../conf/config_viewers.js"></script>
+<script src="pntserver.js"></script>
+<script src="images.js"></script>
+<script>
+"use strict";
+
+// Este script coloca em uma tabela os dados dos pontos supervisionados filtrados por SE e módulo. 
+//
+// OSHMI/Open Substation HMI - Copyright 2008-2016 - Ricardo L. Olsen
+
+var L = []; // aqui o servidor colocará lista de eventos 
+var V = []; // aqui o servidor colocará os valores dos pontos
+var F = []; // aqui o servidor colocará os flags dos pontos
+var T = []; // aqui o servidor colocará os tag de tempo de alarme dos pontos
+var Data = '';          // aqui o servidor colocará hora da atualização
+var NUM_VAR = 0;        // aqui o servidor informa o número de variações digitais
+var NUM_VAR_ANT = 0;    // estado anterior da variável NUM_VAR
+var HA_ALARMES = 0;     // aqui o servidor informa que há alarme sonoro ativo
+var HA_ALARMES_ANT = 0; // estado anterior da variável HA_ALARMES
+var Sha1Ana = '';       // aqui o servidor informa o hash dos valores analogicos (para detectar mudanças)
+var Sha1Dig = '';       // aqui o servidor informa o hash dos valores digitais (para detectar mudanças)
+var LISTA_SES = '';     // lista de subestações para compor filtro
+
+// variáveis para o diálogo de comando
+var NPTO, ID, ESTACAO, MODULO, DESC, ST_ON, ST_OFF, CNPTO, CID, CDESC, CST_ON, CST_OFF;
+var LIMS, LIMI, HISTER, ALRIN, ANOT, VLNOR, ESTALM, UNIDADE, SIMULACAO = 0;
+var ComandoAck = ''; // texto para confirmação do comando 
+var ComandoEnviado = '';
+
+// callback function a ser chamada pelo servidor
+var cbf_F = function() {}; 
+
+var WebSAGE =
+{
+g_cbBloqAtu: 'cbBloqAtu',
+g_remoteServer: TabPNTServer,
+g_timeOutRefresh: 1000 * TabularViewer_RefreshTime,  // tempo de refresh dos dados
+g_timeOutReconhece: 4000, // tempo de refresh após reconhecimento total dos alarmes
+g_timeOutFalha: 30000, // tempo para falha dos dados, caso servidor não responda 
+g_toutID: 0,
+g_timerID: 0, 
+g_showValsIntervalID: 1,
+g_timeoutFalhaID: 0,
+g_pass: 0,
+g_COL_NPONTO: 0,
+g_COL_ID: 1,
+g_COL_SUBEST: 2,
+g_COL_DESCR: 3,
+g_COL_EVENTO: 4,
+g_COL_FLAGS: 5,
+g_COL_SUPCMD: 6,
+g_COL_QUALIF: 7,
+g_COL_ESTNOR: 8,
+g_COL_DATA: 9,
+g_nponto_sup: 0,
+g_nponto_cmd: 0,
+g_win_cmd: {},
+g_cmd_id: 0,
+g_filtroSE: '',
+g_filtroMOD: '',
+g_muda_mod: 0,
+g_win_1stdraw: 0,
+g_wait_win: 0,
+g_datahoraant: '',
+g_waitingServer: 0,
+g_cbf_MostraSE: function() {},
+g_bloqa: 0, 
+g_bloqc: 0, 
+g_firstdraw: 1,
+g_fontsize: 16,  // tamanho das fontes
+g_tbl: {},
+g_tblhead: {},
+g_titulo_janela: "",
+g_filt_all_alarms: "TODOS_ANORMAIS",
+g_alminfo: [],
+g_filterOutList: [],
+g_subst_list: [],
+
+// busca e executa script de um servidor
+getScript: function( srvurl )
+{
+// substitui a chamada $.getScript que causava memory leaks
+$.ajax( { // crossDomain: true,
+          url: srvurl,
+          dataType: "text",
+          success: WebSAGE.onSuccess
+         } );
+},
+
+onSuccess: function( data )
+{
+  eval( data );
+  data = null;
+},
+
+// função auxiliar para escrever dados na janela de comando pelo id do objeto
+cmdWriteById : function( win, id, txt )
+{    
+  win.$( '#' + id ).text( txt );
+},
+
+isAlarmsViewer : function()
+{
+return document.getElementById('FiltroSE').value === WebSAGE.g_filt_all_alarms;
+},
+
+// busca dados do servidor e prepara chamada temporizada de showValsCmd para   
+janelaInfo : function(nponto) 
+{
+  WebSAGE.g_nponto_sup = nponto;
+  LIMS = 0;
+  LIMI = 0;
+  HISTER = 0;
+  ALRIN = 0;
+  ANOT = "";
+  NPTO = 0; CNPTO = 0;
+  ID = ""; DESC = "";
+  if ( BrowserDetect.browser != 'Explorer' )
+    if ( typeof(WebSAGE.g_win_cmd.window) == 'object' ) // fecha janela info
+      if ( WebSAGE.g_win_cmd.window ) 
+         WebSAGE.g_win_cmd.window.close();
+  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo0' );
+},
+
+// busca dado do ponto tempo real  
+showValsInfo0 : function()
+{
+  WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo1' );
+},
+
+// Abre uma janela popup com dados sobre o ponto  
+showValsInfo1 : function()
+{
+  // abre nova janela, dá um tempo e vai  preencher os dados da nova janela em outra funcao
+  // (para dar tempo de abrir a janela) 
+  WebSAGE.g_win_1stdraw = 1;
+  WebSAGE.g_win_cmd = window.open('dlginfo.html','tbinfo','dependent=yes,height=550,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');
+  if ( WebSAGE.g_win_cmd.focus )
+    WebSAGE.g_win_cmd.focus();
+  WebSAGE.g_wait_win = 0;  // contador para esperar abrir a janela 
+
+  // showValsInfo2 será chamado pela própria nova janela aberta em onload
+  // WebSAGE.g_timerID=setTimeout(WebSAGE.showValsInfo2, 200);
+}, 
+
+// Mostra os dados sobre o ponto em janela popup 
+showValsInfo2 : function( mot )
+{
+try 
+  {
+
+  // testa se a janela está carregada
+  if ( NPTO == 0 || NPTO == undefined ||  
+       !WebSAGE.g_win_cmd ||
+       typeof(WebSAGE.g_win_cmd.window) != 'object' ||
+       typeof(WebSAGE.g_win_cmd.window.closed) == 'undefined' ||
+       WebSAGE.g_win_cmd.window.closed ||
+       WebSAGE.g_win_cmd.document == undefined ||
+       typeof(WebSAGE.g_win_cmd.window.$) === 'undefined' 
+     ) 
+     {
+     if ( WebSAGE.g_wait_win < 4 ) // não carregou, vai retentando mais um tempo
+       { 
+       WebSAGE.g_wait_win++;
+       WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 200 );
+       }
+     return; // se esgotou o tempo, desiste
+     }
+
+  // janela carregada 
+  var se = ESTACAO;
+    se = se + '-';
+
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'VALOR_SUP', V[NPTO] + " " + UNIDADE + " (" + Msg.QValor + ")" );
+
+  var SQ = '';
+  var Q = F[NPTO];
+
+  if ( (Q & 0x03) == 0x00 )
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', Msg.QDPIntermed + " (" + Msg.EstadoAtual + ")"  ); }
+  else    
+  if ( (Q & 0x03) == 0x03 )
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', Msg.QDPInvalido + " (" + Msg.EstadoAtual + ")" ); }
+  else 
+  if ( V[NPTO]&0x01 != 0 )
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); } // não zero é off 
+  else  
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); } // zero é on
+    
+  if ( Q & 0x80 )
+    SQ += Msg.QFalhado + ' ';
+  if ( Q & 0x10 )
+    SQ += Msg.QSubst + ' ';
+
+  if ( (Q & 0x0C) == 0x04 )
+    SQ += Msg.QCalculado + ' ';
+  else  
+  if ( (Q & 0x0C) == 0x0C )
+    SQ += Msg.QManual + ' ';
+  else  
+  if ( (Q & 0x0C) == 0x08 )
+    SQ += Msg.QNuncaAtu + ' ';
+
+  if ( Q & 0x100 )
+    SQ += Msg.QAlarmado + ' ';
+    
+  //if ( Q & 0x200 )
+  //  SQ += Msg.QAnotacao + ' ';
+
+  if ( Q & 0x400 )
+    SQ += Msg.QAlmInib + ' ';
+
+  if ( Q & 0x800 )
+    SQ += Msg.QNaoNormal + ' ';
+
+  if ( Q & 0x1000 )
+    SQ += Msg.QCongelado + ' ';
+
+  if ( SQ == "" )
+    SQ = Msg.QNormal + ' ';
+  
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'QUALIF', Msg.Qualific + ': ' + SQ );
+
+  if ( WebSAGE.g_win_1stdraw ) // escreve parâmetros só na primeira vez que abriu a janela
+    {
+    WebSAGE.g_win_1stdraw = 0;
+  
+    WebSAGE.cmdWriteById(WebSAGE.g_win_cmd,'NPONTO_SUP', NPTO+':'+ID);
+    WebSAGE.cmdWriteById(WebSAGE.g_win_cmd,'DESCR_SUP', se+DESC);
+    WebSAGE.cmdWriteById(WebSAGE.g_win_cmd, 'SPCMDINTERTRAV', Titles.SPCMDINTERTRAV);
+    //WebSAGE.g_win_cmd.document.getElementById("TABULAR").style.display="none";
+    //Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("TABULAR"), "click", WebSAGE.tabular);
+  
+    if ( ID.charAt(21)=='M' ) // Manual não apresenta opção de inibir
+      WebSAGE.g_win_cmd.document.getElementById('DIVINIB').style.display='none';       
+
+    WebSAGE.g_win_cmd.document.getElementById("CURVAS").style.display = "";
+    Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("CURVAS"), "click", WebSAGE.curvas );
+
+    if ( (Q & 0x20) )
+      { // mostra parâmetros de limites só para pontos analógicos
+      WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS").style.display="";
+      Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS"), "click", WebSAGE.tendencias);
+
+      WebSAGE.g_win_cmd.document.getElementById("VALOR_HID").style.display="";
+      WebSAGE.g_win_cmd.document.getElementById("LIMCTRLS").style.display="";
+      WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value=LIMS;    
+      WebSAGE.g_win_cmd.document.getElementById("LIMINF").value=LIMI;    
+      WebSAGE.g_win_cmd.document.getElementById("HISTER").value=HISTER;
+      Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("LIMSUP"), "blur", WebSAGE.writeParams);
+      Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("LIMINF"), "blur", WebSAGE.writeParams);
+      Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("HISTER"), "blur", WebSAGE.writeParams);
+      if ( ID.charAt(21)=='M' || SIMULACAO==1 || SIMULACAO==2 ) // permite alterar valor de ponto manual
+        {
+        WebSAGE.g_win_cmd.document.getElementById("DIVALTVALOR").style.display="";
+        Core.addEventListener
+          ( WebSAGE.g_win_cmd.document.getElementById("CBALTVALOR"), 
+            "click", 
+            function() { WebSAGE.g_win_cmd.document.getElementById('CBALTVALOR').style.display='none';
+                         WebSAGE.g_win_cmd.document.getElementById('NOVOVALOR').style.display=''; 
+                       } 
+          );
+        Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("NOVOVALOR"), "blur", WebSAGE.writeValor);
+        }  
+      }    
+    WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value=ANOT.replace(/\|\^/g,"\n");
+    WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked= (ALRIN!='0');    
+    Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("CBALRIN"),  "click", WebSAGE.writeParams);
+    Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("ANOTACAO"), "blur",  WebSAGE.writeParams);
+    Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD"), "click", WebSAGE.writeParams);
+  
+    if (! (Q & 0x20) )
+      { // ponto digital
+      WebSAGE.g_win_cmd.document.getElementById("ESTADO_HID").style.display="";
+      
+      if ( ID.charAt(21)=='M' ||SIMULACAO==1 || SIMULACAO==2 ) // permite alterar valor de ponto manual
+        {
+        WebSAGE.g_win_cmd.document.getElementById("DIVALTVALOR").style.display="";
+
+        Core.addEventListener
+          ( WebSAGE.g_win_cmd.document.getElementById("CBALTVALOR"), 
+            "click", 
+            function() { WebSAGE.g_win_cmd.document.getElementById('CBALTVALOR').style.display='none';
+                         WebSAGE.g_win_cmd.document.getElementById('DIVALTVALORDIG').style.display=''; 
+                       } 
+          );
+        
+        WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").nextSibling.data=ST_ON;
+        WebSAGE.g_win_cmd.document.getElementById("rbNovoValorOff").nextSibling.data=ST_OFF;
+        Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("rbNovoValor"), "click", WebSAGE.writeValor);
+        Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("rbNovoValorOff"), "click", WebSAGE.writeValor);
+        }
+      }
+  
+    // torna visível botão de comandar, caso haja comando associado
+    if ( CNPTO != 0 )
+      {
+      WebSAGE.g_win_cmd.document.getElementById("COMANDAR").style.display="";
+      Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("COMANDAR"), "click", WebSAGE.prejanelaComando);
+      }   
+
+
+    // get nonblocking annotation
+    $.ajax( {
+            dataType: "json",
+            url: "annotation.php?N=" + NPTO, 
+            success: 
+              function(data) {
+                 if ( data[0] && data[0].hasOwnProperty('CONTENT') )
+                   WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = data[0].CONTENT;
+                 else
+                   WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = "";
+                 },
+          });  
+    Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
+    }
+
+  // bloqueio automático de comando por presença de anotação
+  if ( CNPTO != 0 )
+    {
+    if ( WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value != "" )
+      {
+      WebSAGE.g_win_cmd.document.getElementById("COMANDAR").disabled = true;
+      WebSAGE.g_win_cmd.document.getElementById("DIVBLKCMD").style.display = '';
+      }
+    else  
+      {
+      WebSAGE.g_win_cmd.document.getElementById("COMANDAR").disabled = false;
+      WebSAGE.g_win_cmd.document.getElementById("DIVBLKCMD").style.display = 'none';
+      WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked = false;
+      }
+
+    if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked )
+      WebSAGE.g_win_cmd.document.getElementById("COMANDAR").disabled = false;
+
+    if ( WebSAGE.g_win_cmd.document.getElementById("COMANDAR").disabled )
+      WebSAGE.g_win_cmd.document.getElementById("COMANDAR").title = Msg.BlqAnot;
+    else
+      WebSAGE.g_win_cmd.document.getElementById("COMANDAR").title = Msg.AcessCmd;
+      
+    if ( Q&0x2000 )
+      {
+      WebSAGE.g_win_cmd.document.getElementById("DIVCMDBLKBUT").style.display = 'none';
+      WebSAGE.g_win_cmd.document.getElementById("SPCMDINTERTRAV").style.display = '';
+      }
+    else  
+      {
+      WebSAGE.g_win_cmd.document.getElementById("DIVCMDBLKBUT").style.display = '';
+      WebSAGE.g_win_cmd.document.getElementById("SPCMDINTERTRAV").style.display = 'none';
+      }
+
+    WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 2000 );
+    }
+
+  WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
+  }
+catch ( e ) {}  
+}, 
+
+prejanelaComando : function( nponto ) 
+{
+  clearTimeout( WebSAGE.g_timerID );
+  WebSAGE.janelaComando( NPTO );
+},
+
+// busca dados do servidor e prepara chamada temporizada de showValsCmd para   
+janelaComando : function( nponto ) 
+{
+  WebSAGE.g_nponto_sup = nponto;  
+  NPTO = 0; 
+  CNPTO = 0;
+  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
+},
+
+// Mostra dados sobre o comando na respectiva janela 
+showValsCmd1 : function()
+{
+  clearTimeout( WebSAGE.g_timerID );
+  if ( WebSAGE.g_win_cmd ) // fecha janela info
+    {
+    WebSAGE.g_win_cmd.window.close();
+    }
+  
+  if ( CNPTO == 0 || CNPTO == undefined )
+    {
+    return;
+    }
+
+  WebSAGE.g_win_cmd = NPTO; // mark window to be open for point NPTO
+
+  // abre nova janela, dá um tempo e vai  preencher os dados da nova janela em outra funcao
+  setTimeout("WebSAGE.g_win_cmd=window.open('dlgcomando.html','tbcomando','dependent=yes,height=530,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');", 500);
+
+  // será chamado pela própria janela
+}, 
+
+// Mostra os dados sobre o ponto de comando em janela popup 
+showValsCmd2 : function()
+{ 
+  var se;
+  if ( F[NPTO] & 0x2000 ) // Comando intertravado?
+    { WebSAGE.g_win_cmd.close(); }
+
+  se = ESTACAO;
+  se = se + '-';  
+
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'fc_inst', ESTACAO );
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'fc_mod', CDESC.substring( 0, CDESC.indexOf("-") ) );
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'fc_info', CDESC.substring( CDESC.indexOf("-") + 1 ) );
+
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'NPONTO_SUP', NPTO + '-' + ID );
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'DESCR_SUP', se + DESC );
+  
+  if ( ! ( F[NPTO] & 0x20 ) )
+    { // digital
+    if ( V[NPTO] > 0 )
+      { 
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); // não zero é off 
+      // se o estado atual (off) bate com o valor do comando off (3 primeiras letras do texto), 
+      // assume que deve a intenção é comandar ON, portanto sobreia a opção OFF
+      if ( CST_OFF.toUpperCase().substring( 0, 2 ) === ST_OFF.toUpperCase().substring( 0, 2 ) && 
+           CST_ON.toUpperCase().substring( 0, 2 ) !== ST_OFF.toUpperCase().substring( 0, 2 )  
+         )
+        WebSAGE.g_win_cmd.document.getElementById('CMD_OFF').style.color = "darkgray";
+      }
+    else  
+      {
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); // zero é on
+      // se o estado atual (on) bate com o valor do comando on (3 primeiras letras do texto), 
+      // assume que deve a intenção é comandar OFF, portanto sobreia a opção ON
+      if ( CST_ON.toUpperCase().substring( 0, 2 ) === ST_ON.toUpperCase().substring( 0, 2 ) &&
+           CST_OFF.toUpperCase().substring( 0, 2 ) !== ST_ON.toUpperCase().substring( 0, 2 ) 
+         )
+        WebSAGE.g_win_cmd.document.getElementById('CMD_ON').style.color = "darkgray";
+      }
+    WebSAGE.g_win_cmd.document.getElementById("ESTADO_HID").style.display = "";
+    }
+  else
+    { // analógico
+    WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'VALOR_SUP', V[NPTO] + " " + UNIDADE + " (" + Msg.QValor + ")" );
+    WebSAGE.g_win_cmd.document.getElementById("VALOR_HID").style.display = "";
+    }    
+  
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'CNPONTO_SUP', CNPTO + '-' + CID );
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'CDESCR_SUP', se + CDESC );
+
+  WebSAGE.g_win_cmd.document.getElementById('CMD_OFF').text = CST_OFF.toUpperCase();    
+  WebSAGE.g_win_cmd.document.getElementById('CMD_ON').text = CST_ON.toUpperCase();
+  WebSAGE.g_win_cmd.document.getElementById('EXECUTAR').style.display = "";
+  WebSAGE.g_win_cmd.document.getElementById('EXECUTAR').disabled = true;
+  WebSAGE.g_win_cmd.document.getElementById('COMANDO').style.display = "none";
+  WebSAGE.g_win_cmd.document.getElementById('COMANDOANA').style.display = "none";
+
+  if ( CST_OFF != "" || CST_ON != "" )
+    { // Digital Command
+    WebSAGE.g_win_cmd.document.getElementById('COMANDO').style.display = "";
+    }
+  else  
+    { // Analog Command
+    WebSAGE.g_win_cmd.document.getElementById('COMANDOANA').style.display = "";
+    WebSAGE.g_win_cmd.document.getElementById('COMANDOANA').value = V[NPTO];
+    }  
+}, 
+
+// abre o visor de tendencias
+tendencias : function()
+{
+window.open( 'trend.html?NPONTO=' + NPTO, 'Tendencias', 'dependent=no,height=400,width=700,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no' );    
+setTimeout( 'WebSAGE.g_win_cmd.close()', 500 );
+},
+
+// open plot visor (historical) of point info
+curvas : function()
+{
+  window.open( 'histwebview/histwebview.php?NPONTO_1=' + NPTO, 'Histwebview ' + NPTO, 'dependent=no,height=600,width=1000,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no' ); 
+  setTimeout( 'WebSAGE.g_win_cmd.close()', 500 );
+},
+
+// open tabular visor of bay, of point info
+tabular : function()
+{
+window.open( 'tabular.html?SUBST=' + ESTACAO + '&BAY=' + MODULO, 'Tabular', 'dependent=no,height=700,width=900,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no' );    
+setTimeout('WebSAGE.g_win_cmd.close()',500);
+},
+
+executaComando : function(cmd_01)
+{
+  WebSAGE.getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
+  
+  // Command log in browser's localStorage
+  if (storageAvailable('localStorage')) 
+  {
+  var lastlogcnt = 0;
+  if ( localStorage.hasOwnProperty("lastlogcnt") )
+    lastlogcnt = parseInt(localStorage["lastlogcnt"]);
+  lastlogcnt++;
+  lastlogcnt = lastlogcnt % 1000; // circular buffer of 1000
+  localStorage[printf("%03d", lastlogcnt)] = Date() + " Point:" + CNPTO + " Id:" + CID + " Value:" + cmd_01;
+  localStorage["lastlogcnt"] = lastlogcnt;
+  }
+
+},
+
+ackComando : function()
+{
+  WebSAGE.getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
+},
+
+writeParams : function() 
+{
+  if (!WebSAGE.g_win_cmd)
+     return;
+  if (typeof(WebSAGE.g_win_cmd.window) != 'object')
+     return;
+  if (typeof(WebSAGE.g_win_cmd.window.closed) == 'undefined')
+     return;
+  if (WebSAGE.g_win_cmd.window.closed)
+     return;
+  if (WebSAGE.g_win_cmd.document == undefined)
+     return;
+
+  if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotação
+    WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value="";
+
+  WebSAGE.getScript( WebSAGE.g_remoteServer + 
+               '?W=' + NPTO + 
+               "&LI=" + WebSAGE.g_win_cmd.document.getElementById("LIMINF").value + 
+               "&LS=" + WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value + 
+               "&HI=" + WebSAGE.g_win_cmd.document.getElementById("HISTER").value + 
+               "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked?1:0) + 
+               "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dão problema no javascript
+               "&VN=" + 0
+             );
+},
+
+// write non blocking annootation
+writeAnnotDoc : function()
+{
+  $.ajax( {
+          type: "POST",
+          url: "annotation.php?W=1&N=" + NPTO,
+          data:  { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
+          // success: success,
+          // dataType: "text"
+          } );
+},
+
+writeValor : function() 
+{
+  if (!WebSAGE.g_win_cmd)
+     return;
+  if (typeof(WebSAGE.g_win_cmd.window) != 'object')
+     return;
+  if (typeof(WebSAGE.g_win_cmd.window.closed) == 'undefined')
+     return;
+  if (WebSAGE.g_win_cmd.window.closed)
+     return;
+  if (WebSAGE.g_win_cmd.document == undefined)
+     return;
+
+  var val;  
+  if (F[NPTO] & 0x20)
+    val= WebSAGE.g_win_cmd.document.getElementById("NOVOVALOR").value;
+  else      
+    val = WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").checked?0:1;
+  
+  WebSAGE.getScript( WebSAGE.g_remoteServer + 
+               '?X=' + NPTO + 
+               "&V=" + val  
+             );
+},
+
+mudaFiltro : function()
+{
+if ( WebSAGE.g_filtroSE != document.getElementById('FiltroSE').value || 
+     WebSAGE.g_filtroMod != document.getElementById('FiltroMod').value )  
+  {
+  WebSAGE.cmdWriteById( window, 'ATUALIZACAO', ' ' );
+  WebSAGE.cmdWriteById( window, 'NUMREGS', ' ' );
+  clearTimeout( WebSAGE.g_toutID );
+  WebSAGE.g_tbl.clearAll();
+  document.getElementById("cbMostraCmd").checked = false;
+  document.getElementById("cbForaNormal").checked = false;
+
+  WebSAGE.g_filtroSE = document.getElementById('FiltroSE').value;
+  WebSAGE.g_filtroMod = document.getElementById('FiltroMod').value;
+  L = [];
+  if ( WebSAGE.g_filtroSE == '')
+    {
+        clearTimeout( WebSAGE.g_timeoutFalhaID );
+    }
+  else
+    {
+    WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, 100 );
+    WebSAGE.g_muda_mod = 1;
+    }
+  }
+},
+
+// busca lista de estações no servidor
+leListaSEs : function() 
+{
+  // prepara função de callback que será chamada pelo script a ser devolvido pelo servidor
+  WebSAGE.g_cbf_MostraSE = function() { setTimeout(WebSAGE.mostraSEs, 10); };
+  // chama o servidor, executa o script devolvido
+  WebSAGE.getScript( WebSAGE.g_remoteServer + '?S=1' + "&B=WebSAGE.g_cbf_MostraSE" );
+},
+
+// mostra lista de estações
+mostraSEs : function() 
+{
+var Lista = LISTA_SES.split("-");
+var i = 0;
+
+Lista.sort();
+document.getElementById("SELSE").options.length = 0;
+
+for (var se in Lista)
+ {
+ if ( Lista[i] != undefined )
+   document.getElementById("SELSE").options[i] = new Option(Lista[i], Lista[i]);
+ i++;
+ }
+
+// ve se recebeu algum modulo (SE+MODULO) para mostrar pela URL, caso positivo já usa para filtrar  
+var se = gup("SUBST");
+var mod = gup("BAY");
+
+if ( se != "" )
+  {
+   document.getElementById('FiltroSE').value = se;
+   document.getElementById('FiltroMod').value = mod;
+   setTimeout( WebSAGE.mudaFiltro, 10 );
+  }
+
+// document.getElementById("SELSE").onChange=WebSAGE.mudaSE; 
+},
+
+// Processa mudança da SE selecionada
+mudaSE : function() 
+{ 
+var v = document.getElementById("SELSE").options[document.getElementById("SELSE").selectedIndex].value;
+document.getElementById('FiltroSE').value = v ;  
+document.getElementById('FiltroMod').value = "";
+document.getElementById("SELMOD").options.length = 0;
+  
+WebSAGE.mudaFiltro();
+document.getElementById("SELSE").onchange = function() {};
+document.getElementById("SELSE").options[0].selected = 1;  
+document.getElementById('SELSE').blur();
+},
+
+// mostra lista de opções de móulos
+mostraMods : function() 
+{
+var lmods = [];
+var descr = [];
+var i;
+var cnt;
+
+if ( WebSAGE.isAlarmsViewer() )
+  return;
+if ( document.getElementById('FiltroSE').value == "" )
+  {
+  document.getElementById("SELMOD").options.length = 0;
+  return;
+  }
+
+WebSAGE.g_muda_mod = 0;
+
+// assemble bay list
+cnt = 0;
+for ( i in L )
+  {
+  descr = WebSAGE.g_tbl.cellsx(i,WebSAGE.g_COL_DESCR).split("~");
+  if ( lmods.indexOf( descr[0] ) === -1 ) 
+    {
+    lmods[cnt] = descr[0];
+    cnt++;
+    }
+  }
+
+if ( lmods.length <= 2 ) // if 1 bay only, presents no choice
+  return;
+
+lmods[lmods.length] = ""; // 1st option is empty
+lmods.sort();
+document.getElementById("SELMOD").options.length = 0;
+
+// options list
+cnt = 0;
+for ( cnt = 0; cnt < lmods.length ; cnt++ )
+  {
+  document.getElementById("SELMOD").options[cnt] = new Option( lmods[cnt], lmods[cnt] );
+  }
+},
+
+// Filtra pelo módulo  
+mudaMod : function()
+{
+  document.getElementById('FiltroMod').value =
+    document.getElementById("SELMOD").options[document.getElementById("SELMOD").selectedIndex].value;
+  WebSAGE.mudaFiltro();
+  document.getElementById("SELMOD").options.length = 0;
+},
+
+callServer : function() 
+{
+     clearTimeout( WebSAGE.g_toutID );
+
+     if ( WebSAGE.g_waitingServer ) // se ainda está esperando pelo servidor
+       { // dá mais um tempo para rechamar-se e cai fora
+         WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh / 2 );
+         return;
+       }       
+
+    // testa se não está bloqueado
+    if ( document.getElementById(WebSAGE.g_cbBloqAtu).checked == false )
+      {
+        // antes de chamar o servidor
+        // prepara uma função que falha todos os pontos se der timeout na chamada do servidor
+        clearTimeout( WebSAGE.g_timeoutFalhaID );
+        WebSAGE.g_timeoutFalhaID = setTimeout( WebSAGE.falhaTudo, WebSAGE.g_timeOutFalha );
+        // prepara função de callback que será chamada pelo script a ser devolvido pelo servidor
+        cbf_F = function() 
+                  { 
+                  setTimeout( WebSAGE.showVals, 100 ); 
+                  clearTimeout( WebSAGE.g_timeoutFalhaID ); 
+                  WebSAGE.g_waitingServer = 0; 
+                  };
+        // sinaliza que vai esperar resposta do servidor 
+        WebSAGE.g_waitingServer = 1;
+
+        Ventoinha.pulse();
+
+        // chama o servidor, executa o script devolvido
+        WebSAGE.getScript( WebSAGE.g_remoteServer + 
+                           '?G=' + WebSAGE.g_filtroSE + 
+                           "&M=" + WebSAGE.g_filtroMod + 
+                           "&A=0&B=cbf_F" );                           
+        WebSAGE.g_pass++;        
+        WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh );
+      }
+},
+
+applyTableStyle: function()
+{
+// assemble the filterout list
+WebSAGE.g_filterOutList = [];
+for ( var substorpri in WebSAGE.g_alminfo ) 
+   {
+     if ( WebSAGE.g_alminfo.hasOwnProperty(substorpri) ) 
+        {
+        if ( WebSAGE.isAlarmsViewer() )
+           {
+           if (  WebSAGE.g_alminfo[substorpri].filterout )
+              {
+              WebSAGE.g_filterOutList.push(substorpri);
+              $( '#DIV_' + substorpri ).css('opacity', '.25');
+              }
+           else
+              {
+              $( '#DIV_' + substorpri ).css('opacity', '1' );         
+              }              
+           }
+        }
+   }
+
+// reapply line styles
+for( var i = 0; i < L.length; i++ )
+   {
+   WebSAGE.EstiloLinha( i, 0 );   
+   }
+},
+
+// Mostra os eventos recebidos
+showVals: function()
+{
+  var dbg = 0;
+  
+  try
+    {
+    var qualif, i, cntsb, cntpr, xleft, ytop;
+    var tam = L.length;  
+    var sb;
+    
+    if ( HA_ALARMES != HA_ALARMES_ANT )
+      {
+      if ( HA_ALARMES )
+        {
+        document.getElementById( "SILENCIA_ID" ).style.display = "";
+        }
+      else
+        {
+        document.getElementById( "SILENCIA_ID" ).style.display = "none";
+        }
+      HA_ALARMES_ANT = HA_ALARMES;
+      }
+    
+    // quando houver o que mostrar e não for modo de todas anormalidades, mostra controles de filtro anormais e comandáveis
+    if ( tam > 0 )
+    if ( !WebSAGE.isAlarmsViewer() )
+    if ( document.getElementById("OPC_CMDANORM").style.display === "none" )   
+      {
+        document.getElementById("OPC_CMDANORM").style.display = "inline";    
+      }
+
+    clearTimeout( WebSAGE.g_toutID ); // pára de chamar o servidor
+    
+    var chkcmd = document.getElementById("cbMostraCmd").checked;
+    var chknor = document.getElementById("cbForaNormal").checked;
+    
+    dbg = 1;
+    
+    // zeroes the alarm count and minimum priority
+    for ( var subst in WebSAGE.g_alminfo ) 
+     {
+     if ( WebSAGE.g_alminfo.hasOwnProperty(subst) ) 
+        {
+        WebSAGE.g_alminfo[subst].countack = 0;
+        WebSAGE.g_alminfo[subst].countnack = 0;
+        WebSAGE.g_alminfo[subst].minpriorack = 10;
+        WebSAGE.g_alminfo[subst].minpriornack = 10;
+        }
+     }
+
+    // só mostra se vier uma linhas diferente da que já havia
+    for( i = 0; i < tam; i++ )
+      {
+      if ( i >= WebSAGE.g_tbl.getRowsNum() )
+        {
+        dbg = 1.6; // bug intermitente do chrome
+
+        WebSAGE.g_tbl.addRow( i, L[i] );
+        if ( WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_SUBEST ) ) == -1 )
+          {
+          WebSAGE.g_subst_list.push( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_SUBEST ) );
+          }
+        WebSAGE.EstiloLinha( i, 0 );
+        }
+      else
+        {
+        dbg = 1.1; // bug intermitente do chrome
+
+        if ( L[i] != WebSAGE.g_tbl.getUserData(i) ) // enquanto for igual, mantém
+           {
+           WebSAGE.g_tbl.changeRow( i, L[i] );
+           if ( WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_SUBEST ) ) == -1 )
+             {
+             WebSAGE.g_subst_list.push( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_SUBEST ) );
+             }
+           WebSAGE.EstiloLinha( i, 0 );
+           }  
+        }
+     
+     // account alarms by priority and substation, leave out commands
+     if ( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_QUALIF ).indexOf("J") == -1 )
+       {      
+       var pri = WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_QUALIF ).charAt(0);
+       // count alarms by priority
+       if ( typeof( WebSAGE.g_alminfo[ pri ] ) === 'undefined' )
+         {
+         WebSAGE.g_alminfo[ pri ] =  { countnack: 0, 
+                                       countack: 0, 
+                                       filterout: false, 
+                                       minpriorack: 10, 
+                                       minpriornack: 10, 
+                                       is_subst: false };
+         }
+       if ( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_QUALIF ).indexOf("L") != -1 )
+         {
+           WebSAGE.g_alminfo[ pri ].countnack += 1;
+           WebSAGE.g_alminfo[ pri ].minpriornack = pri;
+         }  
+       else
+         {
+           WebSAGE.g_alminfo[ pri ].countack += 1;
+           WebSAGE.g_alminfo[ pri ].minpriorack = pri;
+         }         
+
+       // count alarms by substation
+       sb = WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_SUBEST );
+       if ( typeof( WebSAGE.g_alminfo[ sb ] ) === 'undefined' )
+         {
+         WebSAGE.g_alminfo[ sb ] =  { countnack: 0, 
+                                      countack: 0, 
+                                      filterout: false, 
+                                      minpriorack: 10, 
+                                      minpriornack: 10, 
+                                      is_subst: true };
+         }
+       // count and verify minimum priority of unacknowledged and acknowledge alarms
+       if ( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_QUALIF ).indexOf("L") != -1 )
+         {
+           WebSAGE.g_alminfo[ sb ].countnack += 1;
+           if ( pri < WebSAGE.g_alminfo[ sb ].minpriornack )
+             WebSAGE.g_alminfo[ sb ].minpriornack = pri;
+         }
+       else  
+         {
+           WebSAGE.g_alminfo[ sb ].countack += 1;
+           if ( pri < WebSAGE.g_alminfo[ sb ].minpriorack )
+             WebSAGE.g_alminfo[ sb ].minpriorack = pri;
+         }
+       }  
+     }
+
+    cntpr = -1; 
+    cntsb = -1; 
+    if ( WebSAGE.isAlarmsViewer() ) // manage alarm boxes
+    for ( var substorpri in WebSAGE.g_alminfo ) 
+      {
+      if ( WebSAGE.g_alminfo.hasOwnProperty(substorpri) ) 
+        {
+        if ( WebSAGE.g_alminfo[substorpri].is_subst )
+          {
+            ytop = 42;
+            xleft = 5;
+            cntsb++;
+          }
+        else
+          {
+            ytop = 2;
+            xleft = 230;
+            cntpr++;
+          }            
+
+        // container to put in per substation filters
+        if ( document.getElementById( "DIV_SUBSTALMFILT" ) === null )
+           $( "body" ).append("<div id='DIV_SUBSTALMFILT' style='overflow:auto;top:42px;left:0;width:100%;height:35px;position:absolute;text-align:center;'><div>");
+
+        if ( document.getElementById( "DIV_" + substorpri ) === null )
+          { // create priority and substation alm boxes
+          if ( WebSAGE.g_alminfo[substorpri].is_subst )
+            { // create substation filters inside a div
+            ytop=0;
+            $( "#DIV_SUBSTALMFILT" ).append(
+            "<div id='DIV_" + substorpri + "' " +
+               " onclick='WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout = ! WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout;WebSAGE.applyTableStyle();'" +
+               " style='position:relative;float:left;text-align:center;margin-bottom:7px;margin-left:3px;top:" + ytop + "px;" + 
+                       // "left:" + ( xleft + ( WebSAGE.g_alminfo[substorpri].is_subst ? cntsb : cntpr ) * 58 ) + "px;" + 
+                       "cursor:pointer;box-shadow: 2px 2px 2px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid black;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
+              substorpri + 
+              "<br>" + 
+              "<span id='SP_" + substorpri +  "_ACK" +
+                  "' style='float:right;-webkit-filter:contrast(.7);text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;'>" + 
+              "</span>" + 
+              "<span id='SP_" + substorpri + "_NACK" +
+                  "' style='float:right;text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;'>" + 
+              "</span>" + 
+            "</div>" );
+            }
+          else
+            { // create priority filters directly over the body
+            $( "body" ).append(
+            "<div id='DIV_" + substorpri + "' " +
+               " onclick='WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout = ! WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout;WebSAGE.applyTableStyle();'" +
+               " style='position:absolute;float:left;text-align:center;top:" + ytop + "px;" + 
+                        "left:" + ( xleft + ( WebSAGE.g_alminfo[substorpri].is_subst ? cntsb : cntpr ) * 58 ) + "px;" + 
+                       "cursor:pointer;box-shadow: 2px 2px 2px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid black;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
+              substorpri + 
+              "<br>" + 
+              "<span id='SP_" + substorpri +  "_ACK" +
+                  "' style='float:right;-webkit-filter:contrast(.7);text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;'>" + 
+              "</span>" + 
+              "<span id='SP_" + substorpri + "_NACK" +
+                  "' style='float:right;text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;'>" + 
+              "</span>" + 
+            "</div>" );
+            }
+          }
+        else
+          {
+          if ( ! WebSAGE.g_alminfo[substorpri].is_subst ) // reposition priority alm boxes
+             document.getElementById( "DIV_" + substorpri ).style.left =  ( xleft + cntpr * 58 ) + "px";
+          }
+          
+        // update alarm boxes state/counts  
+        $( '#DIV_' + substorpri ).css( 'opacity', WebSAGE.g_alminfo[substorpri].filterout ? '.25' : '1' );         
+        $( '#SP_' + substorpri + "_NACK").text( WebSAGE.g_alminfo[substorpri].countnack );
+        $( '#SP_' + substorpri + "_NACK" ).css( 'background-color', ColorOfPriority[ WebSAGE.g_alminfo[substorpri].minpriornack ] );
+        $( '#SP_' + substorpri + "_NACK" ).css( 'border-color',  ColorOfPriority[ WebSAGE.g_alminfo[substorpri].minpriornack ] );
+        $( '#SP_' + substorpri + "_ACK").text(  WebSAGE.g_alminfo[substorpri].countack );
+        $( '#SP_' + substorpri + "_ACK" ).css( 'background-color', ColorOfPriority[ WebSAGE.g_alminfo[substorpri].minpriorack ] );
+        $( '#SP_' + substorpri + "_ACK" ).css( 'border-color',  ColorOfPriority[ WebSAGE.g_alminfo[substorpri].minpriorack ] );
+        }      
+      }
+    
+    while ( tam < WebSAGE.g_tbl.getRowsNum() ) // para caso onde ficam entrando e saindo linhas (qdo mostra tudo anormal)) 
+     {
+        WebSAGE.g_tbl.delRow( WebSAGE.g_tbl.getRowsNum() - 1 );
+     }
+
+    // se a janela info estiver aberta, fica atualizando o ponto 
+    if ( WebSAGE.g_win_cmd )
+    if ( WebSAGE.g_win_cmd.window )
+    if ( typeof(WebSAGE.g_win_cmd.window) == 'object' )
+    if ( typeof(WebSAGE.g_win_cmd.window.closed) != 'undefined' )
+       if ( ! WebSAGE.g_win_cmd.window.closed )
+        {
+        WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
+        clearTimeout( WebSAGE.g_timerID );
+        WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 100 );
+        }
+
+    if ( WebSAGE.g_muda_mod == 1 )      
+      setTimeout( WebSAGE.mostraMods, 100 ); // atualiza opções de módulo
+    
+    $('#ATUALIZACAO').text( Data );
+    $('#NUMREGS').text( WebSAGE.g_tbl.getRowsNum() + " Tot - " );
+  
+    if ( gup("SOCMD") == 1 && document.getElementById("cbMostraCmd").checked != true && WebSAGE.g_firstdraw )
+      document.getElementById("cbMostraCmd").click();
+    
+    if ( WebSAGE.g_firstdraw == 1 )
+      WebSAGE.g_firstdraw = 0;  
+
+    Ventoinha.pulse(".");
+    }
+catch (e)
+    {
+    // o CHROME gera exceptions aqui de vez em quando!
+    //
+
+    Ventoinha.pulse("E");    
+    }    
+
+  // próximo refresh
+  WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh );
+},
+  
+// falha todos os dados caso servidor pare de atualizar por um tempo  
+falhaTudo: function()
+{
+  WebSAGE.g_tbl.clearAll();
+  WebSAGE.g_tbl.addRow( 0, ",,," + Msg.FalhaWebserver + ",,,,", 0 );
+  L=[];
+  WebSAGE.g_waitingServer = 0;
+  
+  // vai tentar de novo
+  clearTimeout( WebSAGE.g_toutID );
+  WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh );
+},
+
+doSilenciaBeep : function()
+{
+   WebSAGE.getScript( WebSAGE.g_remoteServer + "?Z=1" );
+},      
+
+EstiloLinha: function(id, rec)
+{
+try
+  {
+      var stl = '';
+      id = parseInt(id);
+      var pri = parseInt( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).charAt(0) );
+
+      // alinha os analógicos à direita
+      if (  $.isNumeric(WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_EVENTO )) )
+          {
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.textAlign = "right";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.paddingRight = "35px";
+          }
+      else
+          {
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.textAlign = "left";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.paddingRight = "0px";
+          }
+
+      // esconde os filtrados
+      if ( WebSAGE.g_filterOutList.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUBEST ) ) != -1  ||
+           WebSAGE.g_filterOutList.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).charAt(0) ) != -1
+         )
+          {
+            WebSAGE.g_tbl.setRowHidden( id, true );
+            return;
+          }
+        
+      // esconde os comandos  
+      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("J") != -1 )
+          {
+            WebSAGE.g_tbl.setRowHidden( id, true );
+            return;
+          }
+
+      // testa filtro pelos comandáveis
+      var chk = document.getElementById("cbMostraCmd").checked;
+      if (  WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUPCMD ) == 0 && chk )
+          {
+            WebSAGE.g_tbl.setRowHidden( id, true );
+            return;
+          }
+
+      // testa filtro pelos anormais
+      chk = document.getElementById("cbForaNormal").checked;
+      if ( !( parseInt( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_FLAGS ) ) & 0x800 ) && chk )
+          {
+            WebSAGE.g_tbl.setRowHidden( id, true );
+            return;
+          }
+
+      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("L") == -1 || rec )
+          { // reconhecido
+          // Se alarme inibido, mostra texto mais claro
+          if  ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("I") != -1 )
+            stl = 'color: ' + chroma(TabularViewer_AckTxtColor).brighten().brighten() + ';';
+          else
+            stl = 'color: ' + TabularViewer_AckTxtColor + ';';                        
+          }
+      else    
+          { // não reconhecido (alarmado)
+              if ( pri === 0 )
+                {
+                stl = 'color: ' + ColorOfPriority[ pri ] + ';';
+                stl += 'font-weight: bold;';
+                }
+              else  
+                {
+                stl = 'color: ' + TabularViewer_AlmTxtColor + ';';
+                }                
+          }
+
+      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("L") != -1 ||
+           WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("P") != -1
+         )
+         {
+            // let the qualifiers columns be in the color of priority
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.backgroundColor = 
+              ColorOfPriority[ pri ];
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.borderRadius = "10px";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.color = "black";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.textAlign = "center";
+            
+            if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("L") != -1 )
+               WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.opacity = "1";
+            else   
+               WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.opacity = ".3";
+         }
+      else
+         {         
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.backgroundColor = "";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.borderRadius = "";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.color = "";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.textAlign = "center";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.opacity = "1";
+         }
+          
+      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DATA].style.paddingLeft = "5px";
+      
+      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("F") != -1 )
+          { // falhado
+            stl = 'color: ' + TabularViewer_FailTxtColor + ';';
+          }
+
+/*
+      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_ID ).indexOf(Viewers_IDTxtHighlight2) != -1 && 
+           WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_DESCR ).indexOf(Viewers_DescrTxtHighlight2) != -1 )
+          { // coloca fundo nas linhas de disjuntor
+            // stl = stl + 'background-color: ' + TabularViewer_LineColorDestaq2 + ';';
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.borderLeft = TabularViewer_LineColorDestaq2 + " 3px solid";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.borderLeft = TabularViewer_LineColorDestaq2 + " 3px solid";
+          }
+      else
+      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_EVENTO ) == Viewers_AlmTxtHighlight1 )
+          { // coloca fundo nas linhas de operação de proteção
+            // stl = stl + 'background-color: ' + TabularViewer_LineColorDestaq1 + ';';
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.borderLeft = TabularViewer_LineColorDestaq1 + " 3px solid";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.borderLeft = TabularViewer_LineColorDestaq1 + " 3px solid";
+          }
+      else
+          {
+            stl = stl + 'background-color: ;';
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.borderLeft = "";
+            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.borderLeft = "";
+          }
+*/
+      WebSAGE.g_tbl.setRowTextStyle( id, stl );
+      
+      if ( WebSAGE.isAlarmsViewer() )
+        {
+        // differentiate the substation name
+        WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_SUBEST].style.paddingLeft = 
+          ( WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUBEST ) ) * 5 ) % 30 + "px"
+        WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_SUBEST].style.color = 
+          ColorOfSubstation[ WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUBEST ) ) % ColorOfSubstation.length ];
+        }
+  }
+catch ( e ) 
+  { 
+  document.getElementById("VENTOINHA").title = e.stack;
+  }        
+},
+
+doReconheceTudo: function(rec_apaga)
+{
+  // se tem algum não reconhecido, torna reconhecido
+  for (var row=0; row<WebSAGE.g_tbl.getRowsNum(); row++)
+    {
+    if ( rec_apaga==0 )
+      WebSAGE.EstiloLinha(row, 1);
+    else  
+      WebSAGE.EstiloLinha(row, 2);
+    }
+
+    if ( rec_apaga==0 )
+      WebSAGE.getScript( WebSAGE.g_remoteServer +
+                  '?R=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
+                  'PS=' + WebSAGE.g_pass++ 
+                );
+    else              
+      WebSAGE.getScript( WebSAGE.g_remoteServer +
+                  '?Q=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
+                  'PS=' + WebSAGE.g_pass++ 
+                );
+
+    clearTimeout(WebSAGE.g_toutID);
+	  WebSAGE.g_toutID = setTimeout(WebSAGE.callServer, WebSAGE.g_timeOutReconhece);
+},
+
+// linha selecionada: reconhece  
+doOnRowSelected: function( evt )
+{
+    var rec = false;
+    var row = 0;
+    
+    if ( evt === 0 )
+      {
+        row = 0;
+        rec = true;
+      }
+    else  
+      {
+        row = evt.currentTarget.rowIndex - 1 ;
+        if ( WebSAGE.isAlarmsViewer() )
+          rec = true;
+        if ( evt.ctrlKey )
+          rec = true;
+        if ( evt.altKey || evt.shiftKey )
+          rec = false;
+      }
+
+    if ( evt.which == 2 )
+      rec = true;    
+
+    var Qualif = WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_QUALIF );    
+    
+    // RECONHECE EVENTO, SE PRESSIONOU CONTROL
+    if ( rec )
+      {
+      if ( WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_FLAGS) & 0x100 )
+        {
+        WebSAGE.getScript( WebSAGE.g_remoteServer +
+                    '?R=' + WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_NPONTO ) + '&' +
+                    'D=00/00/0000&H=00:00:00&M=000&A=1&' +
+                    'PS=' + WebSAGE.g_pass++ 
+                  );
+
+        // tira o L do qualificador          
+        WebSAGE.g_tbl.cellsSetValue( row, WebSAGE.g_COL_QUALIF, Qualif.replace("L","") );
+        WebSAGE.EstiloLinha( row, 1 );
+        }          
+      }          
+    else          
+      {
+      // somente silencia alarme
+      if ( WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_FLAGS) & 0x100 )
+          WebSAGE.doSilenciaBeep();
+      WebSAGE.janelaInfo( WebSAGE.g_tbl.cellsx(row, WebSAGE.g_COL_NPONTO) );
+      } 
+},
+
+mostraTodosAnormais: function()
+{
+  // testa se realmente deseja sair
+  window.onbeforeunload = function() { return Msg.ConfirmaSaida; };
+
+  WebSAGE.g_timeOutRefresh = WebSAGE.g_timeOutRefresh / 1.5; // shorten refresh time for alarms viewer
+  document.getElementById('FiltroSE').value = WebSAGE.g_filt_all_alarms;
+  WebSAGE.g_titulo_janela = Msg.NomeVisorAnormais + " - " +  Msg.NomeProduto + " - " + Msg.VersaoProduto;
+  document.title = "."; // necessário devido a um bug do chromium!
+  document.title = WebSAGE.g_titulo_janela;
+  
+  LoadFavicon( Imgs.FAVICONANORM );
+  WebSAGE.mudaFiltro();
+  document.getElementById("cbMostraCmd").checked = false;
+  document.getElementById("cbForaNormal").checked = false;
+  document.getElementById("OPC_CMDANORM").style.display = "none";
+  document.getElementById("OPC_FILTROS").style.display = "none";
+  
+  document.getElementById("IMGTABULAR").style.display = "none";
+  document.getElementById("ANORM_ID").style.display = "";
+  document.getElementById("imgReconheceTudo").style.display = "";
+},
+
+// filter by alarm condition (unacknowledged + persistent)
+mostraAlarmados: function()
+{
+    // pára atualização 
+    clearTimeout( WebSAGE.g_toutID );
+
+    var chknor = document.getElementById("cbForaNormal").checked;
+    
+    for( var i in L )
+      {
+        var flg = parseInt( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_FLAGS ) );
+        
+        if ( ( !( flg & 0x900 ) // 0x800=unack.alarm 0x100=persistent alarm
+             && 
+             chknor 
+             )
+            || ( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_QUALIF ).indexOf("J") != -1 )  // comando
+           )
+          WebSAGE.g_tbl.setRowHidden( i, true );
+        else
+          WebSAGE.g_tbl.setRowHidden( i, false );
+      }
+
+    if ( chknor )  // enquanto estiver selecionado, segue filtrando
+       {
+       WebSAGE.g_bloqc = 1; // bloqueia para evitar refiltro pelo comando
+       document.getElementById("cbMostraCmd").checked = false;
+       }
+
+   // atualiza após 2s
+   WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, 2000 );
+},
+      
+mostraCmd: function()
+{
+    // pára atualização 
+    clearTimeout( WebSAGE.g_toutID );
+
+    var chk = document.getElementById("cbMostraCmd").checked;
+    
+    for( var i in L )
+      {
+      if ( ( WebSAGE.g_tbl.cellsx(i,WebSAGE.g_COL_QUALIF).indexOf("J") != -1 )  // comando
+             || ( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_SUPCMD ) == 0 && chk ) 
+         )
+        WebSAGE.g_tbl.setRowHidden( i, true );
+      else
+        WebSAGE.g_tbl.setRowHidden( i, false );		  
+      }
+
+    if ( chk ) 
+       {
+       WebSAGE.g_bloqa = 1; // bloqueia para evitar refiltro pelo estado anormal
+       document.getElementById("cbForaNormal").checked = false;
+       }
+   
+   // atualiza após 2s
+   WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, 2000 );
+},
+  
+fontSize: function(updn)
+{
+    if ( updn == 1 && WebSAGE.g_fontsize < 30 ) 
+      WebSAGE.g_fontsize = parseInt(WebSAGE.g_fontsize) + 1;
+    else   
+    if ( updn == 0 && WebSAGE.g_fontsize > 16 ) 
+      WebSAGE.g_fontsize = parseInt(WebSAGE.g_fontsize) - 1;
+    else
+      return;  
+
+    // escreve tamanho da fonte em cookie
+    var date = new Date();
+    date.setTime( date.getTime() + (3000 * 24 * 60 * 60 * 1000) );
+    document.cookie = 'tab_fontsize=' + WebSAGE.g_fontsize + '; expires=' + date.toGMTString();
+    
+    window.onbeforeunload = null;
+
+    // recarrega a página
+    window.location.reload();        
+},
+
+tbl_prepare: function()
+{
+    WebSAGE.g_tbl = document.getElementById('TBLEVE');
+    WebSAGE.g_tblhead = document.getElementById('TBLHEAD');
+
+    WebSAGE.g_tbl.setColAlign =
+        function( vals ) 
+        {  
+        };
+
+    WebSAGE.g_tbl.setInitWidths =
+        function( vals ) 
+        {  
+        WebSAGE.g_tbl.larguraCol = [];
+        var varr = vals.split(',');
+        for (var i=0; i < varr.length; i++)
+           {
+           WebSAGE.g_tbl.larguraCol[i] = varr[i];
+           }
+        };
+
+    WebSAGE.g_tbl.setHeader = 
+        function( vals ) 
+        {  
+        var varr = vals.split(',');
+
+        if ( WebSAGE.g_tbl.rows.length == 0 )
+            WebSAGE.g_tbl.insertRow( 0 );
+
+        for (var i=0; i < varr.length; i++)
+        {
+           WebSAGE.g_tbl.rows[0].insertCell(i);
+           WebSAGE.g_tbl.rows[0].cells[i].innerHTML=varr[i];
+
+           WebSAGE.g_tblhead.rows[0].insertCell(i);
+           WebSAGE.g_tblhead.rows[0].cells[i].innerHTML=varr[i];
+
+           if ( WebSAGE.g_tbl.larguraCol[i] == 0 )
+              {
+              WebSAGE.g_tbl.rows[0].cells[i].style.display = 'none';
+              WebSAGE.g_tblhead.rows[0].cells[i].style.display = 'none';
+              }
+            WebSAGE.g_tbl.setColWidth(i, WebSAGE.g_tbl.larguraCol[i] );
+        } 
+
+        while ( WebSAGE.g_tbl.rows[0].cells.length > varr.length )
+            WebSAGE.g_tbl.rows[0].deleteCell(WebSAGE.g_tbl.rows[0].cells.length-1);
+
+        // acerta tamanho dos campos se a fonte for maior que a padrão
+        if (WebSAGE.g_fontsize>16)
+            {
+            for ( i=0; i < varr.length; i++ )
+                WebSAGE.g_tbl.setColWidth( i, (WebSAGE.g_tbl.getColWidth(i) * WebSAGE.g_fontsize)/16);
+            }
+            
+        WebSAGE.g_tbl.rows[0].style.display = 'none';
+        };
+
+    WebSAGE.g_tbl.addRow = 
+        function( line, vals ) 
+        {  
+        line++;	
+        var varr = vals.split(',');	
+        WebSAGE.g_tbl.insertRow( line );
+        WebSAGE.g_tbl.rows[line].onclick = WebSAGE.doOnRowSelected;
+        WebSAGE.g_tbl.rows[line].ondblclick = WebSAGE.doOnRowSelected;
+                    
+        for (var i=0; i < varr.length; i++)
+           {
+           WebSAGE.g_tbl.rows[line].insertCell(i);
+           WebSAGE.g_tbl.rows[line].cells[i].innerHTML = varr[i];
+           WebSAGE.g_tbl.rows[line].cells[i].style.boxSizing = "border-box";
+           WebSAGE.g_tbl.rows[line].cells[i].style.borderBottom = '1px solid ' + TabularViewer_GridColor;
+           WebSAGE.g_tbl.rows[line].cells[i].style.padding = "1px 0px";
+           if ( WebSAGE.g_tbl.larguraCol[i] == 0 )
+             WebSAGE.g_tbl.rows[line].cells[i].style.display = 'none';
+          else
+             WebSAGE.g_tbl.rows[line].cells[i].width = WebSAGE.g_tbl.larguraCol[i];  
+           } 
+        WebSAGE.g_tbl.rows[line].userData = vals;
+        };
+
+    WebSAGE.g_tbl.changeRow = 
+        function( line, vals ) 
+        {  
+        line++;
+        var varr = vals.split(',');
+        
+        // equalizes number of columns
+        while ( varr.length > WebSAGE.g_tbl.rows[line].cells.length )             
+           {
+           var cell = WebSAGE.g_tbl.rows[line].insertCell( -1 );
+           var col = WebSAGE.g_tbl.rows[line].cells.length - 1;
+           cell.style.borderBottom = '1px solid ' + TabularViewer_GridColor;
+           if ( WebSAGE.g_tbl.larguraCol[col] == 0 )
+             cell.style.display = 'none';
+           else
+             cell.width = WebSAGE.g_tbl.larguraCol[col];  
+           }
+         
+        for ( var i = 0; i < varr.length; i++ )
+           {
+           WebSAGE.g_tbl.rows[line].cells[i].innerHTML = varr[i];
+           } 
+        WebSAGE.g_tbl.rows[line].userData = vals;
+        };
+
+    WebSAGE.g_tbl.copyRowContent = 
+        function( linefrom, lineto ) 
+        {
+        linefrom++;	lineto++;
+        for (var i=0; i < WebSAGE.g_tbl.rows[0].cells.length; i++)
+          {
+          WebSAGE.g_tbl.rows[lineto].cells[i].innerHTML=WebSAGE.g_tbl.rows[linefrom].cells[i].innerHTML;
+          } 
+        WebSAGE.g_tbl.rows[lineto].userData=WebSAGE.g_tbl.rows[linefrom].userData;
+        };
+
+    WebSAGE.g_tbl.getUserData = 
+        function( line ) 
+        {
+            line++;
+            return WebSAGE.g_tbl.rows[line].userData;
+        };
+
+    WebSAGE.g_tbl.getRowsNum = 
+        function( ) 
+        {
+            return WebSAGE.g_tbl.rows.length-1;
+        };
+
+    WebSAGE.g_tbl.getColsNum = 
+        function( ) 
+        {
+            return WebSAGE.g_tblhead.rows[0].cells.length;
+        };
+
+    WebSAGE.g_tbl.delRow = 
+        function( row ) 
+        {
+            row++;
+            return WebSAGE.g_tbl.deleteRow(row);
+        };
+
+    WebSAGE.g_tbl.setRowColor = 
+        function( row, color ) 
+        {
+            row++;
+            WebSAGE.g_tbl.rows[row].style.color = color;
+        };
+
+    WebSAGE.g_tbl.setRowHidden = 
+        function( row, hide ) 
+        {
+            row++;
+            if ( hide )
+              WebSAGE.g_tbl.rows[row].style.display = 'none';
+            else  
+              WebSAGE.g_tbl.rows[row].style.display = '';
+        };
+
+    WebSAGE.g_tbl.cellsx = 
+        function( row, col ) 
+        {
+            row++;
+            return WebSAGE.g_tbl.rows[row].cells[col].innerHTML;
+        };      
+      
+    WebSAGE.g_tbl.cellsSetValue = 
+        function( row, col, value ) 
+        {
+            row++;
+            return WebSAGE.g_tbl.rows[row].cells[col].innerHTML=value;
+        };      
+
+    WebSAGE.g_tbl.getColWidth = 
+        function( col ) 
+        {
+            return WebSAGE.g_tbl.larguraCol[col];
+        };
+
+    WebSAGE.g_tbl.setColWidth = 
+        function( col, width ) 
+        {
+            WebSAGE.g_tbl.larguraCol[col] = width;
+            WebSAGE.g_tblhead.rows[0].cells[col].width = width;
+            WebSAGE.g_tblhead.rows[0].cells[col].style.display = (width==0)?'none':'';
+            for (var i=0; i < WebSAGE.g_tbl.rows.length; i++) 
+              {
+                WebSAGE.g_tbl.rows[i].cells[col].width = width;
+                WebSAGE.g_tbl.rows[i].cells[col].style.display = (width==0)?'none':'';
+              }
+        return 0;
+        };
+
+    WebSAGE.g_tbl.setStyle = 
+        function( ss_header, ss_grid, ss_selCell, ss_selRow ) 
+        {
+            WebSAGE.g_tbl.style.cssText = ss_grid;
+            return 0;
+        };
+
+    WebSAGE.g_tbl.setRowTextStyle = 
+        function( row, stl ) 
+        {
+            row++;
+            WebSAGE.g_tbl.rows[row].style.cssText = stl;
+            return 0;
+        };
+
+    WebSAGE.g_tbl.setCellTextStyle = 
+        function( row, col, stl ) 
+        {
+            row++;
+            WebSAGE.g_tbl.rows[row].cells[col].style.cssText = stl;
+            return 0;
+        };
+        
+    WebSAGE.g_tbl.clearAll = 
+        function( ) 
+        {
+            while (WebSAGE.g_tbl.rows.length>1) 
+            WebSAGE.g_tbl.deleteRow(1);
+        };      
+},
+
+showInfo: function()
+{
+    var wid=WebSAGE.g_tbl.getColWidth(WebSAGE.g_COL_NPONTO);
+    if ( wid == 0 )
+      {
+      WebSAGE.g_tbl.setColWidth( WebSAGE.g_COL_NPONTO, 60*WebSAGE.g_fontsize/16 );
+      WebSAGE.g_tbl.setColWidth( WebSAGE.g_COL_ID, 230*WebSAGE.g_fontsize/16 );    
+      WebSAGE.g_tbl.witdh='1500px';
+      WebSAGE.g_tblhead.witdh='1500px';
+      }
+    else  
+      {
+      WebSAGE.g_tbl.setColWidth( WebSAGE.g_COL_NPONTO, 0 );
+      WebSAGE.g_tbl.setColWidth( WebSAGE.g_COL_ID, 0 );    
+      WebSAGE.g_tbl.witdh='1200px';
+      WebSAGE.g_tblhead.witdh='1200px';
+      }
+},
+
+init: function()
+{
+    WebSAGE.tbl_prepare();
+
+    WebSAGE.g_titulo_janela = Msg.NomeVisorTabular + " - " +  Msg.NomeProduto + " - " + Msg.VersaoProduto;
+    document.title = "."; // necessário devido a um bug do chromium!
+    document.title = WebSAGE.g_titulo_janela;
+
+    // vai nos objetos com 'id' e coloca como 'title' a mensagem correspondente de Titles, carrega as imagens (de images.js)        
+    $('img[id]').attr('src', function(index) { return Imgs[this.id]; } );
+    $('img[id]').attr('title', function(index) { return Titles[this.id]; } );
+    $('span[id]').attr('title', function(index) { return Titles[this.id]; } );
+    $('input[id]').attr('title', function(index) { return Titles[this.id]; } );
+    $('select[id]').attr('title', function(index) { return Titles[this.id]; } );
+    $('#SPCOMANDAVEIS').text( Msg.SPCOMANDAVEIS );
+    $('#SPANORMAIS').text( Msg.SPANORMAIS );
+    $('#SPSUBEST').text( Msg.SPSUBEST );
+    $('#SPMODULO').text( Msg.SPMODULO );
+    $('#SPFILTROID').text( Msg.SPFILTROID );
+    $('#TOOLBAR_ID').css('background-color', TabularViewer_ToolbarColor);
+    $('#ANORM_ID').attr('title', Msg.NomeVisorAnormais + ' - ' + Msg.NomeProduto  + ' - ' +  Titles.LEGQUAL_ID);
+    
+    $('#TOOLBAR_ID').css('display', ''); // shows toolbar
+
+    // WebSAGE.g_tbl.setColAlign("center,left,center,left,center,right,right,center,center,center");
+
+    // busca tamanho da fonte em cookie
+    var fs = readCookie( "tab_fontsize" );
+    if ( isInt ( fs ) )
+      WebSAGE.g_fontsize = parseInt( fs );
+
+    if ( WebSAGE.g_fontsize <= 16 )
+      document.getElementById("imgFontSizeDown").style.display = "none";
+    if ( WebSAGE.g_fontsize >= 30 )
+      document.getElementById("imgFontSizeUp").style.display = "none";
+      
+    var gridstyle = "outline:none;cursor:pointer;font-weight:normal;border:0px;white;padding:0px;margin-left:5px;";
+    gridstyle = gridstyle + 'table-layout:fixed;';
+    gridstyle = gridstyle + 'color:' + TabularViewer_AckTxtColor + ';'; 
+    gridstyle = gridstyle + 'font-family:' + TabularViewer_Font + ';'; 
+    WebSAGE.g_tbl.setStyle(';', 'height:auto;font-size:' + WebSAGE.g_fontsize + 'px;' + gridstyle,';',';');
+    WebSAGE.g_tbl.setInitWidths("0,0,70,400,180,0,0,55,0,170");
+    WebSAGE.g_tbl.setHeader(Msg.TabNomesColunas);
+
+    $('#gridbox').css('background-color', TabularViewer_TableColor);
+    WebSAGE.g_tbl.cellSpacing = "0px";
+    WebSAGE.g_tbl.cellPadding = "0px";
+    WebSAGE.g_tblhead.cellSpacing = "0px";
+    WebSAGE.g_tblhead.cellPadding = "0px";
+    $('#TBLHEAD').css('margin-left', '5px');
+    $('#TBLHEAD').css('table-layout', 'fixed');
+    $('#TBLHEAD').css('background-color', 'gainsboro');
+    document.body.bgColor = 'gainsboro';
+    $('#TBLHEAD').css('color', 'black');
+    $('#TBLHEAD').css('font-family', TabularViewer_Font);
+
+    setTimeout( WebSAGE.leListaSEs, 500 );
+
+    shortcut.add( "F8", // reconhece tudo
+                  function() { WebSAGE.doReconheceTudo(0); },
+                  { 'type':'keydown', 'propagate':true,	'target':document } );
+    shortcut.add( "F9",
+                  function() { WebSAGE.doSilenciaBeep(); },
+                  { 'type':'keydown', 'propagate':true, 'target':document } );
+    shortcut.add( "1",
+                  function() { document.getElementById("cbMostraCmd").click(); },
+                  { 'type':'keydown', 'propagate':true, 'disable_in_input':true, 'target':document } );
+    shortcut.add( "2",
+                  function() { document.getElementById("cbForaNormal").click(); },
+                  { 'type':'keydown', 'propagate':true, 'disable_in_input':true, 'target':document } );
+                  
+    // teclas de atalho para tamanho da fonte
+    shortcut.add( "", // Num[+] : Aumenta
+                  function() { WebSAGE.fontSize(1); },
+                  { 'type':'keydown', 'propagate':false, 'target':document, 'keycode':107 } );
+    shortcut.add( "", // Num[-] : Diminnui
+                  function() { WebSAGE.fontSize(0); },
+                  { 'type':'keydown', 'propagate':false, 'target':document, 'keycode':109 } );
+
+    // atalhos para percorrer a lista de pontos
+    shortcut.add( "home", 
+                  function() { document.getElementById('TBLEVE').focus(); },
+                  {'type':'keydown', 'propagate':true,	'target':document} );
+    shortcut.add( "end", 
+                  function() { document.getElementById('TBLEVE').focus(); },
+                  {'type':'keydown', 'propagate':true,	'target':document} );    
+    shortcut.add( "pagedown", 
+                  function() { document.getElementById('TBLEVE').focus(); },
+                  {'type':'keydown', 'propagate':true,	'target':document} );
+    shortcut.add( "pageup", 
+                  function() { document.getElementById('TBLEVE').focus(); },
+                  {'type':'keydown', 'propagate':true,	'target':document} );    
+    shortcut.add( "down", // desc12e sem numlock
+                  function() { document.getElementById('TBLEVE').focus(); },
+                  {'type':'keydown', 'propagate':true,	'target':document} );
+    shortcut.add( "up", // sobe sem numlock
+                  function() { document.getElementById('TBLEVE').focus(); },
+                  {'type':'keydown', 'propagate':true,	'target':document} );
+
+    shortcut.add( "esc",
+                  function() { if ( typeof(WebSAGE.g_win_cmd.window) == 'object' ) // fecha janela info
+                               if ( WebSAGE.g_win_cmd.window ) 
+                                 WebSAGE.g_win_cmd.window.close();                                 
+                           },
+                  {'type':'keydown', 'propagate':false, 'target':document} );           
+                  
+    // dispara ventoinha
+    Ventoinha.init("VENTOINHA"); 
+    Ventoinha.periodico();
+
+    if ( gup("SELMODULO") == WebSAGE.g_filt_all_alarms )
+      {
+      WebSAGE.mostraTodosAnormais();
+      }
+    else    
+      {
+      LoadFavicon( Imgs.FAVICONTABULAR );      
+      }
+      
+    document.getElementById('TBLEVE').tabIndex=1; // permite foco na tabela
+    document.getElementById('TBLEVE').focus();      
+
+    // desabilita o botão direito 
+    document.oncontextmenu = function() { return false; };
+    }
+};
+Core.start(WebSAGE);
+
+</script>
+</head>
+<body style='margin:0px; overflow:hidden; user-select:none;'>
+<div id='DIV_TOOL' style='position:fixed;top:0px;left:0px;width:100%;box-shadow: 2px 2px 2px #888888;'>
+<table id="TOOLBAR_ID" style='display:none;font-family:tahoma;font-size:16px;' height='8%' width='100%' cellpadding='0' cellspacing='0'>
+<tr height='40px'>
+<td style='vertical-align:middle;height:36px;white-space:nowrap;'>&nbsp;
+<img id='IMGTABULAR' alt='' src='' align='middle' width='32' height='32' onclick='WebSAGE.showInfo()' style='cursor:pointer;'/>
+<img id='ANORM_ID' alt='' src='' align='middle' width='32' height='32' onclick='WebSAGE.showInfo()'  style='cursor:pointer;display:none;'/>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<img id="imgFontSizeUp" alt='' src='' align='middle' width="27" height="27" onclick='WebSAGE.fontSize(1)' style='cursor:pointer;' />
+<img id="imgFontSizeDown" alt='' src='' align='middle' width="27" height="27" onclick='WebSAGE.fontSize(0)' style='cursor:pointer;' />
+<img id='imgReconheceTudo' alt='' src='' align='middle' width="32" height="32" onclick='WebSAGE.doReconheceTudo(0);' style='cursor:pointer;display:none' />
+<img id='imgClipboard' alt='' src='' onclick='CopyClipboard("TBLEVE")' align='middle' border='0' width='32' height='32' style='cursor:pointer;' />
+<img id='SILENCIA_ID' alt='' src='' align='middle' width="32" height="32" onclick='document.getElementById("SILENCIA_ID").style.display="none";WebSAGE.doSilenciaBeep();' style='display:none; cursor:pointer;' />
+&nbsp;&nbsp;&nbsp;&nbsp;
+<div id='OPC_CMDANORM' style='display:none' >
+<input id="cbMostraCmd" style='vertical-align:middle;' type="checkbox" onclick='WebSAGE.mostraCmd()' /><span id='SPCOMANDAVEIS'>?</span>&nbsp;
+<input id="cbForaNormal" style='vertical-align:middle;' type="checkbox" onclick='WebSAGE.mostraAlarmados()' /><span id='SPANORMAIS'>?</span>&nbsp;
+</div>
+
+<div style="position: absolute; right: 0px; top: 0px; ">
+<small><span id="NUMREGS"style="font-weight:bold;" > </span> <span id='ATUALIZACAO'> </span></small>&nbsp;&nbsp;
+<span id='VENTOINHA' style='font-family:courier;font-weight:bold;'>(!)</span>
+</div>
+
+</td>
+</tr>
+<tr>
+<td style='vertical-align:middle;height:36px;white-space:nowrap;' >
+<div id='OPC_FILTROS'> 
+&nbsp;<span id='SPSUBEST'></span>:<select name="SELSE" id="SELSE" style='text-shadow: 1px 1px 1px #808080;' onfocus='this.onchange=WebSAGE.mudaSE;' size="1"></select>
+<span id='SPMODULO'></span>:<select name="SELMOD" id="SELMOD" style='text-shadow: 1px 1px 1px #808080;' onchange='WebSAGE.mudaMod()' SIZE="1"></select>&nbsp;&nbsp;
+&nbsp;<span id='SPFILTROID' style='display:none;'></span>
+<input id="FiltroSE" style='display:none;text-shadow: 1px 1px 1px #808080;' onblur="WebSAGE.mudaFiltro();" onkeypress="if (event.witch==13 || event.keyCode==13) document.getElementById('SELSE').focus();" />
+<input id="FiltroMod" style='display:none;text-shadow: 1px 1px 1px #808080;' onblur="WebSAGE.mudaFiltro();" onkeypress="if (event.witch==13 || event.keyCode==13) document.getElementById('SELSE').focus();" />
+<input id="cbBloqAtu" onclick='WebSAGE.callServer()' type="checkbox" style="visibility:hidden;" />
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="divhead" style="position:fixed;width:100%;top:80px;height:18px;">
+<table id="TBLHEAD">
+<tr><td></td></tr>
+</table>
+</div>
+<div id="gridbox" style="position:fixed;width:100%;top:100px;height:calc(100% - 80px - 18px);overflow-y:auto;">
+<table id="TBLEVE">
+</table>
+</div>
+</body>
+</html>

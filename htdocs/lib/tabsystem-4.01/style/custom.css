@@ -1,0 +1,57 @@
+.custom-tabsystem {
+ border: none;
+ width: 100%;
+}
+
+.custom-tabsystem .tabcontainer ul, li {
+ list-style-type: none;
+ display: inline;
+ margin: 0; padding: 0;
+ border: none;
+
+}
+
+.custom-tabsystem .tabcontainer {
+ background: #cde;
+ float: right;
+ width: 100%;
+ border: 1px #666 solid;
+ border-bottom-width: 0px;
+ border-right-width: 0px;
+ filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr='#bbbbbb', EndColorStr='#ffffff');
+}
+
+.custom-tabsystem .tabpage {
+ background: #fff;
+ padding: 1em;
+ font: 12px verdana;
+ color: black;
+ border: 1px solid rgb( 145, 155, 156 );
+ clear: both;
+}
+
+.custom-tabsystem .tabcontainer .tab {
+ position:	relative;
+ top: 0;
+ display: inline;
+ float: right;
+ overflow: hidden;	
+ margin: 1px -1px 1px 2px;
+ padding: 2px 0px 0px 0px;
+ border: 0;
+ z-index: 1;
+ font: 12px verdana;
+ white-space: nowrap;
+ text-align: center;
+ margin: 5px 1em;
+}
+
+.custom-tabsystem .tabcontainer .tab-hover {
+ color: blue;
+}
+
+.custom-tabsystem .tabcontainer .tab-active{
+ font-weight: bold;
+ letter-spacing: 2px; 
+  text-decoration: underline;
+}

@@ -1,0 +1,115 @@
+{
+  "width": 500,
+  "height": 200,
+  "data": [
+    {
+      "name": "stocks",
+      "url": "/htdocs/sqlite_oshmi.php?QUERY=select nponto as pnt, valor as val, data*1000 as date from hist where (nponto = 43 or nponto=44 or nponto=45) and data>strftime('%s','now')-60*60 order by pnt, data desc&HMAC=ea71165a4c4877356b5f6842b51b14edccdf6fcf",
+      "update_period" : 20
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "time",
+      "range": "width",
+      "domain": {"data": "stocks", "field": "date"}
+    },
+    {
+      "name": "y",
+      "type": "linear",
+      "range": "height",
+      "nice": true,
+      "zero": false,
+      "domain": [-150, 150]
+    },
+    {
+      "name": "color", 
+      "type": "ordinal", 
+      "domain": {"data": "stocks", "field": "pnt"},
+      "range": "category10"
+    }
+  ],
+  "axes": [
+    {
+    "type": "x", 
+    "scale": "x", 
+    "format":"%H:%M",
+    "tickSizeEnd": 0,
+    "grid": true,
+    "properties": { 
+          "grid": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}},
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"}
+              },
+          "axis": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }  
+          }    
+    },
+{ 
+      "type": "y", 
+      "scale": "y" , 
+      "format": "0.0f", 
+      "grid": true,
+      "properties": {
+          "grid": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.5}},
+          "axis": {
+              "stroke": {"value": "#00eeee"}
+              },
+          "labels": {
+              "fill": {"value": "#00eeee"},
+              "font": {"value": "open sans"},
+              "fontSize": {"value": 14},
+              "fontStyle": {"value": "oblique"},
+              "fontWeight": {"value": 300}
+              },
+          "ticks": {
+              "stroke": {"value": "#00eeee"}, "strokeWidth": {"value": 0.7}
+              }                  
+          }
+    }
+  ],
+  "marks": [
+    {
+      "type": "group",
+      "from": {
+        "data": "stocks",
+        "transform": [{"type": "facet", "groupby": ["pnt"]}]
+      },
+      "marks": [
+        {
+          "type": "line",
+          "properties": {
+            "enter": {
+              "x": {"scale": "x", "field": "date"},
+              "y": {"scale": "y", "field": "val"},
+              "stroke": {"scale": "color", "field": "pnt"},
+              "strokeWidth": {"value": 2}
+            }
+          }
+        },
+        {
+          "type": "text",
+          "from": {
+            "transform": [{"type": "filter", "test": "datum.date > 0"}]
+          },
+          "properties": {
+            "enter": {
+              "x": {"scale": "x", "field": "date", "offset": 2},
+              "y": {"scale": "y", "field": "val"},
+              "fill": {"scale": "color", "field": "pnt"},
+              "text": {"field": "pnt"},
+              "baseline": {"value": "middle"}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

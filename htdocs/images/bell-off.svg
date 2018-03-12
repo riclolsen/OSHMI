@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: IcoMoon  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="512" height="512" viewBox="0 0 512 512" data-tags="bell, alarm, notification" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<path d="M 512.00,416.00c-53.021,0.00-96.00-42.98-96.00-96.00L 416.00,177.455 c0.00-70.37-54.971-129.064-128.00-142.543L 288.00,0.00 l-64.00,0.00 l0.00,34.912 
+	C 150.969,48.391, 96.00,107.085, 96.00,177.455L 96.00,320.00 c0.00,53.02-42.981,96.00-96.00,96.00l0.00,32.00 l 214.799,0.00 c-2.604,5.712-4.054,12.06-4.054,18.745
+	C 210.745,491.739, 231.006,512.00, 256.00,512.00c 24.993,0.00, 45.255-20.261, 45.255-45.255c0.00-6.687-1.452-13.033-4.055-18.745L 512.00,448.00 L 512.00,416.00 z M 352.00,320.00
+	l-32.00,32.00l-64.00-64.00l-64.00,64.00l-32.00-32.00l 64.00-64.00l-64.00-64.00l 32.00-32.00l 64.00,64.00l 64.00-64.00l 32.00,32.00l-64.00,64.00L 352.00,320.00z">
+<animate calcMode = "discrete" dur="2.0s" keyTimes = "0; 0.4; 0.6; 0.8; 1" repeatCount="indefinite" attributeName="fill" values="black; firebrick; crimson; firebrick; black;" fill="freeze" />
+  </path>
+  </svg>
