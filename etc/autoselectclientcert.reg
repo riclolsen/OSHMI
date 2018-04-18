@@ -1,0 +1,4 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Chromium\AutoSelectCertificateForUrls]
+"1"="{\"pattern\":\"https://127.0.0.1\",\"filter\":{\"ISSUER\":{\"CN\":\"CEEE.COM.BR\"}}}"
