@@ -3777,7 +3777,7 @@ GtkWidget *isac_menu_clone_init(GtkObject *spw)
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf), GTK_WRAP_WORD);
 	GtkTextBuffer *desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf));
 	//gtk_text_view_set_editable(GTK_TEXT_VIEW(tf), FALSE);
-	gtk_text_buffer_set_text(desc_buffer, "'Faceplate' was previously known as 'Clone' in SAGE. A very useful way to group several animations together by making the tag name into variable, and duplicate them easily. An example of implementation is on several tanks or production lines with exact group of animations but different tags which systematically assign for its associate production lines. See user guide for more details. For example, n=5, s=sectionA, f=12.345", -1);
+	gtk_text_buffer_set_text(desc_buffer, "A way to group several animations together by making tag names into variables, and duplicate them easily. For example, n=TAG1, s=TAG2, f=TAG3. In the grouped objects those variables are accessed as %n, %s and %f receiving the values of TAG1, TAG2 and TAG3.", -1);
 	gtk_container_add(GTK_CONTAINER(int_expander), tf);
 	//gtk_table_attach_defaults (GTK_TABLE (tb1), tf, 3, 4, 2, 3);
 	gtk_widget_show(tf);
@@ -4140,7 +4140,7 @@ GtkWidget *isac_menu_get_init(GtkObject *spw)
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf), GTK_WRAP_WORD);
 	GtkTextBuffer *desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf));
 	//gtk_text_view_set_editable(GTK_TEXT_VIEW(tf), FALSE);
-	gtk_text_buffer_set_text(desc_buffer, "Display data in the text object.", -1);
+	gtk_text_buffer_set_text(desc_buffer, "Display values in the text object. Use C/printf float convention like %05.2f to display 01.20 when the tag has the value 1.2", -1);
 	gtk_container_add(GTK_CONTAINER(int_expander), tf);
 	//gtk_table_attach_defaults (GTK_TABLE (tb1), tf, 1, 3, 2, 3);
 	gtk_widget_show(tf);
@@ -4899,7 +4899,7 @@ GtkWidget *isac_menu_script_init(GtkObject *spw)
 	gtk_widget_set_sensitive(GTK_WIDGET(tf1), FALSE);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf1), GTK_WRAP_WORD);
 	GtkTextBuffer *desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf1));
-	gtk_text_buffer_set_text(desc_buffer, "Run user's JavaScript when this object is triggered with the selected mouse event.", -1);
+	gtk_text_buffer_set_text(desc_buffer, "Run user's JavaScript when this object is triggered with the selected event.", -1);
 	gtk_container_add(GTK_CONTAINER(int_expander), tf1);
 	gtk_widget_show(tf1);
 
@@ -5049,7 +5049,7 @@ GtkWidget *isac_menu_set_init(GtkObject *spw)
 	gtk_widget_set_sensitive(GTK_WIDGET(tf), FALSE);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf), GTK_WRAP_WORD);
 	GtkTextBuffer *desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf));
-	gtk_text_buffer_set_text(desc_buffer, "Set data into associate tag.", -1);
+	gtk_text_buffer_set_text(desc_buffer, "Set parameters into associate tag or special function.", -1);
 	gtk_container_add(GTK_CONTAINER(int_expander), tf);
 	gtk_widget_show(tf);
 
@@ -5327,7 +5327,7 @@ GtkWidget *isac_menu_text_init(GtkObject *spw)
 	gtk_widget_set_sensitive(GTK_WIDGET(tf), FALSE);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf), GTK_WRAP_WORD);
 	GtkTextBuffer *desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf));
-	gtk_text_buffer_set_text(desc_buffer, "Association of tag values with text string, e.g. 1 = 'OPEN', 2 = 'MOVING', 3 = 'CLOSED', 4 = 'FAILED'.", -1);
+	gtk_text_buffer_set_text(desc_buffer, "Association of tag enumerated values with text string, e.g. 1 = 'OPEN', 2 = 'MOVING', 3 = 'CLOSED', 4 = 'FAILED'. For digital values use IEC60870 double point convention 1=OFF, 2=ON, 0 and 3=INVALID or TRANSIT, +128 for BAD quality, f=all invalid states, a=alarmed point.", -1);
 	gtk_container_add(GTK_CONTAINER(int_expander), tf);
 	gtk_widget_show(tf);
 
@@ -5580,9 +5580,25 @@ GtkWidget *isac_menu_about_init(GtkObject *spw)
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf), GTK_WRAP_WORD);
 	buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf));
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tf), FALSE);
-	gtk_text_buffer_set_text(buffer, "\nSAGE (SCADA Animation GUI Editor) is produced by Ecava for use in conjunction with IntegraXor SCADA system.\n\n"
-		"Please contact support@integraxor.com or visit support forum at \n"
-		"http://www.integraxor.com for any issues related to this extension.\n\n", -1);
+	gtk_text_buffer_set_text(buffer, 
+	    "Inkscape SCADAvis vector graphics display editor (April/2018)\n"
+	    "Modified and custom built for:\n"
+        "  * SCADAvis.io\n"
+        "  * xPlainCloud.com\n"
+        "  * OSHMI - Open Substation HMI\n\n"
+		"This build is a derivative of the Inkscape Project work and of the Ecava SAGE work,\n"
+		" it is not in any way associated with the Inkscape Project nor Ecava.\n"
+		"We respect and intend to comply with the branding policy of the Inkscape Project\n"
+		"  https://inkscape.org/en/about/branding/\n"
+		"In our view the modifications introduced are not substantial and do not intend to create a competitive product.\n"
+		"The modifications introduced are meant to allow the use of the sotware as a SCADA Synoptics Editor.\n"
+		"We respect the GPL license of the upstream work by making the source code of modifications to the original Inkscape and SAGE code available at:\n"
+		"  https://sourceforge.net/p/oshmiopensubstationhmi/mercurial/ci/default/tree/inkscape_sage_src/\n\n"
+        "The original SAGE (SCADA Animation Graphic Editor) software and source code is available here:\n"
+		"  https://sourceforge.net/projects/sage-scada/\n"
+		"Licensed under the GNU GPLv3\n"
+		"  https://www.gnu.org/licenses/gpl-3.0.en.html", 
+		-1);
 	gtk_table_attach_defaults(GTK_TABLE(tbscroll), tf, 0, 8, 0, 6);
 	gtk_widget_show(tf);
 
