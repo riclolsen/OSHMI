@@ -1,6 +1,6 @@
 object FormScreenList: TFormScreenList
-  Left = 0
-  Top = 366
+  Left = 236
+  Top = 448
   Hint = 'Choose a screen'
   HorzScrollBar.Visible = False
   VertScrollBar.Style = ssHotTrack
@@ -23,6 +23,7 @@ object FormScreenList: TFormScreenList
   OnKeyDown = FormKeyDown
   OnMouseWheelDown = FormMouseWheelDown
   OnMouseWheelUp = FormMouseWheelUp
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 24
 end

@@ -33,6 +33,7 @@
 #define MAX_RUN 6 // máximo de programas a executar
 #define MAX_ATALHOS_TELAS 10
 #define MAX_WIN_TITLE_CTL 100
+#define MAX_TELAS 300
 
 //---------------------------------------------------------------------------
 class TfmShell : public TForm
@@ -72,6 +73,7 @@ __published:	// IDE-managed Components
         TToolButton *ToolButton6;
         TToolButton *ToolButton7;
         TNMHTTP *NMHTTP2;
+        TTimer *Timer11;
         void __fastcall tbSairClick(TObject *Sender);
         void __fastcall tbCurvasClick(TObject *Sender);
         void __fastcall tbEventosClick(TObject *Sender);
@@ -125,6 +127,9 @@ __published:	// IDE-managed Components
           int X, int Y);
         void __fastcall Label1MouseMove(TObject *Sender, TShiftState Shift,
           int X, int Y);
+        void __fastcall Timer11Timer(TObject *Sender);
+        void __fastcall lblScreenClick(TObject *Sender);
+        void __fastcall lblScreenMouseMove(TObject *Sender, TShiftState Shift, int X, int Y);
 private:	// User declarations
         int glAlpha;
         static const int glAlphaMax = 250;
@@ -154,8 +159,12 @@ private:	// User declarations
         void SilenciaBeep();
         int HaBeepAtivo();
         void AtivaBeep( int tipo );
-
+        void CheckWinKey();
 public:		// User declarations
+        TLabel * ScreenItems[MAX_TELAS];
+        void ShowSelScreen(void);
+        int NumScreens;
+        int SelScreen;
         String VISOR_EVENTOS;
         String VISOR_TABULAR;
         String VISOR_TELAS;
@@ -163,6 +172,7 @@ public:		// User declarations
         String VISOR_TENDENCIAS;
         String VISOR_DOCS;
         String VISOR_LOGS;
+        int lastks;
         __fastcall TfmShell(TComponent* Owner);
 };
 //---------------------------------------------------------------------------
@@ -181,6 +191,15 @@ extern int REMOTE_PORT;
 #define BEEP_NENHUM 0
 #define BEEP_NORMAL 1
 #define BEEP_CRITICO 2
+
+#define CLR_SCR_TXT_OPENED 0x0274020f
+#define CLR_SCR_TXT_NOTOPENED 0x02929405 
+#define CLR_SCR_BGD_SELECTED 0x02ede5c8
+#define CLR_SCR_BGD_NOTSELECTED 0x02fdf5d8
+#define CLR_SCR_GRP 0x028fefdf1
+
+#define SHELLAPIURL "htdocs/shellapi.rjs"
+
 
 void ExecExternApp(char * cmd);
 void Loga(String msg, String arq=ARQ_LOG );

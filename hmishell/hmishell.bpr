@@ -4,10 +4,10 @@
   <MACROS>
     <VERSION value="BCB.05.03"/>
     <PROJECT value="..\bin\hmishell.exe"/>
-    <OBJFILES value="hmishell.obj shell_u.obj exit_u.obj sha1.obj"/>
+    <OBJFILES value="hmishell.obj shell_u.obj exit_u.obj sha1.obj ..\webserver\screen_list_u.obj"/>
     <RESFILES value="hmishell.res"/>
     <DEFFILE value=""/>
-    <RESDEPEN value="$(RESFILES) shell_u.dfm exit_u.dfm"/>
+    <RESDEPEN value="$(RESFILES) shell_u.dfm exit_u.dfm ..\webserver\screen_list_u.dfm"/>
     <LIBFILES value="&quot;c:\program files (x86)\borland\cbuilder5\Lib\PSDK\psapi.lib&quot;"/>
     <LIBRARIES value="$(BCB)\lib\psdk\psapi.lib VCLX50.lib NMFast50.lib Vcl50.lib"/>
     <SPARELIBS value="Vcl50.lib NMFast50.lib VCLX50.lib $(BCB)\lib\psdk\psapi.lib"/>
@@ -15,7 +15,7 @@
       ibsmp50.bpi vcldbx50.bpi TeeUI50.bpi TeeDB50.bpi Tee50.bpi TeeQR50.bpi 
       VCLIB50.bpi bcbie50.bpi vclie50.bpi Inetdb50.bpi Inet50.bpi NMFast50.bpi 
       dclocx50.bpi bcb2kaxserver50.bpi Indy50.bpi dclusr50.bpi"/>
-    <PATHCPP value=".;"/>
+    <PATHCPP value=".;..\webserver"/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
@@ -25,8 +25,8 @@
     <USERDEFINES value=""/>
     <SYSDEFINES value="NO_STRICT"/>
     <MAINSOURCE value="hmishell.cpp"/>
-    <INCLUDEPATH value="\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;&quot;C:\Arquivos de programas\Borland\CBuilder5\Projects\&quot;;$(BCB)\include;$(BCB)\include\vcl"/>
-    <LIBPATH value="\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;&quot;C:\Arquivos de programas\Borland\CBuilder5\Projects\&quot;;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib"/>
+    <INCLUDEPATH value="..\webserver;&quot;C:\Program Files (x86)\Borland\CBuilder5\Projects\&quot;;\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;&quot;C:\Arquivos de programas\Borland\CBuilder5\Projects\&quot;;$(BCB)\include;$(BCB)\include\vcl"/>
+    <LIBPATH value="..\webserver;&quot;C:\Program Files (x86)\Borland\CBuilder5\Projects\&quot;;\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;&quot;C:\Arquivos de programas\Borland\CBuilder5\Projects\&quot;;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib"/>
     <WARNINGS value="-w-par"/>
   </MACROS>
   <OPTIONS>
@@ -70,17 +70,21 @@ ProductVersion=1.0.0.0
 Comments=
 
 [HistoryLists\hlIncludePath]
-Count=3
-Item0=\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
-Item1=C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
-Item2=C:\Arquivos de programas\Borland\CBuilder5\Projects;$(BCB)\include;$(BCB)\include\vcl
+Count=5
+Item0=..\webserver;C:\Program Files (x86)\Borland\CBuilder5\Projects\;\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
+Item1=..\webserver;C:\Program Files (x86)\Borland\CBuilder5\Projects;\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
+Item2=\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
+Item3=C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
+Item4=C:\Arquivos de programas\Borland\CBuilder5\Projects;$(BCB)\include;$(BCB)\include\vcl
 
 [HistoryLists\hlLibraryPath]
-Count=4
-Item0=\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib
-Item1=C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib
-Item2=C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib
-Item3=C:\Arquivos de programas\Borland\CBuilder5\Projects;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib
+Count=6
+Item0=..\webserver;C:\Program Files (x86)\Borland\CBuilder5\Projects\;\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib
+Item1=..\webserver;C:\Program Files (x86)\Borland\CBuilder5\Projects;\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib
+Item2=\\vboxsvr\vm\work\projetos\builder_5\webserver\shell;C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib
+Item3=C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\psdk\psapi.lib
+Item4=C:\Arquivos de programas\Borland\CBuilder5\Projects\;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib
+Item5=C:\Arquivos de programas\Borland\CBuilder5\Projects;$(BCB)\Projects\Lib;c:\indy\c5\;$(BCB)\lib\obj;$(BCB)\lib
 
 [HistoryLists\hlDebugSourcePath]
 Count=1

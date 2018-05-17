@@ -12,7 +12,7 @@
 // Com os valores obtidos dos pontos são atualizados os objetos (DJ, SC e medidas) no SVG.
 // DEPENDENCIAS : util.js, jquery.js, jquery.ui, core.js, shortcut.js, messages.js, config_viewers.js  (todas devem estar incluidas antes deste script)  
 
-// OSHMI/Open Substation HMI - Copyright 2008-2016 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 /*jslint browser: true, bitwise: true, devel: true */
 /*jslint white: true */
@@ -71,6 +71,42 @@ var CLICK_POSX = 0;
 var CLICK_POSY = 0;
 
 var ComandoEnviado = "";
+
+// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+// http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+// requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish, Tino Zijdel, and Jonathan Neal
+// MIT license
+if (!window.requestAnimationFrame) (function() {
+	'use strict';
+	function requestAnimationFrame(callback) {
+		var
+		currentTime = now(),
+		delay = Math.max(0, 16 - (currentTime - lastTime));
+
+		lastTime = currentTime;
+
+		return setTimeout(function () {
+			lastTime = now();
+
+			callback(lastTime - startTime);
+		}, delay);
+	}
+	function cancelAnimationFrame(id) {
+		clearTimeout(id);
+	}
+  var	
+  raf = 'RequestAnimationFrame',
+	caf = 'CancelAnimationFrame',
+	webkit = 'webkit',
+	moz = 'moz',
+	now = Date.now || function () {
+		return new Date().getTime();
+	},
+	startTime = now(),
+	lastTime = startTime;
+	window.requestAnimationFrame = window[moz + raf] || window[webkit + raf] || requestAnimationFrame;
+	window.cancelAnimationFrame = window[moz + caf] || window[webkit + caf] || window[webkit + 'CancelRequestAnimationFrame'] || cancelAnimationFrame;
+})();
 
 // Process the list of screens
 function lista_telas()
@@ -509,14 +545,23 @@ return T[tagornumber] || T[NPTS[tagornumber]] || 0;
 },
 
 // busca e executa script de um servidor
-getScript: function ( srvurl )
+getScript: function ( srvurl, postdata )
 {
-// substitui a chamada $.getScript que causava memory leaks
-$.ajax( { // crossDomain: true,
-          url: srvurl,
-          dataType: "text",
-          success: WebSAGE.onSuccess
-         } );
+// substitui a chamada $.getScript que aparentemente causava memory leaks por $.ajax
+if ( postdata != "" )
+  $.ajax( { // crossDomain: true,
+            url: srvurl,
+            dataType: "text",
+            data: postdata,
+            type: "POST",
+            success: WebSAGE.onSuccess
+          } );
+else
+  $.ajax( { // crossDomain: true,
+            url: srvurl,
+            dataType: "text",
+            success: WebSAGE.onSuccess
+          } );
 },
 
 tooltipRelac: function(item, pnt)
@@ -2543,11 +2588,15 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
          for ( i = 0; i < inksage_labelvec[lbv].list.length; i++ )
            { 
            item.setAttributeNS( null, "on" + inksage_labelvec[lbv].list[i].evt, "thisobj=evt.currentTarget;" + inksage_labelvec[lbv].list[i].param ); 
+           if ( inksage_labelvec[lbv].list[i].evt.indexOf("mouse") >= 0 )
+           if ( typeof(item.blockPopup) == "undefined" )
+           if ( item.style !== null )
+               item.style.cursor = "pointer";
            }
          break;               
       case "text":
          break;
-      case "clone": // só presente em objetos agrupados
+      case "clone": 
          break;
       default:
          break;          
@@ -2647,7 +2696,7 @@ callServer : function ()
   var tipo;
   var nohs;
 
-  // o argumento PASS é só para mudar a URL de forma a que o cache não seja usado pelo IE
+  // o argumento PASS é só para mudar a URL de forma garantir a que o cache não seja usado pelo browser
 
   Data = ''; // apaga data, vai ser atualizada pelo script abaixo
 
@@ -2656,10 +2705,12 @@ callServer : function ()
   // pede dados de tempo real ao servidor, con informações sobre os pontos na primeira vez
   // asks for real time data from the server, with point info on the first time
   WebSAGE.getScript( WebSAGE.g_remoteServer + 
-                    '?P=' + WebSAGE.lstpnt +
+                    '?P=' + // leave P parameter empty, list of points will be in the E (HTTP POST) parameter
                     '&B=WebSAGE.showValsSVG' +  
                     '&I=' +  ( WebSAGE.Pass === 0  ? 1 : 0 ) +
-                    '&PS=' + WebSAGE.Pass );
+                    '&PS=' + WebSAGE.Pass,
+                    'E=' + WebSAGE.lstpnt // force post, list of points in the E (HTTP POST) parameter
+                   );
 
   // vou testar, na metade do tempo, o status do webserver para ver se houve alguma mudança 
   WebSAGE.g_toutStatusID = setTimeout( WebSAGE.getServerStatus, WebSAGE.g_timeOutRefresh / 2 );
@@ -3398,7 +3449,7 @@ produzDestaq : function ( obj , ponto )
 {
  var svg_ns, block, bb, x, y, rx, ry, id, aux, el, xfm;
 
- if ( ponto == 99999 )
+ if ( ponto === 99999 || ponto === 0 )
   return;
 
  if ( typeof( obj.getAttributeNS ) === 'undefined' )
@@ -3492,7 +3543,7 @@ produzEtiq : function ( obj , ponto )
  //if (isNaN(parseInt(ponto)))
  //  id=id;
  
- if ( ponto == 99999 )
+ if ( ponto === 99999 || ponto === 0 )
    {
    return;
    }
@@ -3636,6 +3687,8 @@ visibEtiq : function ( ponto )
 // cria textos para mostrar relacionamentos
 produzRelac : function ( obj , ponto )
 {
+ /* 
+ 
  var svg_ns, block, bb, x, y, id, aux, xfm;
 
  if ( ponto == 99999 || ponto == 0 )
@@ -3698,6 +3751,8 @@ produzRelac : function ( obj , ponto )
  
  // SVGDoc.documentElement.appendChild( block );
  obj.parentNode.appendChild( block ); 
+
+ */
 },      
 
 // mostra/esconde os relacionamentos, através dos objetos criados na função produzRelac
@@ -4147,11 +4202,13 @@ setupTimeMachine: function()
        clearTimeout( WebSAGE.g_timeoutFalhaID );
        WebSAGE.getScript(
                   WebSAGE.g_timePntServer +
-                 '?P=' + WebSAGE.lstpnt +
+                 '?P=' + // leave P parameter empty, list of points will be in the E (HTTP POST) parameter
                  '&H=' + document.getElementById('tmpk').value +
                  '&D=' + dtstr +
                  '&B=WebSAGE.showValsSVG' +
-                 '&PS=' + WebSAGE.Pass );
+                 '&PS=' + WebSAGE.Pass,
+                 'P=' + WebSAGE.lstpnt // force post, list of points in the P (HTTP POST) parameter
+                 );
 
   document.getElementById('timesldr').focus();
   $('#timemachinecontrols').css('display', '');

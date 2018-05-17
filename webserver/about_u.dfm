@@ -8413,7 +8413,7 @@ object AboutForm: TAboutForm
     Width = 157
     Height = 13
     Alignment = taCenter
-    Caption = '© 2008 - 2017 - Ricardo L. Olsen'
+    Caption = '© 2008 - 2018 - Ricardo L. Olsen'
   end
   object Label2: TLabel
     Left = 123

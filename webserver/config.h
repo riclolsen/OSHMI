@@ -3,7 +3,7 @@
 
 // Parâmetros e constantes de configuração do sistema
 
-#define VERSAO "4.12"
+#define VERSAO "4.15"
 
 extern int IEC104_PORT;
 extern int IEC104_1_SEC; // endereço secundário da utr 1
@@ -37,6 +37,7 @@ extern int LAST_PRIORITY_THAT_BEEPS; // alarms up to and including this priority
 extern int ALARMA_DUPLA_TRANSICAO; // alarma ou não quando recebe evento com estado igual ao atual
 extern String WEBSERVER_CLIENTES_REMOTOS; // Lista separada por vírgula de clientes remotos, * libera geral
 extern String WEBSERVER_SCRIPT; // Nome do script servidor de código javascript chamado de dentro do browser
+extern String SHELLAPI_SCRIPT; // Nome do script servidor de código javascript chamado do hmishell
 extern String WEBSERVER_DATE_FMT; // date time format according to TDateTime::FormatString
 extern String WEBSERVER_DP_TRANSIT; // message for iec digital double 00
 extern String WEBSERVER_DP_INVALID; // message for iec digital double 11

@@ -816,11 +816,6 @@ try
 
   // console.profileEnd();
     
-  // tenta reconectar o websocket, se não estiver conectado (readyState>=2)
-  //if ( typeof(WebSocket) != "undefined" )
-  //if ( WebSAGE.g_ws.readyState >= 2 ) 
-  //   WebSAGE.websocketConecta(1);
-  
   // Process notifications if enabled and not in historical mode
   if ( EventsViewer_Notific )
   if ( ! document.getElementById("idHistorico").checked )
@@ -971,32 +966,6 @@ for ( var c in cria )
     }
   }  
 },
-
-/*
-// conexão ao websocket para receber do servidor os informes de trocas de estado de pontos digitais
-websocketConecta : function(reconectar)
-{
-    if ( typeof(WebSocket) != "undefined" )
-    {
-        if (reconectar==1)
-            WebSAGE.g_ws.close();
-        WebSAGE.g_ws = new WebSocket("ws://"+document.location.hostname+":8120/vardig", "oshmi");
-        WebSAGE.g_ws.onopen = function() { WebSAGE.g_timeOutRefresh=3*1000*EventsViewer_RefreshTime; };
-        WebSAGE.g_ws.onmessage =
-            function(evt)
-        { // este evento será disparado pelo servidor quando houver alteração de pontos digitais
-            // se estiver em modo congelar ou histórico, não atualiza
-            if ( !document.getElementById("idCongelar").checked && !document.getElementById("idHistorico").checked )
-            {
-                clearTimeout(WebSAGE.g_toutID);
-                WebSAGE.g_toutID = setTimeout(WebSAGE.callServer, 1000);
-            }
-        };
-        WebSAGE.g_ws.onclose = function() { WebSAGE.g_timeOutRefresh=1000*EventsViewer_RefreshTime; };
-        WebSAGE.g_ws.error = function() {};
-    }
-},
-*/
 
 // falha todos os dados caso servidor pare de atualizar por um tempo  
 falhaTudo: function()
@@ -1429,7 +1398,11 @@ tbl_prepare: function()
            if ( WebSAGE.g_tbl.larguraCol[i] == 0 )
              WebSAGE.g_tbl.rows[line].cells[i].style.display = 'none';
           else
+             {
              WebSAGE.g_tbl.rows[line].cells[i].width = WebSAGE.g_tbl.larguraCol[i];  
+             WebSAGE.g_tbl.rows[line].cells[i].style.minWidth = WebSAGE.g_tbl.larguraCol[i] + "px";  
+             WebSAGE.g_tbl.rows[line].cells[i].style.textOverflow = "ellipsis";  
+             }
            } 
         WebSAGE.g_tbl.rows[line].userData = vals;
         };
@@ -1531,10 +1504,12 @@ tbl_prepare: function()
         {
             WebSAGE.g_tbl.larguraCol[col] = width;
             WebSAGE.g_tblhead.rows[0].cells[col].width = width;
+            WebSAGE.g_tblhead.rows[0].cells[col].style.minWidth = width + "px";
             WebSAGE.g_tblhead.rows[0].cells[col].style.display = (width == 0) ? 'none' : '';
             for (var i=0; i < WebSAGE.g_tbl.rows.length; i++) 
               {
                 WebSAGE.g_tbl.rows[i].cells[col].width = width;
+                WebSAGE.g_tbl.rows[i].cells[col].style.minWidth = width + "px";
                 WebSAGE.g_tbl.rows[i].cells[col].style.display = (width == 0) ? 'none' : '';
               }
         return 0;
@@ -1746,7 +1721,7 @@ init: function()
     $('#DIVFILT').css( 'left', document.getElementById('imgFilter').getBoundingClientRect().right + 5 );
 
     var gridstyle = "outline:none;cursor:pointer;font-weight:normal;border:0px;white;padding:0px;margin-left:5px;";
-    gridstyle = gridstyle + 'table-layout:fixed;';
+    gridstyle = gridstyle + 'table-layout:fixed;white-space:nowrap;overflow:hidden;';
     gridstyle = gridstyle + 'color:' + EventsViewer_AlmTxtColor + ';'; 
     gridstyle = gridstyle + 'font-family:' + EventsViewer_Font + ';'; 
     WebSAGE.g_tbl.setStyle(';', 'height:auto;font-size:' + WebSAGE.g_fontsize + 'px;' + gridstyle,';',';');
@@ -1759,6 +1734,8 @@ init: function()
     WebSAGE.g_tblhead.cellSpacing = "0px";
     WebSAGE.g_tblhead.cellSpacing = "0px";
     WebSAGE.g_tblhead.cellPadding = "0px";
+    $('#TBLHEAD').css('overflow', 'hidden');
+    $('#TBLHEAD').css('white-space', 'nowrap');
     $('#TBLHEAD').css('margin-left', '5px');
     $('#TBLHEAD').css('table-layout', 'fixed');
     $('#TBLHEAD').css('background-color', 'gainsboro');
@@ -1873,10 +1850,6 @@ init: function()
     
     WebSAGE.reload( "init" );
       
-    // vou usar websckets, se disponível, para atualizar mais rapidamente quando houver troca de estado em pontos digitais.   
-    //if ( typeof(WebSocket) != "undefined" )
-    //   WebSAGE.websocketConecta(0);	
-       
     document.getElementById('TBLEVE').tabIndex = 1; // permite foco na tabela
     document.getElementById('TBLEVE').focus();      
        

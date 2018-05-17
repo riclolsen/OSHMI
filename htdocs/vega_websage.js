@@ -1,6 +1,6 @@
 "use strict";
 
-// OSHMI/Open Substation HMI - Copyright 2008-2017 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 WebSAGE.g_vega_num = 0;
 
@@ -428,47 +428,6 @@ function (inksage_labelvec, lbv, item)
       );
     }
     break;
-
-    /*
-    case "#multibar": //
-    item.style.display = 'none'; // hide the rectangle
-    d3.json('multiBarHorizontalData.json', function(data) {
-    nv.addGraph(function() {
-    var chart = nv.models.multiBarHorizontalChart()
-    .x(function(d) { return d.label })
-    .y(function(d) { return d.value })
-    .width(item.getAttributeNS( null, 'width' ))
-    .height(item.getAttributeNS( null, 'height' ))
-    .margin({top: 30, right: 20, bottom: 50, left: 175})
-    .showValues(true)           //Show bar value next to each bar.
-    .color( d3.scale.ordinal().range( [ item.style.fill, item.style.stroke ] ))
-    //.tooltip(true)             //Show tooltips on hover.
-    //.transitionDuration(350)
-    .showControls(false)        //Allow user to switch between "Grouped" and "Stacked" mode.;
-    chart.yAxis
-    .tickFormat(d3.format(',.2f'));
-
-    var svg = d3.select( SVGDoc.getElementsByTagName("svg").item(0) );
-
-    item.mb = svg.select("#layer1").append('g').
-    style("font-size", "14").
-    style("font-family", "consolas,Trebuchet MS,arial").
-    datum(data).call( chart );
-
-    // position according to the rectangle
-    item.mb[0][0].setAttributeNS( null,
-    'transform',
-    ( item.getAttributeNS( null, "transform" ) || "" )  +
-    " translate(" + item.getAttributeNS( null, "x" ) + "," +
-    item.getAttributeNS( null, "y" ) + ") " );
-
-    // nv.utils.windowResize(chart.update);
-
-    return chart;
-    });
-    });
-    break;
-     */
   }
 };
 
@@ -476,6 +435,7 @@ WebSAGE.SetExeExtended =
 function (i)
 {
   var j;
+  var newdata;
   switch (WebSAGE.InkSage[i].tag)
   {
   case "#arc":
@@ -490,12 +450,15 @@ function (i)
     break;
   case "#vega": // vega V2 chart, defined under a rectangle
 
-    if (typeof(WebSAGE.InkSage[i].parent.vw) != "undefined")
+  if (typeof WebSAGE.InkSage[i].parent.vw != "undefined" && 
+      typeof WebSAGE.InkSage[i].parent.vgInitData != "undefined" &&
+      WebSAGE.InkSage[i].parent.vgInitData != "" 
+     )
     {
       WebSAGE.InkSage[i].parent.vw.data(WebSAGE.InkSage[i].parent.vgTableName[0]).remove( function (d) { return true; } );
 
       // copia dados iniciais para o novo
-      var newdata = JSON.parse(JSON.stringify(WebSAGE.InkSage[i].parent.vgInitData));
+      newdata = JSON.parse(JSON.stringify(WebSAGE.InkSage[i].parent.vgInitData));
     }
 
     // procura "PNT#*", etc. onde * eh a ordem do ponto, substitui pelo valor do ponto linkado em SAGE/source
@@ -610,8 +573,8 @@ function (i)
                 if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
                   newdata[index][ix] = WebSAGE.getSubstation(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1]);
               }
+            }
           }
-        }
         );
       }
       );
@@ -631,13 +594,16 @@ function (i)
   case "#vega-lite": // vega-lite V1 or V2 chart, defined under a rectangle
   case "#vega3": // vega V3 chart, defined under a rectangle
   
-      if (typeof(WebSAGE.InkSage[i].parent.vw) != "undefined")
+      if (typeof WebSAGE.InkSage[i].parent.vw != "undefined" && 
+          typeof WebSAGE.InkSage[i].parent.vgInitData != "undefined" &&
+          WebSAGE.InkSage[i].parent.vgInitData != "" 
+         )
       {
         //WebSAGE.InkSage[i].parent.vw.change(WebSAGE.InkSage[i].parent.vgTableName[0], 
         //                                    vega.changeset().remove( function (d) { return true; } )).run();        
 
         // copia dados iniciais para o novo
-        var newdata = JSON.parse(JSON.stringify(WebSAGE.InkSage[i].parent.vgInitData));
+        newdata = JSON.parse(JSON.stringify(WebSAGE.InkSage[i].parent.vgInitData));
       }
   
       // procura "PNT#*", etc. onde * eh a ordem do ponto, substitui pelo valor do ponto linkado em SAGE/source

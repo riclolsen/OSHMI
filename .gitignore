@@ -56,4 +56,6 @@ trunk/
 *.out
 *.app
 
+*.cgl
+
 

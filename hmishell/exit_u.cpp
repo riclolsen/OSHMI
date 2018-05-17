@@ -147,6 +147,9 @@ fmShell->Timer5->Enabled = false;
 fmShell->Timer6->Enabled = false;
 fmShell->Timer7->Enabled = false;
 fmShell->Timer8->Enabled = false;
+fmShell->Timer9->Enabled = false;
+fmShell->Timer10->Enabled = false;
+fmShell->Timer11->Enabled = false;
 
 // Log user logout
 // register the system start and (OS) username
@@ -162,21 +165,22 @@ try
   String Rq = (String)"http://" +
               (String)REMOTE_HOST + (String)":" +
               (String)REMOTE_PORT + (String)"/" +
-              (String)"htdocs/pntserver.rjs?U=" + (String)UserName + (String)"&O=Shutdown";
+              (String)SHELLAPIURL + (String)"?U=" + (String)UserName + (String)"&O=Shutdown";
   fmShell->NMHTTP1->TimeOut = 0;
   fmShell->NMHTTP1->Get( Rq );
   } catch ( Exception &E ) {}
 
-Sleep(100);
+Sleep(250);
 
 try
   {
   fmShell->NMHTTP1->Host = "127.0.0.1";
   fmShell->NMHTTP1->TimeOut = 0;
-  fmShell->NMHTTP1->Get( (String)"/htdocs/pntserver.rjs?Y=1" );
+  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
   } catch ( Exception &E ) {}
 
 WinExec( "hidec.exe do_turnoff.bat", SW_HIDE );
+Sleep(250);
 Close();
 }
 //---------------------------------------------------------------------------
@@ -199,6 +203,9 @@ fmShell->Timer5->Enabled = false;
 fmShell->Timer6->Enabled = false;
 fmShell->Timer7->Enabled = false;
 fmShell->Timer8->Enabled = false;
+fmShell->Timer9->Enabled = false;
+fmShell->Timer10->Enabled = false;
+fmShell->Timer11->Enabled = false;
 
 // Log user logout
 // register the system start and (OS) username
@@ -214,21 +221,22 @@ try
   String Rq = (String)"http://" +
               (String)REMOTE_HOST + (String)":" +
               (String)REMOTE_PORT + (String)"/" +
-              (String)"htdocs/pntserver.rjs?U=" + (String)UserName + (String)"&O=Reboot";
+              (String)SHELLAPIURL + (String)"?U=" + (String)UserName + (String)"&O=Reboot";
   fmShell->NMHTTP1->TimeOut = 0;
   fmShell->NMHTTP1->Get( Rq );
   } catch ( Exception &E ) {}
 
-Sleep(100);
+Sleep(250);
 
 try
   {
   fmShell->NMHTTP1->Host = "127.0.0.1";
   fmShell->NMHTTP1->TimeOut = 0;
-  fmShell->NMHTTP1->Get( (String)"/htdocs/pntserver.rjs?Y=1" );
+  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
   } catch ( Exception &E ) {}
 
 WinExec( "hidec.exe do_reboot.bat", SW_HIDE );
+Sleep(250);
 Close();
 }
 //---------------------------------------------------------------------------
@@ -251,6 +259,9 @@ fmShell->Timer5->Enabled = false;
 fmShell->Timer6->Enabled = false;
 fmShell->Timer7->Enabled = false;
 fmShell->Timer8->Enabled = false;
+fmShell->Timer9->Enabled = false;
+fmShell->Timer10->Enabled = false;
+fmShell->Timer11->Enabled = false;
 
 // Log user logout
 // register the system start and (OS) username
@@ -266,21 +277,22 @@ try
   String Rq = (String)"http://" +
               (String)REMOTE_HOST + (String)":" +
               (String)REMOTE_PORT + (String)"/" +
-              (String)"htdocs/pntserver.rjs?U=" + (String)UserName + (String)"&O=Logoff";
+              (String)SHELLAPIURL + (String)"?U=" + (String)UserName + (String)"&O=Logoff";
   fmShell->NMHTTP1->TimeOut = 0;
   fmShell->NMHTTP1->Get( Rq );
   } catch ( Exception &E ) {}
 
-Sleep(100);
-  
+Sleep(250);
+
 try
   {
   fmShell->NMHTTP1->Host = "127.0.0.1";
   fmShell->NMHTTP1->TimeOut = 0;
-  fmShell->NMHTTP1->Get( (String)"/htdocs/pntserver.rjs?Y=1" );
+  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
   } catch ( Exception &E ) {}
 
 WinExec( "hidec.exe do_logout.bat", SW_HIDE );
+Sleep(250);
 Close();
 }
 //---------------------------------------------------------------------------
@@ -314,7 +326,7 @@ void __fastcall TfmSair::edSenhaChange(TObject *Sender)
         {
         fmShell->NMHTTP1->Host = "127.0.0.1";
         fmShell->NMHTTP1->TimeOut = 0;
-        fmShell->NMHTTP1->Get( (String)"/htdocs/pntserver.rjs?H=0" );
+        fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?H=0" );
         } catch ( Exception &E ) {}
       }
     else
@@ -331,7 +343,7 @@ void __fastcall TfmSair::edSenhaChange(TObject *Sender)
         {
         fmShell->NMHTTP1->Host = "127.0.0.1";
         fmShell->NMHTTP1->TimeOut = 0;
-        fmShell->NMHTTP1->Get( (String)"/htdocs/pntserver.rjs?H=1" );
+        fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL +(String)"?H=1" );
         } catch ( Exception &E ) {}
 
       }

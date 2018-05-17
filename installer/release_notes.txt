@@ -32,6 +32,7 @@ Acknowledgements:
   NSIS (Nullsoft Scriptable Install System): http://nsis.sourceforge.net/Main_Page
   Open Sans Fonts by Steve Matteson
   Source Sans Pro by Adobe Systems Incorporated. License: http://scripts.sil.org/OFL
+  Google Fonts: https://fonts.google.com/
   JQuery: http://jquery.com
   JQuery UI: http://jqueryui.com
   Shortcut: http://www.openjs.com/scripts/events/keyboard_shortcuts
@@ -49,6 +50,7 @@ Acknowledgements:
   Vega A Visualization Grammar: https://vega.github.io/vega
   NSSM - The Non-Sucking Service Manager: http://nssm.cc
   NGINX - http://nginx.org
+  APACHE - http://apache.org
   PHP - http://php.net
   WGet - http://www.gnu.org/software/wget
   SQLite - https://www.sqlite.org
@@ -73,8 +75,9 @@ The default password for HMIShell is "oshmi".
 
 The system is preconfigured to run a simulation with an example point list and screens.
 To simulate a command, click on a breaker and push the "Command" button then choose an action like "open" or "close" and push the action button.
-To stop the system click on the "Stop_All" icon on the OSHMI folder.
-To edit and create new SVG screens, download and use Inkscape+SAGE 0.481 + SAGE 3.03.. Screens are in "c:\oshmi\svg\".
+To stop the system click on the "Stop_All" icon in the OSHMI folder.
+To edit and create new SVG screens, use the customized Inkscape+SAGE (shortucut in the OSHMI folder). 
+Screens are in "c:\oshmi\svg\".
 OSHMI configuration files are in "c:\oshmi\conf\".
 For more info about configuration please read the OSHMI Configuration Manual.
 
@@ -83,8 +86,22 @@ To allow other IP addresses edit the "c:\oshmi\conf\nginx_access_control.conf" f
 
 -------------------------------------------------------------------
 
+The customized Inkscape SVG graphics editor is a derivative of the Inkscape Project work and of the Ecava SAGE work,
+ it is not in any way associated with the Inkscape Project nor Ecava.
+We respect and intend to comply with the branding policy of the Inkscape Project
+  https://inkscape.org/en/about/branding/
+In our view the modifications introduced are not substantial and do not intend to create a competitive product.
+The modifications introduced are meant only to allow the use of the sotware as a SCADA Synoptics Editor.
+We respect the GPL license of the upstream work by making the source code of modifications to the original Inkscape and SAGE code available at:
+  https://sourceforge.net/p/oshmiopensubstationhmi/mercurial/ci/default/tree/inkscape_sage_src/
+
+The original SAGE (SCADA Animation Graphic Editor) software and source code is available here:
+  https://sourceforge.net/projects/sage-scada/
+
+-------------------------------------------------------------------
+
 Recommended utils (can be downloaded running the "download_external_progs.bat" script that is located inside the "extprogs" folder):
- - Inkscape 0.481 + SAGE 3.03. (To edit/create SVG screens) 
+ - Alternative (older) screen editor Inkscape 0.481 + SAGE 3.03. (To edit/create SVG screens)
      https://sourceforge.net/projects/sage-scada/files/SAGE%20v3.03/inkscape0481_sage303.exe/download
  - SysInternals (useful systems utilities)
      http://technet.microsoft.com/en-us/sysinternals/default
@@ -92,7 +109,7 @@ Recommended utils (can be downloaded running the "download_external_progs.bat" s
  - Notepad++ (text editor): http://notepad-plus-plus.org/
  - Visual Studio Code: https://code.visualstudio.com/
      
-Recommended OS's:
+Recommended Operating Systems:
  - Windows 10 Pro/Home/Enterprise, 32 or 64 bits.
  - Windows 8/8.1 Pro/Home, 32 or 64 bits.
  - Windows 7 Pro/Home, 32 or 64 bits.
@@ -105,7 +122,7 @@ If you encounter errors related to Windows Universal C Runtime (CRT), see:
 Can also run on:
  - Linux (under Wine, experimental).
 
-Not anymore compatible, recommended or supported:
+Not anymore compatible Operating Systems:
  - Windows Vista 32/64 bits (require an old version of Chromium not included).
  - Windows XP 32/64 bits (require an old version of Chromium not included).
    On XP and Vista it is possible to use OSHMI Version 3.17 with Chromium version 49:
@@ -127,6 +144,81 @@ Webserver, HMIShell, Mon_Proc and Sim_TR:
 
 QTester104:
  - QT 5.9.2 or newer.
+
+-------------------------------------------------------------------
+
+Notes for version 4.15:
+
+Screen Viewer:
+Webserver.exe:
+ - Changed from HTTP GET to HTTP POST the request for point list to allow larger requests.
+   This overcomes browser limitation for URL size.
+   Now the number of objects in screens have no more arbitrary limits.
+ - Changed API URLs used by HMIShell.
+ - Vega updated to version 3.3.1.
+ - Vega-Lite updated to version 2.4.3. 
+ - Added Polyfill for requestAnimationFrame for better compatibility with older browsers.
+
+Events Viewer:
+ - Fixed misalignment of column text when resized.
+ 
+HMI Shell:
+ - Use new API URL.
+ - Get the keyboard focus when opened the screen list.
+
+Config:
+ - Updated nginx_http.conf and nginx_https.conf in the conf_templates folder.
+ - Old conf\nginx_http.conf overwritten and backuped to conf\nginx_http.conf.bak.
+
+Chromium:
+ - Updated to version 66.0.3359.117.
+ - Redefined Chromium configurations to allow notifications.
+
+-------------------------------------------------------------------
+
+Notes for version 4.14:
+
+Screen Editor:
+ - Uptated Inkscape to version 0.92.3.
+   Various bug fixes and performance improvements (much faster startup, etc.).
+   See https://inkscape.org/releases/0.92.3/.
+
+Screen Viewer:   
+ - Change mouse cursor to pointer for mouse event handling.
+
+-------------------------------------------------------------------
+
+Notes for version 4.13:
+
+HMIShell:
+ - New improved menu to choose screens started by Windows-Key globally.
+ - Global handling of ALT+F12 shortcut to show options menu.
+
+Screen Viewer:
+ - Removed creation of objects that can identify relations for faster loading.
+ - Snap SVG updated to 0.5.1.
+ - Fixed creation of unnecessary objects.
+
+Webserver.exe:
+ - Altered code to generate events and beeps for state changed (KConv2=-1) 
+   even when the invalid state qualifier is true.
+ - New formula to calculate distance from max to min of parcels.
+
+Modbus:   
+ - Can now read floating point values (as a combination of 2 16bit holding registers).
+
+SQLite:
+ - Updated to version 3.23.1.
+
+Fonts:
+ - Available Open Sans v15 (various) and Roboto v18 (Regular).
+
+Chromium:
+ - Updated config data profile to match version 64.0.3282.140.
+
+Other:
+ - Included htpasswd.exe and htdigest.exe binaries for managing Nginx user authentication.
+ - Added .reg files to implement chromium policy for auto selection of client certificates.
 
 -------------------------------------------------------------------
 

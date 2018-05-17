@@ -996,6 +996,7 @@ if ( fp )
 
 EscrevePonto(NPONTO_BANCO_ATIVO, 0, 0x02, 1);
 Pontos[NPONTO_BANCO_ATIVO].TipoAD = 'D';
+Pontos[NPONTO_BANCO_ATIVO].Endereco = NPONTO_BANCO_ATIVO;
 strcpy(Pontos[NPONTO_BANCO_ATIVO].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_BANCO_ATIVO].Tag,"HMIX-RTDB_ST");
 strcpy(Pontos[NPONTO_BANCO_ATIVO].EstadoOff,"INACTIVE");
@@ -1005,6 +1006,7 @@ ListaSEs.insert("HMIX");
 
 EscrevePonto(NPONTO_OSHMI_OPER, 0, 0x02, 1);
 Pontos[NPONTO_OSHMI_OPER].TipoAD = 'D';
+Pontos[NPONTO_OSHMI_OPER].Endereco = NPONTO_OSHMI_OPER;
 strcpy(Pontos[NPONTO_OSHMI_OPER].Estacao,"IHMIXHMX");
 strcpy(Pontos[NPONTO_OSHMI_OPER].Tag,"HMIX-WEBSERVER_ST");
 strcpy(Pontos[NPONTO_OSHMI_OPER].EstadoOff,"FORA_DE_OPERAÇÃO");
@@ -1013,6 +1015,7 @@ strcpy(Pontos[NPONTO_OSHMI_OPER].Descricao,"Webserver Status");
 
 EscrevePonto(NPONTO_OSHMI_MODO, 1, 0x01, 1);
 Pontos[NPONTO_OSHMI_MODO].TipoAD = 'D';
+Pontos[NPONTO_OSHMI_MODO].Endereco = NPONTO_OSHMI_MODO;
 strcpy(Pontos[NPONTO_OSHMI_MODO].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_OSHMI_MODO].Tag,"HMIX-WEBSERVER_MODE");
 strcpy(Pontos[NPONTO_OSHMI_MODO].EstadoOff,"SECUNDARY");
@@ -1021,6 +1024,7 @@ strcpy(Pontos[NPONTO_OSHMI_MODO].Descricao,"Webserver mode");
 
 EscrevePonto(NPONTO_ACERTO_HORA, 1, 0x01, 1);
 Pontos[NPONTO_ACERTO_HORA].TipoAD = 'D';
+Pontos[NPONTO_ACERTO_HORA].Endereco = NPONTO_ACERTO_HORA;
 strcpy(Pontos[NPONTO_ACERTO_HORA].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_ACERTO_HORA].Tag,"HMIX-TIME_ADJUST");
 strcpy(Pontos[NPONTO_ACERTO_HORA].EstadoOff,"TIME_NOT_SYNC");
@@ -1029,6 +1033,7 @@ strcpy(Pontos[NPONTO_ACERTO_HORA].Descricao,"Time Adjust");
 
 EscrevePonto(NPONTO_COMUNIC_BDTR, 1, 0x01, 1);
 Pontos[NPONTO_COMUNIC_BDTR].TipoAD = 'D';
+Pontos[NPONTO_COMUNIC_BDTR].Endereco = NPONTO_COMUNIC_BDTR;
 strcpy(Pontos[NPONTO_COMUNIC_BDTR].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_COMUNIC_BDTR].Tag,"HMIX-BDTR_COMM_ST");
 strcpy(Pontos[NPONTO_COMUNIC_BDTR].EstadoOff,"NO_COMM");
@@ -1037,6 +1042,7 @@ strcpy(Pontos[NPONTO_COMUNIC_BDTR].Descricao,"BDTR comm status");
 
 EscrevePonto(NPONTO_COMUNIC_I104, 1, 0x01, 1);
 Pontos[NPONTO_COMUNIC_I104].TipoAD = 'D';
+Pontos[NPONTO_COMUNIC_I104].Endereco = NPONTO_COMUNIC_I104;
 strcpy(Pontos[NPONTO_COMUNIC_I104].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_COMUNIC_I104].Tag,"HMIX-I104_COMM_ST");
 strcpy(Pontos[NPONTO_COMUNIC_I104].EstadoOff,"NO_COMM");
@@ -1045,6 +1051,7 @@ strcpy(Pontos[NPONTO_COMUNIC_I104].Descricao,"I104 comm Staus");
 
 EscrevePonto(NPONTO_LOGIN_ADM, 1, 0x01, 1);
 Pontos[NPONTO_LOGIN_ADM].TipoAD = 'D';
+Pontos[NPONTO_LOGIN_ADM].Endereco = NPONTO_LOGIN_ADM;
 strcpy(Pontos[NPONTO_LOGIN_ADM].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_LOGIN_ADM].Tag,"HMIX-WEBSERVER_ADMLOGIN");
 strcpy(Pontos[NPONTO_LOGIN_ADM].EstadoOff,"NOT_LOGGED");
@@ -1053,6 +1060,7 @@ strcpy(Pontos[NPONTO_LOGIN_ADM].Descricao,"Webserver Admin Login");
 
 EscrevePonto(NPONTO_FALHAINTERNA, 1, 0x01, 1);
 Pontos[NPONTO_FALHAINTERNA].TipoAD = 'D';
+Pontos[NPONTO_FALHAINTERNA].Endereco = NPONTO_FALHAINTERNA;
 strcpy(Pontos[NPONTO_FALHAINTERNA].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_FALHAINTERNA].Tag,"HMIX-INTERNAL_ST");
 strcpy(Pontos[NPONTO_FALHAINTERNA].EstadoOff,"NORMAL");
@@ -1061,6 +1069,7 @@ strcpy(Pontos[NPONTO_FALHAINTERNA].Descricao,"Internal status");
 
 EscrevePonto(NPONTO_HORA, 0, 0x20, 1);
 Pontos[NPONTO_HORA].TipoAD = 'A';
+Pontos[NPONTO_HORA].Endereco = NPONTO_HORA;
 strcpy(Pontos[NPONTO_HORA].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_HORA].Tag,"HMIX-HOUR");
 strcpy(Pontos[NPONTO_HORA].Unidade,"h");
@@ -1068,6 +1077,7 @@ strcpy(Pontos[NPONTO_HORA].Descricao,"Hour");
 
 EscrevePonto(NPONTO_MINUTO, 0, 0x20, 1);
 Pontos[NPONTO_MINUTO].TipoAD = 'A';
+Pontos[NPONTO_MINUTO].Endereco = NPONTO_MINUTO;
 strcpy(Pontos[NPONTO_MINUTO].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_MINUTO].Tag,"HMIX-MINUTE");
 strcpy(Pontos[NPONTO_MINUTO].Unidade,"min");
@@ -1075,6 +1085,7 @@ strcpy(Pontos[NPONTO_MINUTO].Descricao,"Minute");
 
 EscrevePonto(NPONTO_I104UTRS_OK, 0, 0x20, 1);
 Pontos[NPONTO_I104UTRS_OK].TipoAD = 'A';
+Pontos[NPONTO_I104UTRS_OK].Endereco = NPONTO_I104UTRS_OK;
 strcpy(Pontos[NPONTO_I104UTRS_OK].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_I104UTRS_OK].Tag,"HMIX-I104_RTU_OK");
 strcpy(Pontos[NPONTO_MINUTO].Unidade,"RTUs");
@@ -1119,6 +1130,7 @@ EscrevePonto(NPONTO_SUPSCRIPT_5, 1, 0x01, 1);
 
 EscrevePonto(NPONTO_CMDSCRIPT_1, 1, 0x01, 1);
 Pontos[NPONTO_CMDSCRIPT_1].TipoAD = 'D';
+Pontos[NPONTO_CMDSCRIPT_1].Endereco = NPONTO_CMDSCRIPT_1;
 strcpy(Pontos[NPONTO_CMDSCRIPT_1].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_CMDSCRIPT_1].Tag,"HMIXSCRIPT1_EXEC-----K");
 strcpy(Pontos[NPONTO_CMDSCRIPT_1].EstadoOff,"");
@@ -1128,6 +1140,7 @@ Pontos[NPONTO_CMDSCRIPT_1].CodOrigem = CODORIGEM_COMANDO;
 
 EscrevePonto(NPONTO_CMDSCRIPT_2, 1, 0x01, 1);
 Pontos[NPONTO_CMDSCRIPT_2].TipoAD = 'D';
+Pontos[NPONTO_CMDSCRIPT_2].Endereco = NPONTO_CMDSCRIPT_2;
 strcpy(Pontos[NPONTO_CMDSCRIPT_2].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_CMDSCRIPT_2].Tag,"HMIXSCRIPT2_EXEC-----K");
 strcpy(Pontos[NPONTO_CMDSCRIPT_2].EstadoOff,"");
@@ -1137,6 +1150,7 @@ Pontos[NPONTO_CMDSCRIPT_2].CodOrigem = CODORIGEM_COMANDO;
 
 EscrevePonto(NPONTO_CMDSCRIPT_3, 1, 0x01, 1);
 Pontos[NPONTO_CMDSCRIPT_3].TipoAD = 'D';
+Pontos[NPONTO_CMDSCRIPT_3].Endereco = NPONTO_CMDSCRIPT_3;
 strcpy(Pontos[NPONTO_CMDSCRIPT_3].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_CMDSCRIPT_3].Tag,"HMIXSCRIPT3_EXEC-----K");
 strcpy(Pontos[NPONTO_CMDSCRIPT_3].EstadoOff,"");
@@ -1146,6 +1160,7 @@ Pontos[NPONTO_CMDSCRIPT_3].CodOrigem = CODORIGEM_COMANDO;
 
 EscrevePonto(NPONTO_CMDSCRIPT_4, 1, 0x01, 1);
 Pontos[NPONTO_CMDSCRIPT_4].TipoAD = 'D';
+Pontos[NPONTO_CMDSCRIPT_4].Endereco = NPONTO_CMDSCRIPT_4;
 strcpy(Pontos[NPONTO_CMDSCRIPT_4].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_CMDSCRIPT_4].Tag,"HMIXSCRIPT4_EXEC-----K");
 strcpy(Pontos[NPONTO_CMDSCRIPT_4].EstadoOff,"");
@@ -1155,6 +1170,7 @@ Pontos[NPONTO_CMDSCRIPT_4].CodOrigem = CODORIGEM_COMANDO;
 
 EscrevePonto(NPONTO_CMDSCRIPT_5, 1, 0x01, 1);
 Pontos[NPONTO_CMDSCRIPT_5].TipoAD = 'D';
+Pontos[NPONTO_CMDSCRIPT_5].Endereco = NPONTO_CMDSCRIPT_5;
 strcpy(Pontos[NPONTO_CMDSCRIPT_5].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_CMDSCRIPT_5].Tag,"HMIXSCRIPT5_EXEC-----K");
 strcpy(Pontos[NPONTO_CMDSCRIPT_5].EstadoOff,"");
@@ -1396,7 +1412,6 @@ if ( usakconv )
 
 // gera alarme quando mudou estado mesmo sem tag de tempo
 if ( ((*it).second).Qual.Tipo == TIPO_DIGITAL )
-if ( !((*it).second).Qual.Falha ) // não falhado
 if ( !temtagtmp ) // sem tag de tempo
 if ( ! ( ((*it).second).EventoDigital && // não pode ser evento com estado que não seja on
          (((*it).second).Qual.Duplo != ESTDUP_ON) ) )
@@ -2519,7 +2534,7 @@ try
            if ( Pontos[(*it).second.Parcelas[i]].Qual.Falha == 0 )
              q.Duplo = ESTDUP_ON;
            }
-         r = q.Estado;  
+         r = q.Estado;
 
         // não gera evento quando inibido,
         // não gera evento por um tempo na inicialização   
@@ -2545,6 +2560,20 @@ try
                           0 );
             temtagtmp = 1;
             }
+        }
+        break;
+    case COD_FORMULA_DISTMAXMIN:
+        {
+        float max=-1e30, min=1e30;
+        q.Falha=0;
+        for (i=0; i<MAX_PARCELAS && (*it).second.Parcelas[i]!=0; i++)
+          {
+          max = Pontos[(*it).second.Parcelas[i]].Valor > max ? Pontos[(*it).second.Parcelas[i]].Valor : max;
+          min = Pontos[(*it).second.Parcelas[i]].Valor < min ? Pontos[(*it).second.Parcelas[i]].Valor : min;
+          q.Falha=q.Falha||Pontos[(*it).second.Parcelas[i]].Qual.Falha;
+          }
+        r = max - min;
+        q.Tipo = TIPO_ANALOGICO;
         }
         break;
     default:

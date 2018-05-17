@@ -11,7 +11,7 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.4.12"
+!define VERSION "v.4.15"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -45,7 +45,7 @@ VIProductVersion 0.0.0.0
 VIAddVersionKey ProductName "OSHMI (Open Substation HMI)"
 ;VIAddVersionKey Comments ""
 ;VIAddVersionKey CompanyName ""
-VIAddVersionKey LegalCopyright "Copyright 2008-2017 Ricardo L.Olsen"
+VIAddVersionKey LegalCopyright "Copyright 2008-2018 Ricardo L.Olsen"
 VIAddVersionKey FileDescription "OSHMI Installer"
 VIAddVersionKey FileVersion ${VERSION}
 VIAddVersionKey ProductVersion ${VERSION}
@@ -299,7 +299,6 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\htdocs\images\*.*"
 
   SetOutPath $INSTDIR\extprogs
-; File /a "..\extprogs\SumatraPDF-3.1.1-install.exe"
   File /a "..\extprogs\vcredist_x86.exe"
   File /a "..\extprogs\vcredist_x86-2012.exe"
   File /a "..\extprogs\vcredist_x86-2013.exe"
@@ -335,7 +334,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\docs\inkscape-shortcuts2.svg"
 
   SetOutPath $INSTDIR\fonts
-  File /a "..\fonts\*.*"  
+  File /a /r "..\fonts\*.*"  
   
   SetOverwrite off
 
@@ -344,6 +343,9 @@ Section "" ; empty string makes it hidden, so would starting with -
 
   SetOutPath $INSTDIR\etc
   File /a "..\etc\*.bat"
+
+  ; move old http conf to a backup file to allow for the new one to be written
+  Rename  $INSTDIR\conf\nginx_http.conf  $INSTDIR\conf\nginx_http.conf.bak
 
   SetOutPath $INSTDIR\conf
   File /a "..\conf_templates\oshmi_config_manager.xlsm"
@@ -399,9 +401,14 @@ Section "" ; empty string makes it hidden, so would starting with -
 ; sumatra pdf in restrict mode
 ; InstFim:
 
-; escreve chaves para definir atalhos do chrome no hmi.ini
-; chaves para o windows   
+; Escreve chaves para definir atalhos do chrome no hmi.ini
 
+; Evita reescrever atalhos já configurados manualmente para https
+  ReadINIStr $0 "$INSTDIR\conf\hmi.ini"  "RUN" "SCREEN_VIEWER"
+  StrCpy $0 $0 5
+  StrCmp $0 "https" viewer_shortcuts_end
+
+; chaves para o windows   
   WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "EVENTS_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISEVE"'
   WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TABULAR_VIEWER"    '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTAB"'
   WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "SCREEN_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTEL"'
@@ -409,7 +416,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "CURVES_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISCUR"'
   WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "DOCS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISDOC"'
   WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "LOGS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISLOG"'
-
+ 
 ; chaves para o linux   
 ;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";EVENTS_VIEWER"    '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISEVE'
 ;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";TABULAR_VIEWER"   '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTAB'
@@ -418,6 +425,8 @@ Section "" ; empty string makes it hidden, so would starting with -
 ;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";CURVES_VIEWER"    '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISCUR'
 ;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";DOCS_VIEWER"      '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISDOC'
 ;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";LOGSS_VIEWER"     '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISLOG'
+
+ viewer_shortcuts_end:    
 
 ; vou colocar aqui todos os atalhos no Desktop, apagando os antigos
   Delete "$DESKTOP\OSHMI\*.*"

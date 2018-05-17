@@ -22,6 +22,7 @@ USEFORM("shell_u.cpp", fmShell);
 USEFORM("exit_u.cpp", fmSair);
 USELIB("c:\program files (x86)\borland\cbuilder5\Lib\PSDK\psapi.lib");
 USEUNIT("sha1.c");
+USEFORM("..\webserver\screen_list_u.cpp", FormScreenList);
 //---------------------------------------------------------------------------
 WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -37,6 +38,7 @@ WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                  Application->Initialize();
                  Application->CreateForm(__classid(TfmShell), &fmShell);
                  Application->CreateForm(__classid(TfmSair), &fmSair);
+                 Application->CreateForm(__classid(TFormScreenList), &FormScreenList);
                  Application->Run();
         }
         catch (Exception &exception)

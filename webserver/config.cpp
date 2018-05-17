@@ -54,6 +54,7 @@ int LAST_PRIORITY_THAT_BEEPS = 2;
 int ALARMA_DUPLA_TRANSICAO = 0;
 String WEBSERVER_CLIENTES_REMOTOS = "";
 String WEBSERVER_SCRIPT = "pntserver.rjs";
+String SHELLAPI_SCRIPT = "shellapi.rjs";
 // date time format according to TDateTime::FormatString
 String WEBSERVER_DATE_FMT = "yy/mm/dd hh:nn:ss";
 String WEBSERVER_DP_TRANSIT = "TRANSIT"; // message for iec digital double 00

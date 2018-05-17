@@ -1,6 +1,6 @@
 object fmShell: TfmShell
-  Left = 3
-  Top = 864
+  Left = 30
+  Top = 957
   AutoSize = True
   BorderIcons = []
   BorderStyle = bsNone
@@ -2459,5 +2459,11 @@ object fmShell: TfmShell
     ProxyPort = 0
     Left = 298
     Top = 18
+  end
+  object Timer11: TTimer
+    Interval = 300
+    OnTimer = Timer11Timer
+    Left = 804
+    Top = 16
   end
 end

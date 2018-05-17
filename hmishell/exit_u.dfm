@@ -1,6 +1,6 @@
 object fmSair: TfmSair
-  Left = 47
-  Top = 368
+  Left = 20
+  Top = 354
   ActiveControl = btDesligar
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
@@ -27,10 +27,10 @@ object fmSair: TfmSair
   object lbVersion: TLabel
     Left = 40
     Top = 0
-    Width = 194
+    Width = 200
     Height = 13
     Alignment = taCenter
-    Caption = 'OSHMI SHELL V4.7 © 2008-2017 - RLO'
+    Caption = 'OSHMI SHELL V4.15 © 2008-2018 - RLO'
   end
   object lbSenha: TLabel
     Left = 24

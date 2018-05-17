@@ -167,9 +167,71 @@ fmVeDados->PulseWeb( clRed );
 logaln( (String)"R< " +
          ARequestInfo->RemoteIP + (String)":" +
          IdHTTPServer1->DefaultPort + (String)"/" +
-         ARequestInfo->Document + (String)"?" +
-         ARequestInfo->UnparsedParams );
+         ARequestInfo->Document +
+         (String)" Query=" + ARequestInfo->QueryParams +
+         (String)" Post=" + ARequestInfo->FormParams);
 
+if ( ARequestInfo->Document.Pos( SHELLAPI_SCRIPT ) )
+{
+is_dinpg = true;
+if ( ARequestInfo->UnparsedParams.Length() > 0 )
+switch ( ARequestInfo->UnparsedParams[1] )
+  {
+  case 'U': // Mensagem de usuário remoto Login, Logout, Reboot, Shutdown
+     {
+     String Username = ARequestInfo->Params->Strings[0].SubString(3,100).c_str();
+     String Operation = ARequestInfo->Params->Strings[1].SubString(3,100).c_str();
+     Loga( (String)"IP=" + ARequestInfo->RemoteIP + (String)" user=" + Username + (String)", oper=" + Operation,  ARQUIVO_LOGUSER );
+     AResponseInfo->ContentText = "Ok\n";
+     }
+     break;
+  case 'H':
+    if ( HIDE )
+      { // only accepts external command to hide/show if configured to hide initially
+      if ( ARequestInfo->Params->Strings[0].SubString(3,1) == "2" )
+        fmVeDados->Close();
+      if ( ARequestInfo->Params->Strings[0].SubString(3,1) == "1" )
+        fmVeDados->Hide();
+      else
+        fmVeDados->Show();
+      }
+    AResponseInfo->ContentText = "{'error' : 'none'}";
+    break;
+  case 'Y': // solicitação de desligamento comportado do computador
+     {
+     // quando rodando como serviço não sai por esta solicitação
+
+     AResponseInfo->ContentText = "{'error' : 'none'}";
+
+     TCHAR username[200 + 1];
+     DWORD size = 200 + 1;
+     GetUserName((TCHAR*)username, &size);
+     // Usuário SYSTEM ou SISTEMA, significa rodando como serviço, neste caso não fecha
+     if ( (String)username != (String)"SYSTEM" && (String)username != (String)"SISTEMA" )
+       {
+       Timer2->Interval = 2000;
+       Timer2->Tag = 1; // força fechamento de programa, após o tempo vai executar o TfmVeDados::FormCloseQuery(TObject *Sender, bool &CanClose), onde são feitos os procedimentos de fechamento do programa
+       }
+     }
+     break;
+  case 'Z': // Somente silencia o beep, não reconhece nenhum alarme
+     BL.SilenciaBeep();
+     // se tem outro ihm e não veio dele vou encaminhar a mensagem
+     if ( IHMRED_IP_OUTRO_IHM != "" )
+     if ( ARequestInfo->RemoteIP != IHMRED_IP_OUTRO_IHM )
+         lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document +"?" + ARequestInfo->UnparsedParams );
+     break;
+  case 'E': // point list
+  case 'P': // point list
+     AResponseInfo->ContentText = "{'error' : 'none'}";
+     break;
+  }
+else
+  {
+  AResponseInfo->ContentText = "{'error' : 'invalid request'}";
+  }
+}
+else
 if ( ARequestInfo->Document.Pos( WEBSERVER_SCRIPT ) )
 {
 is_dinpg = true;
@@ -327,6 +389,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
          }
      }
      break;
+
   case 'Y': // solicitação de desligamento comportado do computador
      {
      // quando rodando como serviço não sai por esta solicitação
@@ -336,7 +399,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      TCHAR username[200 + 1];
      DWORD size = 200 + 1;
      GetUserName((TCHAR*)username, &size);
-     // Usuário SYSTEM ou SISTEMA, significa rodando como serviço, neste caso não fecha 
+     // Usuário SYSTEM ou SISTEMA, significa rodando como serviço, neste caso não fecha
      if ( (String)username != (String)"SYSTEM" && (String)username != (String)"SISTEMA" )
        {
        Timer2->Interval = 2000;
@@ -371,15 +434,6 @@ switch ( ARequestInfo->UnparsedParams[1] )
                                       ARequestInfo->Params->Strings[1].SubString(3,1000)+
                                       (String)"();\n";
          }
-     }
-     break;
-
-  case 'U': // Mensagem de usuário remoto Login, Logout, Reboot, Shutdown
-     {
-     String Username = ARequestInfo->Params->Strings[0].SubString(3,100).c_str();
-     String Operation = ARequestInfo->Params->Strings[1].SubString(3,100).c_str();
-     Loga( (String)"IP=" + ARequestInfo->RemoteIP + (String)" user=" + Username + (String)", oper=" + Operation,  ARQUIVO_LOGUSER );
-     AResponseInfo->ContentText = "Ok\n";
      }
      break;
 
@@ -779,7 +833,10 @@ switch ( ARequestInfo->UnparsedParams[1] )
        }
      }
      break;
-  case 'P': // lista de valores
+
+  case 'E': // extended list of points (E=) can come as a post | lista de valores (com POST)
+            // this is to allow for a bigger list of points as the url size is limited in most browsers
+  case 'P': // point list with http GET | lista de valores (com GET)
      {
      unsigned int ListaPontos[2000];
      // transforma a lista de pontos (string) em vetor de pontos (terminado em zero)
@@ -790,6 +847,10 @@ switch ( ARequestInfo->UnparsedParams[1] )
        String nponto_ou_tag;
        String lstpts = ARequestInfo->Params->Strings[0];
        bool reqinfo = false;
+
+       // extended list of points (E=) can come as a post
+       if ( ARequestInfo->FormParams.SubString(1,2) == "E=" )
+         lstpts = lstpts + ARequestInfo->FormParams.SubString(3,10000000);
 
        // requisição de informações sobre os pontos 3o parâmetro I=1
        if ( ARequestInfo->Params->Count > 2)
@@ -1842,5 +1903,6 @@ void __fastcall TfmWebServ::IdHTTPServer1Exception(TIdPeerThread *AThread,
 logaln( (String)"E: 16-" + AException->Message );
 }
 //---------------------------------------------------------------------------
+
 
 

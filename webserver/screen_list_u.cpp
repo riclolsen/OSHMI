@@ -69,3 +69,10 @@ void __fastcall TFormScreenList::FormMouseWheelUp(TObject *Sender,
 }
 //---------------------------------------------------------------------------
 
+void __fastcall TFormScreenList::FormShow(TObject *Sender)
+{
+ShowWindow( Handle, SW_RESTORE );
+SetForegroundWindow(Handle);
+}
+//---------------------------------------------------------------------------
+

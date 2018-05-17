@@ -36,6 +36,7 @@
 #include <dir.h>
 #include <inifiles.hpp>
 #include <Filectrl.hpp>
+#include "screen_list_u.h"
 
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -201,6 +202,8 @@ void __fastcall TfmShell::popTelasItemsClick(TObject *Sender)
 __fastcall TfmShell::TfmShell(TComponent* Owner)
         : TForm(Owner)
 {
+lastks=0;
+SelScreen=0;
 TemBeep = 0;
 PROC_BEEP = 0;
 SHRINK = 0;
@@ -298,7 +301,7 @@ try
   String Rq = (String)"http://" +
               (String)REMOTE_HOST + (String)":" +
               (String)REMOTE_PORT + (String)"/" +
-              (String)"htdocs/pntserver.rjs?U=" + (String)UserName + (String)"&O=Login";
+              (String)SHELLAPIURL + (String)"?U=" + (String)UserName + (String)"&O=Login";
   NMHTTP1->TimeOut = 0;
   NMHTTP1->Get( Rq );
   } catch ( Exception &E ) {}
@@ -398,6 +401,7 @@ if ( REMOTE_HOST != "127.0.0.1" )
 void __fastcall TfmShell::tbSairClick(TObject *Sender)
 {
 fmSair->Visible = !fmSair->Visible;
+FormScreenList->Hide();
 }
 //---------------------------------------------------------------------------
 
@@ -479,7 +483,7 @@ try
   String Rq = (String)"http://" +
               (String)REMOTE_HOST + (String)":" +
               (String)REMOTE_PORT + (String)"/" +
-              (String)"htdocs/pntserver.rjs?Z=1";
+              (String)SHELLAPIURL + (String)"?Z=1";
   NMHTTP1->TimeOut = 0;
   NMHTTP1->Get( Rq );
   } catch ( Exception &E ) {}
@@ -512,6 +516,8 @@ void __fastcall TfmShell::Timer1Timer(TObject *Sender)
       done = true;
       }
     }
+
+  CheckWinKey();
 }
 //---------------------------------------------------------------------------
 
@@ -542,6 +548,13 @@ void __fastcall TfmShell::FormKeyDown(TObject *Sender, WORD &Key,
 {
 switch (Key)
  {
+ case VK_RWIN: // WIN Key
+ case VK_LWIN: // WIN Key
+   FormScreenList->Visible = !FormScreenList->Visible;
+   GetAsyncKeyState(VK_LWIN);
+   GetAsyncKeyState(VK_RWIN);
+   lastks = 3; 
+   break;
  case VK_F1: // ajuda
    WinExec( fmSair->DOC_AJUDA.c_str(), SW_SHOWNORMAL );
    break;
@@ -553,6 +566,7 @@ switch (Key)
    tbSilenciaClick( NULL );
    break;
  case VK_F12: // sair
+   FormScreenList->Hide();
    fmSair->Show();
    break;
  case '0':
@@ -565,16 +579,17 @@ switch (Key)
  case '7':
  case '8':
  case '9':
-    String S = TELAS[Key-'0'];
-    JANELA_AENCONTRAR = S.SubString( 1, S.Pos( "[" ) - 1 ).Trim() + (String)" - " + TITULO_VISOR_TELAS;
-    EnumWindows( (int (__stdcall *)()) enumwndprc, 0);
-    Linux_FindWindow( JANELA_AENCONTRAR, VISOR_TELAS + (String)"?INDTELA=" + (String)(Key-'0') );
-    if ( JANELA_ENCONTRADA == 0 ) // se não achou executa
-      {
-      ExecExternApp( (VISOR_TELAS + (String)"?INDTELA=" + (String)(Key-'0')).c_str() );
-      ToolBar1->Enabled = false;
-      Timer1->Interval = TIMER_ESPERA_VISOR;
-      }
+   String S = TELAS[Key-'0'];
+   JANELA_AENCONTRAR = S.SubString( 1, S.Pos( "[" ) - 1 ).Trim() + (String)" - " + TITULO_VISOR_TELAS;
+   EnumWindows( (int (__stdcall *)()) enumwndprc, 0);
+   Linux_FindWindow( JANELA_AENCONTRAR, VISOR_TELAS + (String)"?INDTELA=" + (String)(Key-'0') );
+   if ( JANELA_ENCONTRADA == 0 ) // se não achou executa
+     {
+     ExecExternApp( (VISOR_TELAS + (String)"?INDTELA=" + (String)(Key-'0')).c_str() );
+     ToolBar1->Enabled = false;
+     Timer1->Interval = TIMER_ESPERA_VISOR;
+     }
+   FormScreenList->Hide();
    break;
  }
 
@@ -585,10 +600,37 @@ FormMouseMove(Sender,Shift,0,0);
 void __fastcall TfmShell::FormCloseQuery(TObject *Sender, bool &CanClose)
 {
 if ( fmSair->Fechando )
+  {
   CanClose=true;
+  }
 else
 if ( !fmSair->PasswdTest( fmSair->edSenha->Text.c_str() ) )
+  {
   CanClose=false;
+  }
+else
+  {
+  fmShell->tbTelas->Enabled = false;
+  fmShell->tbTelas->Enabled = false;
+  fmShell->tbEventos->Enabled = false;
+  fmShell->tbHist->Enabled = false;
+  fmShell->tbAnormais->Enabled = false;
+  fmShell->tbTabular->Enabled = false;
+  fmShell->tbCurvas->Enabled = false;
+  fmShell->tbSilencia->Enabled = false;
+  fmShell->Timer1->Enabled = false;
+  fmShell->Timer2->Enabled = false;
+  fmShell->Timer3->Enabled = false;
+  fmShell->Timer4->Enabled = false;
+  fmShell->Timer5->Enabled = false;
+  fmShell->Timer6->Enabled = false;
+  fmShell->Timer7->Enabled = false;
+  fmShell->Timer8->Enabled = false;
+  fmShell->Timer9->Enabled = false;
+  fmShell->Timer10->Enabled = false;
+  fmShell->Timer11->Enabled = false;
+  Sleep(250);
+  }
 }
 //---------------------------------------------------------------------------
 
@@ -617,6 +659,8 @@ if ( dt != Label1->Caption )
 
 Label2->Caption = dttm.SubString( posspc + 1, 99 );
 
+CheckWinKey();
+
 Cnt++;
 }
 
@@ -629,7 +673,7 @@ try
    String Rq = (String)"http://" +
                (String)REMOTE_HOST + (String)":" +
                (String)REMOTE_PORT + (String)"/" +
-               (String)"htdocs/pntserver.rjs?P=99999";
+               (String)SHELLAPIURL + (String)"?P=99999";
    NMHTTP1->TimeOut = 1000;
    NMHTTP1->Get( Rq );
    }
@@ -643,6 +687,8 @@ catch ( Exception &E )
    tbTabular->Enabled = false;
    tbCurvas->Enabled = false;
    }
+
+CheckWinKey();
 }
 //---------------------------------------------------------------------------
 
@@ -679,7 +725,13 @@ tbCurvas->Enabled = false;
 
 void __fastcall TfmShell::Timer4Timer(TObject *Sender)
 {
+TGroupBox *GroupBox=NULL, *grpboxant=NULL;
+TLabel *Lbl;
 Timer4->Enabled = false;
+int topmargin=4;
+int leftmargin=4;
+int bzsize = 15;
+int lblspc = 2;
 
 if ( REMOTE_HOST == "127.0.0.1" )
   fmSair->lbServer->Caption = "";
@@ -694,6 +746,7 @@ if (fp)
   char buff[10000];
   char * rp;
   int index = 1;
+  int grpcnt=0, grpindex=0, cumheight=0, maxwidth=0, maxheight=0;
 
   // lista as telas disponíveis e coloca no menu popup de telas
 
@@ -721,6 +774,36 @@ if (fp)
         S = S.Trim();
         if ( S.Pos( "<option value=" ) == 0 )
           {
+          // new group
+          int grppos = S.Pos( "<optgroup label='" );
+          if (grppos>0)
+            { // detected new group
+            if ( grpboxant != NULL )
+              cumheight += grpboxant->Height;
+            grpboxant = GroupBox;
+            GroupBox = new TGroupBox( FormScreenList );
+            GroupBox->Parent = FormScreenList;
+            GroupBox->Font->Size = 16;
+            GroupBox->Color = (TColor)CLR_SCR_GRP;
+            GroupBox->Caption = S.SubString(17+grppos, S.Pos("'>")-18);
+            GroupBox->Width = GroupBox->Font->Size * 20;
+            if ( grpboxant != NULL )
+              {
+              GroupBox->Left = grpboxant->Left;
+              GroupBox->Top = topmargin + grpboxant->Top + grpboxant->Height;
+              }
+            else
+              {
+              GroupBox->Left = leftmargin;
+              GroupBox->Top = topmargin;
+              }
+
+            GroupBox->Visible = true;
+
+            grpindex = 0;
+            grpcnt++;
+            }
+
           continue;
           }
         else
@@ -728,11 +811,57 @@ if (fp)
           S = S.SubString( S.Pos( ">" ) + 1, 299 );
           S = S.SubString( 1, S.Pos( "<" ) - 1 );
           }
-          
+
         S = S.Trim();
         if ( S == "" )
           continue;  // não achou tela
         }
+
+      if (GroupBox != NULL)
+        {
+        Lbl = new TLabel(GroupBox);
+        Lbl->Parent = GroupBox;
+        Lbl->Font->Color = (TColor)CLR_SCR_TXT_NOTOPENED;
+        Lbl->Font->Style = TFontStyles();
+        Lbl->Font->Size = 14;
+        Lbl->Color = (TColor)CLR_SCR_BGD_NOTSELECTED;
+        Lbl->Caption = S + S.StringOfChar(' ', 30-S.Length());
+        Lbl->Top = Lbl->Height + grpindex*(Lbl->Height+lblspc);
+        Lbl->Left = leftmargin + 4;
+        Lbl->Cursor = crHandPoint;
+        Lbl->Tag = index;
+        Lbl->OnClick = lblScreenClick;
+        Lbl->OnMouseMove = lblScreenMouseMove;
+        GroupBox->Height = Lbl->Top + Lbl->Height + 5 + lblspc;
+        if ( (GroupBox->Top + GroupBox->Height) > (FormScreenList->Height - bzsize - topmargin) )
+          {
+          GroupBox->Left = leftmargin + GroupBox->Left + GroupBox->Width;
+          GroupBox->Top = topmargin;
+          }
+        FormScreenList->Width = leftmargin + GroupBox->Left + GroupBox->Width + bzsize;
+        }
+      else
+        {
+        Lbl = new TLabel(FormScreenList);
+        Lbl->Parent = FormScreenList;
+        Lbl->Font->Color = (TColor)CLR_SCR_TXT_NOTOPENED;
+        Lbl->Font->Style = TFontStyles();
+        Lbl->Font->Size = 14;
+        Lbl->Color = (TColor)CLR_SCR_BGD_NOTSELECTED;
+        Lbl->Caption = S + S.StringOfChar(' ', 30-S.Length());
+        Lbl->Top = lblspc + (index-1)*(Lbl->Height+lblspc);
+        Lbl->Left = leftmargin + 4;
+        Lbl->Cursor = crHandPoint;
+        Lbl->Tag = index;
+        Lbl->OnClick = lblScreenClick;
+        Lbl->OnMouseMove = lblScreenMouseMove;
+        FormScreenList->Width = leftmargin + Lbl->Width + bzsize;
+        }
+
+      if ( Lbl->Top > maxheight )
+        maxheight=Lbl->Top;
+      ScreenItems[index-1] = Lbl;
+      NumScreens=index;
 
       TMenuItem *NewItem;
       NewItem = new TMenuItem( NULL );
@@ -742,12 +871,18 @@ if (fp)
       if ( index < MAX_ATALHOS_TELAS )
         TELAS[index] = S;
       NewItem->OnClick = popTelasItemsClick;
-      NewItem->Tag = index++;
+      NewItem->Tag = index;
       popTelas->Items->Add( NewItem );
-    }
-  fclose( fp );
-  }
 
+      index++;
+      grpindex++;
+    }
+  FormScreenList->VertScrollBar->Increment=Lbl->Height+lblspc;
+  FormScreenList->VertScrollBar->Range=maxheight + Lbl->Height;
+  fclose( fp );
+  ShowSelScreen();
+  ScreenItems[0]->Left = leftmargin + 4;
+  }
 
 // Dá um tempo após a inicialização para posicionar a janela.
 // Em casos de 2 monitores às vezes as coordenadas mudam após a inicialização do Windows.
@@ -967,6 +1102,8 @@ static int encontrada = 0;
       if ( encontrada == 2 )
         encontrada = 0;
       }
+
+      CheckWinKey();
 }
 //---------------------------------------------------------------------------
 
@@ -1171,10 +1308,14 @@ for ( int i = 0; i < popTelas->Items->Count; i++ )
 
       EnumWindows( (int (__stdcall *)()) enumwndprc2, 0 );
       popTelas->Items->Items[i]->Checked = (bool) JANELA_ENCONTRADA;
+      if (FormScreenList!=NULL)
+        ScreenItems[i]->Font->Color = JANELA_ENCONTRADA? (TColor)CLR_SCR_TXT_OPENED:(TColor)CLR_SCR_TXT_NOTOPENED;
   }
 
 if ( Timer8->Interval != TIMER_JANELAS_PROIBIDAS )
   Timer8->Interval = TIMER_JANELAS_PROIBIDAS;
+
+CheckWinKey();
 }
 //---------------------------------------------------------------------------
 
@@ -1187,7 +1328,8 @@ FormMouseMove(Sender,Shift,X,Y);
 
 void __fastcall TfmShell::tbTelasClick(TObject *Sender)
 {
-popTelas->Popup(fmShell->Left+tbTelas->Left,fmShell->Top+tbTelas->Top);
+// popTelas->Popup(fmShell->Left+tbTelas->Left,fmShell->Top+tbTelas->Top);
+FormScreenList->Visible = !FormScreenList->Visible;
 }
 //---------------------------------------------------------------------------
 
@@ -1324,4 +1466,99 @@ FILE *fp;
     fclose( fp );
     }
 }
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfmShell::lblScreenClick(TObject *Sender)
+{
+    TLabel *ClickedItem = dynamic_cast<TLabel *>(Sender);
+    if ( ClickedItem )
+      {
+      // deixa só o que houver à esquerda do  [, { ou pontos.
+
+      String S = ClickedItem->Caption.Trim();
+      if ( S.Pos( "[" ) )
+        S = S.SubString( 1, S.Pos( "[" ) - 1 ).Trim();
+      if ( S.Pos( "{" ) )
+        S = S.SubString( 1, S.Pos( "{" ) - 1 ).Trim();
+
+      while ( S[S.Length()] == '.' )
+        S = S.SubString( 1, S.Length() - 1 ).Trim();
+
+      JANELA_AENCONTRAR = S.Trim();
+
+      JANELA_AENCONTRAR = JANELA_AENCONTRAR + (String)" - " + TITULO_VISOR_TELAS;
+
+      EnumWindows( (int (__stdcall *)()) enumwndprc, 0 );
+      Linux_FindWindow( JANELA_AENCONTRAR, VISOR_TELAS + (String)"?INDTELA=" + (String)ClickedItem->Tag );
+      if ( JANELA_ENCONTRADA == 0 ) // se não achou executa
+        {
+        ExecExternApp( (VISOR_TELAS + (String)"?INDTELA=" + (String)ClickedItem->Tag).c_str() );
+        ToolBar1->Enabled = false;
+        Timer1->Interval = TIMER_ESPERA_VISOR;
+        }
+      FormScreenList->Hide();
+      }
+}
+
+void TfmShell::ShowSelScreen(void)
+{
+for (int i=0; i<NumScreens; i++)
+  {
+  if ( i == SelScreen && ScreenItems[i]!=NULL )
+    {
+    ScreenItems[SelScreen]->Color = (TColor)CLR_SCR_BGD_SELECTED;
+    /*
+    if ( (ScreenItems[SelScreen]->Top + 3*ScreenItems[i]->Height) >= (FormScreenList->Height + FormScreenList->VertScrollBar->Position) )
+        {
+        FormScreenList->VertScrollBar->Position = ScreenItems[i]->Top;
+        }
+    else
+    if ( ScreenItems[SelScreen]->Top < FormScreenList->VertScrollBar->Position )
+       {
+       FormScreenList->VertScrollBar->Position = ScreenItems[SelScreen]->Top;
+       }
+    */
+    }
+  else
+    ScreenItems[i]->Color = (TColor)CLR_SCR_BGD_NOTSELECTED;
+  }
+}
+
+void __fastcall TfmShell::lblScreenMouseMove(TObject *Sender, TShiftState Shift, int X, int Y)
+{
+TLabel *ClickedItem = dynamic_cast<TLabel *>(Sender);
+SelScreen = ClickedItem->Tag-1;
+ShowSelScreen();
+}
+
+void __fastcall TfmShell::Timer11Timer(TObject *Sender)
+{
+CheckWinKey();
+}
+
+// Monitor Win Key to open and close the Screen List
+void TfmShell::CheckWinKey()
+{
+int aks = (GetAsyncKeyState(VK_LWIN)&0x01) || (GetAsyncKeyState(VK_RWIN)&0x01);
+if ( lastks==0 && aks!=0 )
+  {
+  if (FormScreenList!=NULL)
+    {
+    FormScreenList->Visible = !FormScreenList->Visible;
+    }
+  }
+
+if (lastks>0)
+  lastks--;
+else
+  lastks = aks;
+
+if ( GetAsyncKeyState(VK_F12) && GetAsyncKeyState(VK_MENU) )
+   {
+   FormScreenList->Hide();
+   fmSair->Show();
+   }
+}
+
 

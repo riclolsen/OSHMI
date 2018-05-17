@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1" />
-<meta name="application-name" content="OSHMI-Open Substation HMI" />
-<meta name="description" content="Screen Viewer" />
-<meta name="author" content="Ricardo L. Olsen" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="viewport" content="width=2400,initial-scale=1.3" />
+<meta charset='ISO-8859-1' />
+<meta name='application-name' content='OSHMI-Open Substation HMI' />
+<meta name='description' content='Screen Viewer' />
+<meta name='author' content='Ricardo L. Olsen' />
+<meta name='mobile-web-app-capable' content='yes' />
+<meta name='apple-mobile-web-app-capable' content='yes' />
+<meta name='viewport' content='width=2400,initial-scale=1.3' />
 <title>Screen Viewer</title>
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
-<link rel="apple-touch-icon" href="images/tela.png" />
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1' />    
+<link rel='apple-touch-icon' href='images/tela.png' />
 <style>
 /* From https://projects.lukehaas.me/css-loaders/ */
 .loader,
@@ -56,57 +56,58 @@
 }
 
 </style>
-<script src="symbol_webreflection.js"></script>
-<script src="util.js"></script>
-<script src="lib/jquery-1.8.3.js"></script>
-<script src="lib/core-1.0.js"></script>
-<script src="lib/shortcut-2.01b.js"></script>
-<script src="lib/snap.svg.js"></script>
-<script src="lib/d3.min.js"></script>
-<script src="lib/radar-chart.js"></script>
-<script src="lib/vega.min.js" charset="utf-8"></script>
-<script src="lib/vega-3.0.8.min.js" charset="utf-8"></script>
-<script src="lib/vega-lite-2.0.3.min.js" charset="utf-8"></script>
-<script src="lib/chroma.js"></script>
-<script src="legacy_options.js"></script>
-<script src="../i18n/messages_i18n.js"></script>
-<script src="config_viewers_default.js"></script>
-<script src="../conf/config_viewers.js"></script>
-<script src="images.js"></script>
+<script src='symbol_webreflection.js'></script>
+<script src='symbol_webreflection.js'></script>
+<script src='util.js'></script>
+<script src='lib/jquery-1.8.3.js'></script>
+<script src='lib/core-1.0.js'></script>
+<script src='lib/shortcut-2.01b.js'></script>
+<script src='lib/snap.svg-min.js'></script>
+<script src='lib/d3.min.js'></script>
+<script src='lib/radar-chart.js'></script>
+<script src='lib/vega.min.js' charset='utf-8'></script>
+<script src='lib/vega-3.3.1.min.js' charset='utf-8'></script>
+<script src='lib/vega-lite-2.4.3.min.js' charset='utf-8'></script>
+<script src='lib/chroma.js'></script>
+<script src='legacy_options.js'></script>
+<script src='../i18n/messages_i18n.js'></script>
+<script src='config_viewers_default.js'></script>
+<script src='../conf/config_viewers.js'></script>
+<script src='images.js'></script>
 <script>
   var optval = [];
   var opttxt = [];  
   var optfilt = [];  
   var optgroup = [];
-  var optionhtml = "";  
+  var optionhtml = '';  
   function lista_telas(){};
 </script>
-<script src="../svg/screen_list.js"></script>
+<script src='../svg/screen_list.js'></script>
 <script>
-// OSHMI/Open Substation HMI - Copyright 2008-2017 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
-var tela = gup("SELTELA");
-var auxtela = gup("PTELA");
+var tela = gup('SELTELA');
+var auxtela = gup('PTELA');
 if ( auxtela != '' )
   {
   tela = auxtela;
   }
-var indtela = gup("INDTELA");
+var indtela = gup('INDTELA');
 tela = tela.replace(/%2F/g,'/'); 
 </script>
-<script src="pntserver.js"></script>
-<script src="websage.js"></script>
-<script src="vega_websage.js"></script>
+<script src='pntserver.js'></script>
+<script src='websage.js'></script>
+<script src='vega_websage.js'></script>
 </head>
-<body bgcolor="#dddddd" style="margin:0px;overflow:hidden;">
+<body bgcolor='#dddddd' style='margin:0px;overflow:hidden;'>
 <div id='bardiv' style='display:none;position:fixed;float:left;white-space:nowrap;z-index:1;left:0px;top:0px;;height:40px;width:110%;overflow:hidden;color:white;font-family:tahoma;font-size:12px;font-weight:bold;box-shadow: 2px 2px 2px #888888;'>
 <form name='fmTELA' METHOD='get' style='margin-top:4px'> 
 <map id='immap' name='immap'>
-<area shape="poly" id='ZPDesce'  coords="12,20,20,20,32,32,0,32"  alt="down"   onclick='WebSAGE.zoomPan(7);' style='cursor:pointer;' />
-<area shape="poly" id='ZPEsq'    coords="12,20,12,12,0,0,0,31"    alt="left"   onclick='WebSAGE.zoomPan(3);' style='cursor:pointer;' />
-<area shape="poly" id='ZPSobe'   coords="12,12,20,12,32,0,0,0"    alt="up"     onclick='WebSAGE.zoomPan(1);' style='cursor:pointer;' />
-<area shape="poly" id='ZPDir'    coords="20,12,20,20,32,32,32,0"  alt="right"  onclick='WebSAGE.zoomPan(5);' style='cursor:pointer;' />
-<area shape="poly" id='ZPCentro' coords="12,12,20,12,20,20,12,20" alt="center" onclick='WebSAGE.zoomPan(4);' style='cursor:pointer;' />
+<area shape='poly' id='ZPDesce'  coords='12,20,20,20,32,32,0,32'  alt='down'   onclick='WebSAGE.zoomPan(7);' style='cursor:pointer;' />
+<area shape='poly' id='ZPEsq'    coords='12,20,12,12,0,0,0,31'    alt='left'   onclick='WebSAGE.zoomPan(3);' style='cursor:pointer;' />
+<area shape='poly' id='ZPSobe'   coords='12,12,20,12,32,0,0,0'    alt='up'     onclick='WebSAGE.zoomPan(1);' style='cursor:pointer;' />
+<area shape='poly' id='ZPDir'    coords='20,12,20,20,32,32,32,0'  alt='right'  onclick='WebSAGE.zoomPan(5);' style='cursor:pointer;' />
+<area shape='poly' id='ZPCentro' coords='12,12,20,12,20,20,12,20' alt='center' onclick='WebSAGE.zoomPan(4);' style='cursor:pointer;' />
 </map>
 &nbsp;
 <span id='NOME_TELA' style='font-family:trebuchet ms,tahoma,arial,helvetica;font-size:22pt;vertical-align:top;display:none;'></span>
@@ -191,7 +192,7 @@ tela = tela.replace(/%2F/g,'/');
 </div>
 </div>
 
-<div class="loader" id="loader">
+<div class='loader' id='loader'>
 </div>
 
 <div id='svgdiv' style='position:absolute;z-index:0;top:40px;overflow:hidden;'>
@@ -202,7 +203,7 @@ tela = tela.replace(/%2F/g,'/');
 <div id='DIV_HORA' style='text-align:right;' ><span id='HORA_ATU' onclick='WebSAGE.reload();' style='font-family:tahoma,courier;font-size:10pt;font-weight:bold;color:white;'>&nbsp;</span></div>
 <div id='DIV_STATUS' style='text-align:right;'><span id='SP_STATUS' style='font-family:tahoma,courier;font-size:10pt;font-weight:bold;color:white;'>&nbsp;</span></div>
 </div>
-<div id="previewdiv" style='display:none;position:absolute;left:5px;top:5px;z-index:3;opacity:.95;box-shadow: 2px 2px 2px #888888;' onclick='evt.stopPropagation();evt.preventDefault();'>
+<div id='previewdiv' style='display:none;position:absolute;left:5px;top:5px;z-index:3;opacity:.95;box-shadow: 2px 2px 2px #888888;' onclick='evt.stopPropagation();evt.preventDefault();'>
 <iframe id='previewframe' width='700' height='480' frameborder='2'></iframe>
 </div>
 <div id='VEGACHARTS' style='display:none'></div>
@@ -210,6 +211,8 @@ tela = tela.replace(/%2F/g,'/');
 
 $('#svgdiv').css( 'background-color', VisorTelas_BackgroundSVG );   
 $('#bardiv').css( 'background-color', ScreenViewer_ToolbarColor );   
+
+// Load screen file
 document.getElementById('svgid').src = tela;
 document.getElementById('svgid').height = ScreenViewer_SVGMaxHeight;
 document.getElementById('svgid').width = ScreenViewer_SVGMaxWidth;
@@ -221,11 +224,11 @@ document.getElementById('ZPH').ScreenViewer_SVGMaxHeight;
 document.getElementById('SELTELA').onchange = 
   function() 
    { 
-   document.body.onbeforeunload=""; 
+   document.body.onbeforeunload=''; 
    if ( WebSAGE.g_seltela.selectedIndex != 0 ) 
      {
-     if ( document.getElementById("PLAY").value == 1 )
-       document.getElementById("PLAY").name="PLAY";
+     if ( document.getElementById('PLAY').value == 1 )
+       document.getElementById('PLAY').name='PLAY';
      this.form.submit();
      } 
    };
