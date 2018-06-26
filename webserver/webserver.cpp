@@ -120,13 +120,6 @@ WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
                  // executa do servidor nginx / php
                  ExecExternApp( RUN_NGINXPHP.c_str() );
-                 if ( HIST_RECORD )
-                   {
-                   ExecExternApp( RUN_PROCMONHIST.c_str() );
-                   ExecExternApp( RUN_PROCHIST.c_str() );
-                   }
-                 ExecExternApp( RUN_PROCEVENTOS.c_str() );
-                 ExecExternApp( RUN_PROCPONTOS.c_str() );
                  Application->Run();
             }
 
@@ -140,6 +133,9 @@ WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ExecExternApp( END_PROCHIST.c_str() );
         ExecExternApp( END_PROCEVENTOS.c_str() );
         ExecExternApp( END_PROCPONTOS.c_str() );
+        ExecExternApp( END_PGPROCHIST.c_str() );
+        ExecExternApp( END_PGPROCEVENTOS.c_str() );
+        ExecExternApp( END_PGPROCPONTOS.c_str() );
 
         sprintf( execstr, "taskkill /F /IM %s", RUN_VARREDORIEC104 );
         ExecExternApp( execstr );

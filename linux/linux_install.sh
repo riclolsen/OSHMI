@@ -44,11 +44,8 @@ sudo cp xorg.conf /etc/X11/
 sudo service nginx restart
 sudo service php5-fpm restart
 
-# makes autostart executable
-chmod +x autostart.sh
-
-# makes GlipsGraffiti JAR files executable
-#chmod +x ../GlipsGraffiti/*.jar
+# make scripts executable
+chmod +x *.sh
 
 # adds user www-data to group oshmi
 sudo usermod -a -G oshmi www-data

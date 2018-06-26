@@ -108,6 +108,28 @@ __fastcall TfmVeDados::TfmVeDados(TComponent* Owner)
     return;
     }
 
+  // Run SQLITE database insertion processes
+  if ( HIST_RECORD )
+     {
+     ExecExternApp( RUN_PROCMONHIST.c_str() );
+     ExecExternApp( RUN_PROCHIST.c_str() );
+     }
+  ExecExternApp( RUN_PROCEVENTOS.c_str() );
+  ExecExternApp( RUN_PROCPONTOS.c_str() );
+
+  // Run POSTGRESQL database insertion processes
+  if( DB_POSTGRESQL )
+    {
+    ExecExternApp( PG_START.c_str() );
+    if ( HIST_RECORD )
+      ExecExternApp( RUN_PGPROCHIST.c_str() );
+    ExecExternApp( RUN_PGPROCEVENTOS.c_str() );
+    ExecExternApp( RUN_PGPROCPONTOS.c_str() );
+
+    // start Grafana if possible 
+    ExecExternApp( GRAFANA_START.c_str() );
+    }
+
   // se tem outra IHM tenta sincronizar os eventos
   if ( IHMRED_IP_OUTRO_IHM != "" )
     {

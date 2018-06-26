@@ -32,7 +32,7 @@ header("Content-Disposition: inline; filename=\"eventserver.js\"");
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");
     
-require_once '../conf/timezone.php';
+require_once 'timezone.php';
 
 // internationalization messages
 $i18n = parse_ini_file( '../i18n/messages_i18n.ini', true );

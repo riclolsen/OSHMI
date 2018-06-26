@@ -67,10 +67,18 @@ Label6->Caption = ++cntcall;
     fname = fname.sprintf( "..\\db\\hist_%u.sql", GetTickCount() );
     fp = fopen( fname.c_str(), "at" );
 
+    FILE * fppg = NULL;
+    if (DB_POSTGRESQL)
+      {
+      fname = fname.sprintf( "..\\db\\pg_hist_%u.sql", GetTickCount() );
+      fppg = fopen( fname.c_str(), "at" );
+      }
+
     if ( fp != NULL )
       {
-      String SQL;
+      String SQL, PGSQL;
       SQL = SQL + (String)"BEGIN DEFERRED TRANSACTION;\n";
+      PGSQL = PGSQL + (String)"START TRANSACTION;\n";
       // vou usar insert or replace para fazer valer o último estado quando repetir a hora
       // também é útil para não dar erro
       String S;
@@ -96,6 +104,7 @@ Label6->Caption = ++cntcall;
         if ( ins )
            {
            SQL = SQL + (String)"insert or replace into hist (nponto, valor, flags, data) values ";
+           PGSQL = PGSQL + (String)"insert into hist (nponto, valor, flags, data) values ";
            ins = false;
            }
 
@@ -116,7 +125,10 @@ Label6->Caption = ++cntcall;
         unxtm.tm_isdst = isdst; // deixa para o sistema determinar se está ou não em Horário de Verão
         unxts = mktime( &unxtm );
 
-        SQL = SQL + S.sprintf( "(%u,%g,%u,%u),", hvl.nponto, hvl.valor, hvl.flags, unxts );
+
+        S = S.sprintf( "(%u,%g,%u,%u),", hvl.nponto, hvl.valor, hvl.flags, unxts );
+        SQL = SQL + S;
+        PGSQL = PGSQL + S;
 
         if ( ++cnt > ( LIM_INSERT * 2.5 ) ) // evita trancar aqui por muito tempo
           {
@@ -127,6 +139,8 @@ Label6->Caption = ++cntcall;
           {
           SQL[SQL.Length()] = ';'; // troca a última vírgula por ponto e vírgula
           SQL = SQL + (String) "\n";
+          PGSQL[PGSQL.Length()] = ';'; // troca a última vírgula por ponto e vírgula
+          PGSQL = PGSQL + (String) "\n";
           ins = true;
           continue;
           }
@@ -137,6 +151,14 @@ Label6->Caption = ++cntcall;
       SQL = SQL + (String) "COMMIT;\n";
       fputs( SQL.c_str(), fp );
       fclose( fp );
+      PGSQL[PGSQL.Length()] = ' '; // troca a última vírgula por espaço
+      PGSQL = PGSQL + (String) "ON CONFLICT (nponto, data) DO UPDATE SET valor=EXCLUDED.valor, flags=EXCLUDED.flags;\n"; // UPSERT: force update to latest values
+      PGSQL = PGSQL + (String) "COMMIT;\n";
+      if ( fppg != NULL )
+        {
+        fputs( PGSQL.c_str(), fppg );
+        fclose( fppg );
+        }       
       }
     }
 

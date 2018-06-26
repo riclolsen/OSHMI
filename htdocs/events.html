@@ -703,6 +703,7 @@ cbf_Status: function()
 {
   if ( HA_ALARMES != HA_ALARMES_ANT )
     {
+    HA_ALARMES_ANT = HA_ALARMES;
     if ( HA_ALARMES )
       {
       if ( ! document.getElementById( "idHistorico" ).checked )    
@@ -737,7 +738,7 @@ cbf_Status: function()
     WebSAGE.g_ServerStatusID = setTimeout( WebSAGE.getServerStatus, WebSAGE.g_timeOutServerStatus );
     }
 
-  HA_ALARMES_ANT = HA_ALARMES;
+
   NUM_VAR_ANT = NUM_VAR;
 },
 
@@ -1167,9 +1168,6 @@ doSilenciaBeep : function()
 doReconheceTudo: function( rec_apaga )
   {
   var row;
-  document.getElementById( "imgAlarmes" ).style.display = "none";
-  document.getElementById( "SILENCIA_ID" ).style.display = "none";
-  document.getElementById( "IMGEVENTOS" ).style.display = "";
   
   // se tem algum não reconhecido, torna reconhecido
   for ( row = 0; row < WebSAGE.g_tbl.getRowsNum(); row++ )

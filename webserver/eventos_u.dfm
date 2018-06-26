@@ -1,6 +1,6 @@
 object fmSDE: TfmSDE
-  Left = 222
-  Top = 299
+  Left = 229
+  Top = 306
   Width = 400
   Height = 144
   Caption = 'SOE'

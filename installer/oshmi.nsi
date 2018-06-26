@@ -11,7 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.4.15"
+!define VERSION "v.5.0"
+!define VERSION_ "5.0.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -41,10 +42,10 @@ Icon "..\icons\oshmi-o-logo255.ico"
 !define /date DATE "%d_%m_%Y"
 OutFile "oshmi_setup_${VERSION}.exe"
 
-VIProductVersion 0.0.0.0
+VIProductVersion ${VERSION_}
 VIAddVersionKey ProductName "OSHMI (Open Substation HMI)"
-;VIAddVersionKey Comments ""
-;VIAddVersionKey CompanyName ""
+VIAddVersionKey Comments "SCADA HMI Software"
+VIAddVersionKey CompanyName ""
 VIAddVersionKey LegalCopyright "Copyright 2008-2018 Ricardo L.Olsen"
 VIAddVersionKey FileDescription "OSHMI Installer"
 VIAddVersionKey FileVersion ${VERSION}
@@ -131,6 +132,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   var /GLOBAL NAVVISOVW
   var /GLOBAL NAVVISDOC
   var /GLOBAL NAVVISLOG
+  var /GLOBAL NAVGRAFAN
   var /GLOBAL HTTPSRV
     
   StrCpy $HTTPSRV   "http://127.0.0.1:51909"
@@ -149,12 +151,11 @@ Section "" ; empty string makes it hidden, so would starting with -
   StrCpy $NAVVISTRE "/htdocs/trend.html"
   StrCpy $NAVVISCUR "/htdocs/histwebview/histwebview.php"
   StrCpy $NAVVISOVW "/htdocs/overview.html"
-  StrCpy $NAVVISDOC "/docs/listdocs.php"
+  StrCpy $NAVVISDOC "/htdocs/listdocs.php"
   StrCpy $NAVVISLOG "/htdocs/listlogs.php"
+  StrCpy $NAVGRAFAN "/grafana"
 
   ; write reg info
-  StrCpy $1 "POOOOOOOOOOOP"
-  DetailPrint "I like to be able to see what is going on (debug) $1"
   WriteRegStr HKLM SOFTWARE\OSHMI "Install_Dir" "$INSTDIR"
 
   ; write uninstall strings
@@ -194,6 +195,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateDirectory "$INSTDIR\nginx_php"
   CreateDirectory "$INSTDIR\scripts"
   CreateDirectory "$INSTDIR\svg"
+  CreateDirectory "$INSTDIR\grafana"
+  CreateDirectory "$INSTDIR\PostgreSQL"
 
   SetOutPath $INSTDIR
 
@@ -224,6 +227,7 @@ Section "" ; empty string makes it hidden, so would starting with -
 
   SetOutPath $INSTDIR\linux
   File /a "..\linux\*.*"
+  File /a "..\linux\QTester104"
 
   SetOutPath $INSTDIR\db\db_cold
   File /a "..\db\db_cold\*.*"
@@ -242,6 +246,12 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\db\pragmas_hist_safe.sql"
   File /a "..\db\pragmas_soe.sql"
   File /a "..\db\pragmas_dumpdb.sql"
+  File /a "..\db\process_pg_hist.bat"
+  File /a "..\db\process_pg_soe.bat"
+  File /a "..\db\process_pg_dumpdb.bat"
+  File /a "..\db\terminate_pg_hist.bat"
+  File /a "..\db\terminate_pg_soe.bat"
+  File /a "..\db\terminate_pg_dumpdb.bat"
 
   SetOutPath $INSTDIR\i18n
   File /a "..\i18n\*.*"
@@ -266,6 +276,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\htdocs\websage.js"
   File /a "..\htdocs\pntserver.js"
   File /a "..\htdocs\timepntserver.php"
+  File /a "..\htdocs\timezone.php"
   File /a "..\htdocs\legacy_options.js"
   File /a "..\htdocs\eventserver.php"
   File /a "..\htdocs\eventsync.php"
@@ -276,6 +287,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\htdocs\ons.php"
   File /a "..\htdocs\vega_websage.js"  
   File /a "..\htdocs\listlogs.php"
+  File /a "..\htdocs\listdocs.php"
   File /a "..\htdocs\json.php"
   File /a "..\htdocs\odata.php"
   File /a "..\htdocs\csv.php"
@@ -320,7 +332,6 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a /r "..\inkscape_symbols\*.*"
 
   SetOutPath $INSTDIR\docs
-  File /a "..\docs\listdocs.php"
   File /a "..\docs\oshmi_operation_manual-pt_br.odt"
   File /a "..\docs\oshmi_operation_manual-pt_br.pdf"
   File /a "..\docs\oshmi_operation_manual-en_us.odt"
@@ -335,6 +346,14 @@ Section "" ; empty string makes it hidden, so would starting with -
 
   SetOutPath $INSTDIR\fonts
   File /a /r "..\fonts\*.*"  
+
+  SetOutPath $INSTDIR\grafana
+  File /a /r "..\grafana\grafana_start.bat"  
+
+  SetOutPath $INSTDIR\PostgreSQL
+  File /a /r "..\PostgreSQL\install.txt"  
+  File /a /r "..\PostgreSQL\postgresql_start.bat"  
+  
   
   SetOverwrite off
 
@@ -362,10 +381,11 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\conf_templates\nginx_access_control.conf"  
   File /a "..\conf_templates\nginx_http.conf"  
   File /a "..\conf_templates\nginx_https.conf"  
-  File /a "..\conf_templates\timezone.php"
 
   SetOutPath "$INSTDIR\db"
   File /a "..\db\db_cold\*.sl3"
+  File /a "..\db\.pgpass"
+  File /a "..\db\pgpass.conf"
   
   IfFileExists "$SYSDIR\forfiles.exe" JaExisteForFiles
   File /a "..\db\forfiles.exe"
@@ -451,6 +471,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateShortCut "$DESKTOP\OSHMI\Tabular Viewer.lnk"              "$INSTDIR\$NAVWINCMD" " $NAVDATDIR $NAVPREOPT --app=$HTTPSRV$NAVVISTAB $NAVPOSOPT" "$INSTDIR\htdocs\images\tabular.ico" 
   CreateShortCut "$DESKTOP\OSHMI\Alarms Viewer.lnk"               "$INSTDIR\$NAVWINCMD" " $NAVDATDIR $NAVPREOPT --app=$HTTPSRV$NAVVISANO $NAVPOSOPT" "$INSTDIR\htdocs\images\firstaid.ico" 
   CreateShortCut "$DESKTOP\OSHMI\Curves Viewer.lnk"               "$INSTDIR\$NAVWINCMD" " $NAVDATDIR $NAVPREOPT --app=$HTTPSRV$NAVVISCUR $NAVPOSOPT" "$INSTDIR\htdocs\images\plot.ico" 
+  CreateShortCut "$DESKTOP\OSHMI\Grafana.lnk"                     "$INSTDIR\$NAVWINCMD" " $NAVDATDIR $NAVPREOPT --app=$HTTPSRV$NAVGRAFAN $NAVPOSOPT" "$INSTDIR\htdocs\images\grafana.ico" 
 ; CreateShortCut "$DESKTOP\OSHMI\Overview.lnk"                    "$INSTDIR\$NAVWINCMD" " $NAVDATDIR $NAVPREOPT --app=$HTTPSRV$NAVVISOVW $NAVPOSOPT" "$INSTDIR\htdocs\images\oshmi.ico" 
 
   CreateShortCut "$DESKTOP\OSHMI\Operation Manual.lnk"            "$INSTDIR\bin\operation_manual.bat"

@@ -8,7 +8,7 @@
 
 header("Content-Type: text/html; charset=ISO-8859-1");
 
-require_once '../../conf/timezone.php';
+require_once '../timezone.php';
 
 function GetByte($filehandle) 
   { 

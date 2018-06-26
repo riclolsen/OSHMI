@@ -4,7 +4,7 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
-require_once '../conf/timezone.php';
+require_once 'timezone.php';
 
 // Parameters
 // FILTER = Tag or point key filter, can be a comma separated list or can be used * in tag to filter

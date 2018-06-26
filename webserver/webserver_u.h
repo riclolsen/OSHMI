@@ -29,6 +29,8 @@ __published:	// IDE-managed Components
         TMemo *mmWeb;
         TCheckBox *cbLogar;
         TLabel *lbOutroIHM;
+        TLabel *lbReset;
+        TLabel *Label1;
         void __fastcall IdHTTPServer1CommandGet(TIdPeerThread *AThread,
           TIdHTTPRequestInfo *ARequestInfo,
           TIdHTTPResponseInfo *AResponseInfo);
@@ -48,10 +50,15 @@ __published:	// IDE-managed Components
           Exception *AException);
 private:	// User declarations
         void logaln(String msg);
+        int cntDownNoHTTPReq; // count down time with no HTTP Requests, when reached 0 resets server 
 public:		// User declarations
         __fastcall TfmWebServ(TComponent* Owner);
         unsigned getKeyNum(String s);
 };
+
+// 4*Timer2->Interval(10s) = 40s
+#define NOHTTPREQTIME 4
+
 //---------------------------------------------------------------------------
 extern PACKAGE TfmWebServ *fmWebServ;
 //---------------------------------------------------------------------------

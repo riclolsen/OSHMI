@@ -125,6 +125,7 @@ if ( cbLogar->Checked )
 __fastcall TfmWebServ::TfmWebServ(TComponent* Owner)
         : TForm(Owner)
 {
+cntDownNoHTTPReq = NOHTTPREQTIME; 
 NMHTTP1->Port = HTTP_PORTA;
 lbOutroIHM->Caption = (String)"Other HMI IP = " + IHMRED_IP_OUTRO_IHM;
 }
@@ -136,6 +137,7 @@ void __fastcall TfmWebServ::IdHTTPServer1CommandGet(TIdPeerThread *AThread,
 if (IHM_EstaFinalizando()) return;
 
 bool is_dinpg = false; // página dinâmica não vai para o cache
+cntDownNoHTTPReq = NOHTTPREQTIME;
 
 // assegura que IP acessante é o local ou do outro IHM, ou da lista de clientes remotos, para outros não responde
 if (  WEBSERVER_CLIENTES_REMOTOS[1] != '*' &&
@@ -223,7 +225,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      break;
   case 'E': // point list
   case 'P': // point list
-     AResponseInfo->ContentText = "{'error' : 'none'}";
+     AResponseInfo->ContentText = AResponseInfo->ContentText.sprintf("{'beep': %d}", BL.HaBeepAtivo());
      break;
   }
 else
@@ -1658,6 +1660,7 @@ catch ( Exception &E )
 void __fastcall TfmWebServ::Timer2Timer(TObject *Sender)
 {
 int nponto;
+static int cntHTTPServerReset = 0;
 
     if ( IHM_EstaFinalizando() )
       return;
@@ -1675,6 +1678,26 @@ int nponto;
         nponto = lstNPontoDump.front();   // pega o primeiro da fila
         lstNPontoDump.pop_front();   // retira da fila
         fmDumpdb->DumpDB( nponto, 1 ); // faz dump  do ponto forçando mesmo que ainda não recebeu integridade
+      }
+
+    // monitor time without http requests to the server, after some timeout resets the server
+    // also resets the server if it is not active  
+    cntDownNoHTTPReq--;
+    if ( cntDownNoHTTPReq <= 0 || !IdHTTPServer1->Active )
+      {
+      cntDownNoHTTPReq = NOHTTPREQTIME;
+      lbReset->Caption = ++cntHTTPServerReset;
+      try
+        {
+        IdHTTPServer1->Active = false;
+        Sleep(100UL);
+        IdHTTPServer1->Active = true;
+        }
+      catch (Exception &E)
+        {
+        // Error, wait more 10s
+        cntDownNoHTTPReq = 1;
+        }
       }
 
     // logaln( (String)"I: HTTPServerActive=" + (String)(int)IdHTTPServer1->Active );

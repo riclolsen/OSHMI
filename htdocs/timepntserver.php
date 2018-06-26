@@ -25,7 +25,7 @@ header("Content-Disposition: inline; filename=\"timepntserver.js\"");
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");
     
-require_once '../conf/timezone.php';
+require_once 'timezone.php';
 // @date_default_timezone_set( date_default_timezone_get() );
 
 extract($_REQUEST, EXTR_PREFIX_ALL|EXTR_SKIP, 'p');

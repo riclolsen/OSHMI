@@ -59,11 +59,20 @@ if ( ListaDumpSQL.size() > 0 )
     fname = fname.sprintf( "..\\db\\dumpdb_%u.sql", GetTickCount() );
     fp = fopen( fname.c_str(), "at" );
 
+    FILE * fppg = NULL;
+    if (DB_POSTGRESQL)
+      {
+      fname = fname.sprintf( "..\\db\\pg_dumpdb_%u.sql", GetTickCount() );
+      fppg = fopen( fname.c_str(), "at" );
+      }
+
     if ( fp != NULL )
       {
-      String SQL;
+      String SQL, PGSQL;
       SQL = SQL + (String)"BEGIN DEFERRED TRANSACTION;\n";
       SQL = SQL + (String)"insert or replace into dumpdb (nponto, id, descricao, valor, flags, lims, limi, hister, data, hora, ts, alrin, vlrini, histor, bmorta, periodo, tipo, unidade, eston, estoff, supcmd, timeout, anotacao, estacao, estalm, prior ) values ";
+      PGSQL = PGSQL + (String)"START TRANSACTION;\n";
+      PGSQL = PGSQL + (String)"insert into dumpdb (nponto, id, descricao, valor, flags, lims, limi, hister, data, hora, ts, alrin, vlrini, histor, bmorta, periodo, tipo, unidade, eston, estoff, supcmd, timeout, anotacao, estacao, estalm, prior ) values ";
       while (!ListaDumpSQL.empty()) // enquanto houver consulta
         {
         cnt++;
@@ -73,6 +82,7 @@ if ( ListaDumpSQL.size() > 0 )
         S = ListaDumpSQL.front();   // pega a primeira da fila
         ListaDumpSQL.pop_front();   // retira-a da fila
         SQL = SQL + (String)"(" + S + (String)"),";
+        PGSQL = PGSQL + (String)"(" + S + (String)"),";
         }
         
       SQL[SQL.Length()] = ';'; // troca a última vírgula por ponto e vírgula
@@ -80,6 +90,14 @@ if ( ListaDumpSQL.size() > 0 )
       SQL = SQL + (String) "COMMIT;\n";
       fwrite( SQL.c_str(), 1, SQL.Length(), fp );
       fclose( fp );
+      PGSQL[PGSQL.Length()] = ' '; // troca a última vírgula por espaço
+      PGSQL = PGSQL + (String) "ON CONFLICT (nponto) DO UPDATE SET id=EXCLUDED.id, descricao=EXCLUDED.descricao, valor=EXCLUDED.valor, flags=EXCLUDED.flags, lims=EXCLUDED.lims, limi=EXCLUDED.limi, hister=EXCLUDED.hister, data=EXCLUDED.data, hora=EXCLUDED.hora, ts=EXCLUDED.ts, alrin=EXCLUDED.alrin, vlrini=EXCLUDED.vlrini, histor=EXCLUDED.histor, bmorta=EXCLUDED.bmorta, periodo=EXCLUDED.periodo, tipo=EXCLUDED.tipo, unidade=EXCLUDED.unidade, eston=EXCLUDED.eston, estoff=EXCLUDED.estoff, supcmd=EXCLUDED.supcmd, timeout=EXCLUDED.timeout, anotacao=EXCLUDED.anotacao, estacao=EXCLUDED.estacao, estalm=EXCLUDED.estalm, prior=EXCLUDED.prior;\n";
+      PGSQL = PGSQL + (String) "COMMIT;\n";
+      if ( fppg != NULL )
+        {
+        fputs( PGSQL.c_str(), fppg );
+        fclose( fppg );
+        }
       }
   }
 

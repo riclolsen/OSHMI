@@ -3,7 +3,7 @@
 
 // Parâmetros e constantes de configuração do sistema
 
-#define VERSAO "4.15"
+#define VERSAO "5.0"
 
 extern int IEC104_PORT;
 extern int IEC104_1_SEC; // endereço secundário da utr 1
@@ -46,6 +46,8 @@ extern int HIST_RECORD;
 extern int HIST_DEADBANDFACTOR;
 extern int HIST_LIFETIME;
 
+extern int DB_POSTGRESQL; // enable write postgresql files 
+
 extern int DELAY;
 extern int INTERVAL;
 extern String RUN[];
@@ -68,6 +70,16 @@ extern String RUN_PROCPONTOS;
 extern String END_PROCHIST;
 extern String END_PROCEVENTOS;
 extern String END_PROCPONTOS;
+
+extern String PG_START; 
+extern String RUN_PGPROCHIST;
+extern String RUN_PGPROCEVENTOS;
+extern String RUN_PGPROCPONTOS;
+extern String END_PGPROCHIST;
+extern String END_PGPROCEVENTOS;
+extern String END_PGPROCPONTOS;
+
+extern String GRAFANA_START; 
 
 extern String VISOR_EVENTOS;
 extern String VISOR_TABULAR;

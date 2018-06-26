@@ -18,14 +18,18 @@ sh ~/.wine/drive_c/oshmi/db/process_hist.sh &
 # OSHMI shell
 wine ~/.wine/drive_c/oshmi/bin/hmishell.exe &
 
-
 cd ~/.wine/drive_c/oshmi/bin
 
 # OSHMI realtime database server
 wine webserver.exe &
 
+./QTester104 &
+
+# beep iin case wine sound doesn't work
+sh ~/.wine/drive_c/oshmi/linux/beep.sh &
+
 # OSHMI iec104 protocol driver via Wine
-# wine ~/.wine/drive_c/oshmi/bin/qtester104.exe &
+#wine ~/.wine/drive_c/oshmi/bin/qtester104.exe &
 
 # screens editor Inkscape SAGE
 # wine " ~/.wine/drive_c/Program Files (x86)/Inkscape_sage/inkscape.exe" &

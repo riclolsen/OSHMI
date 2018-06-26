@@ -1,6 +1,6 @@
 object fmWebServ: TfmWebServ
-  Left = 190
-  Top = 390
+  Left = 328
+  Top = 398
   Width = 592
   Height = 547
   Caption = 'fmWebServ'
@@ -21,6 +21,20 @@ object fmWebServ: TfmWebServ
     Width = 54
     Height = 13
     Caption = 'lbOutroIHM'
+  end
+  object lbReset: TLabel
+    Left = 480
+    Top = 56
+    Width = 6
+    Height = 13
+    Caption = '0'
+  end
+  object Label1: TLabel
+    Left = 480
+    Top = 40
+    Width = 61
+    Height = 13
+    Caption = 'Auto Resets:'
   end
   object btSinc: TButton
     Left = 488

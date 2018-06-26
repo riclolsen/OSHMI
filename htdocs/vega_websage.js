@@ -139,6 +139,7 @@ function (inksage_labelvec, lbv, item)
     item._d3arc_min = parseFloat(params[0] || 0);
     item._d3arc_max = parseFloat(params[1] || 100);
     item._d3arc_innerRadius = parseFloat(params[2] || 0);
+    item._d3arc_duration = parseFloat(params[3] || 750);
     var arc = d3.svg.arc()
                 .innerRadius(item._d3arc_innerRadius)
                 .outerRadius(100)
@@ -149,6 +150,7 @@ function (inksage_labelvec, lbv, item)
                       .style("fill", "red")
                       .attr("d", arc);
     item._d3arc = sl;
+    item._d3arc.datum({oldAngle: 0});
     sl[0][0].style.cssText = item.style.cssText;
     var bb = item.getBBox();
     sl[0][0].setAttributeNS( null, 'transform',  item.getAttributeNS( null, 'transform' ) || "" +
@@ -306,6 +308,7 @@ function (inksage_labelvec, lbv, item)
     break;
 
   case "#vega3": // vega V3 charts, defined under a rectangle
+  case "#vega4": // vega V4 charts, defined under a rectangle
     {
       item.vgTableName = [];
       item.style.display = 'none'; // hide the rectangle
@@ -321,6 +324,7 @@ function (inksage_labelvec, lbv, item)
       }
       else
         item.timespan = item.width.baseVal.value;
+
       item.pnts = srcsplit[0].split(",");
       for (j = 0; j < item.pnts.length; j++)
       {
@@ -352,6 +356,7 @@ function (inksage_labelvec, lbv, item)
     break;
 
   case "#vega3-json": // vega V3 charts, updated by JSON file obtained periodically, defined under a rectangle
+  case "#vega4-json": // vega V4 charts, updated by JSON file obtained periodically, defined under a rectangle
     { 
       item.vgTableName = [];
       item.style.display = 'none'; // hide the rectangle
@@ -439,16 +444,31 @@ function (i)
   switch (WebSAGE.InkSage[i].tag)
   {
   case "#arc":
-    var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent._d3arc_tag);
-    var proporcao = ( vt - WebSAGE.InkSage[i].parent._d3arc_min ) / ( WebSAGE.InkSage[i].parent._d3arc_max - WebSAGE.InkSage[i].parent._d3arc_min );
+    var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent._d3arc_tag, WebSAGE.InkSage[i].parent);
+    var proporcao = (vt - WebSAGE.InkSage[i].parent._d3arc_min) / (WebSAGE.InkSage[i].parent._d3arc_max - WebSAGE.InkSage[i].parent._d3arc_min);
     var arc = d3.svg.arc()
-                .innerRadius(WebSAGE.InkSage[i].parent._d3arc_innerRadius)
-                .outerRadius(100)
-                .startAngle(0)
-                .endAngle( proporcao * 2 * Math.PI );    
-    WebSAGE.InkSage[i].parent._d3arc.attr("d", arc);
-    break;
-  case "#vega": // vega V2 chart, defined under a rectangle
+      .innerRadius(WebSAGE.InkSage[i].parent._d3arc_innerRadius)
+      .outerRadius(100)
+      .startAngle(0);
+    function arcTween(newAngle) {
+      return function (d) {
+        var interpolate = d3.interpolate(d.oldAngle, newAngle);
+        return function (t) {
+          d.endAngle = interpolate(t);
+          return arc(d);
+        };
+      };
+    }
+    WebSAGE.InkSage[i].parent._d3arc
+      .transition()
+      .duration(WebSAGE.InkSage[i].parent._d3arc_duration)
+      .attrTween("d", arcTween(proporcao * 2 * Math.PI))
+      .each("end", function() {
+        WebSAGE.InkSage[i].parent._d3arc
+          .datum({oldAngle: proporcao * 2 * Math.PI})
+      });
+  break;
+case "#vega": // vega V2 chart, defined under a rectangle
 
   if (typeof WebSAGE.InkSage[i].parent.vw != "undefined" && 
       typeof WebSAGE.InkSage[i].parent.vgInitData != "undefined" &&
@@ -527,7 +547,7 @@ function (i)
             if (vl.indexOf("PNT#") >= 0)
               {
                 if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
-                  newdata[index][ix] = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1]);
+                  newdata[index][ix] = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
                 else
                   newdata.splice(-1, 1);
               }
@@ -593,6 +613,7 @@ function (i)
     break;
   case "#vega-lite": // vega-lite V1 or V2 chart, defined under a rectangle
   case "#vega3": // vega V3 chart, defined under a rectangle
+  case "#vega4": // vega V4 chart, defined under a rectangle
   
       if (typeof WebSAGE.InkSage[i].parent.vw != "undefined" && 
           typeof WebSAGE.InkSage[i].parent.vgInitData != "undefined" &&
@@ -644,17 +665,45 @@ function (i)
                   for (var indv = WebSAGE.InkSage[i].valores[pnt].length - 1; indv >= 0; indv--)
                   {
                     var secdif = (d.getTime() - WebSAGE.InkSage[i].datas[pnt][indv]) / 1000;
-                    if (secdif > WebSAGE.InkSage[i].parent.timespan * 60)
-                    { // o tempo ficou muito grande, tira da lista
-                      WebSAGE.InkSage[i].valores[pnt].splice(indv, 1);
-                      WebSAGE.InkSage[i].datas[pnt].splice(indv, 1);
+                    if (WebSAGE.InkSage[i].parent.timespan > 0) 
+                    {
+                      if (secdif > WebSAGE.InkSage[i].parent.timespan * 60) // o tempo ficou muito grande, tira da lista
+                      {
+                        WebSAGE.InkSage[i].valores[pnt].splice(indv, 1);
+                        WebSAGE.InkSage[i].datas[pnt].splice(indv, 1);
+                      }
                     }
+                    else 
+                    { // control when enter a new time cycle
+                      if ( WebSAGE.InkSage[i].datas[pnt][indv] > WebSAGE.InkSage[i].parent.datafim )
+                        { // time now > previwed time end
+                        WebSAGE.InkSage[i].valores.forEach(function (element, index, arr) {
+                          arr[index] = [];
+                        });  
+                        WebSAGE.InkSage[i].datas.forEach(function (element, index, arr) {
+                          arr[index] = [];
+                        });  
+                        // enter a new time cycle preview begin and end
+                        WebSAGE.InkSage[i].parent.dataini = (new Date()).getTime() -
+                                                            (new Date()).getTime() % (Math.abs(WebSAGE.InkSage[i].parent.timespan*60) * 1000) +
+                                                            ((new Date()).getTimezoneOffset()*60*1000) % (Math.abs(WebSAGE.InkSage[i].parent.timespan*60) * 1000);
+                        WebSAGE.InkSage[i].parent.datafim = WebSAGE.InkSage[i].parent.dataini + Math.abs(WebSAGE.InkSage[i].parent.timespan*60*1000);
+                        }
+                    }  
                   }
                 }
                 else
                 {
                   // call server to get historic data to fill plot, control to call only one time per obj per point
-                  var utm = (new Date()).getTime() - WebSAGE.InkSage[i].parent.timespan * 60 * 1000;
+                  if (WebSAGE.InkSage[i].parent.timespan < 0)
+                  {
+                  WebSAGE.InkSage[i].parent.dataini = (new Date()).getTime() -
+                                                      (new Date()).getTime() % (Math.abs(WebSAGE.InkSage[i].parent.timespan*60) * 1000) +
+                                                      ((new Date()).getTimezoneOffset()*60*1000) % (Math.abs(WebSAGE.InkSage[i].parent.timespan*60) * 1000);
+                  WebSAGE.InkSage[i].parent.datafim = WebSAGE.InkSage[i].parent.dataini + Math.abs(WebSAGE.InkSage[i].parent.timespan*60*1000);
+                  }                               
+
+                  var utm = WebSAGE.InkSage[i].parent.dataini; //(new Date()).getTime() - timespan * 60 * 1000;
                   if (!WebSAGE.InkSage[i].parent.hasOwnProperty("histCalls"))
                   {
                     WebSAGE.InkSage[i].parent.histCalls = [];
@@ -672,7 +721,7 @@ function (i)
               if (vl.indexOf("PNT#") >= 0)
                 {
                   if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
-                    newdata[index][ix] = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1]);
+                    newdata[index][ix] = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
                   else
                     newdata.splice(-1, 1);
                 }

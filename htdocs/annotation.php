@@ -20,7 +20,7 @@ header("Content-Disposition: inline; filename=\"annotation.json\"");
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");
     
-require_once '../conf/timezone.php';
+require_once 'timezone.php';
 
 extract($_REQUEST, EXTR_PREFIX_ALL|EXTR_SKIP, 'p');
 

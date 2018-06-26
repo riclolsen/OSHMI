@@ -1,5 +1,5 @@
 OSHMI - Open Substation HMI
-    Copyright 2008-2018 - Ricardo L. Olsen
+    Copyright 2008-2018 - Ricardo L. Olsen (https://www.linkedin.com/in/ricardo-olsen/)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -93,6 +93,8 @@ We respect and intend to comply with the branding policy of the Inkscape Project
 In our view the modifications introduced are not substantial and do not intend to create a competitive product.
 The modifications introduced are meant only to allow the use of the sotware as a SCADA Synoptics Editor.
 We respect the GPL license of the upstream work by making the source code of modifications to the original Inkscape and SAGE code available at:
+
+Source Code:
   https://sourceforge.net/p/oshmiopensubstationhmi/mercurial/ci/default/tree/inkscape_sage_src/
 
 The original SAGE (SCADA Animation Graphic Editor) software and source code is available here:
@@ -144,6 +146,80 @@ Webserver, HMIShell, Mon_Proc and Sim_TR:
 
 QTester104:
  - QT 5.9.2 or newer.
+
+-------------------------------------------------------------------
+
+Notes for version 5.0:
+
+This version leverages the power of Timescale PostgreSQL database extension that 
+optimizes insertion and query of time series data. The preconfigured add-on can run 
+on the OSHMI servers or data can be uploaded to an external server installed on 
+any PostgreSQL/Timescale supported OS.
+Grafana is available as an add-on to allow for easy construction of customized 
+dashboards and alerts.
+Now OSHMI is capable of handling historical databases of very large installations 
+such as big power plants and control centers.
+The historical data storage and analytics capabilities of OSHMI now match or 
+supplant that of expensive commercial SCADA systems.
+
+Integration of analytics capabilities now include: 
+ - PostgreSQL (fully featured open source database)
+ - Timescale (time series extension)
+ - Grafana (via PostgreSQL)
+ - Power BI (via OData, JSON and PostgreSQL) 
+ - Tableau (via OData, JSON and PostgreSQL)
+ - Excel (via web query and PostgreSQL/ODBC)
+
+PostgreSQL/Timescale, Grafana:
+ - PostgreSQL/Timescale and Grafana now available as add-ons on 64bit Windows.
+ - New scripts to process the SQL text files compatible w/ Postgresql/Timescale.
+
+Screen Viewer:
+ - Better compatibility with other web browsers.
+ - Animation of Arc function (donut graphics).
+ - Better handling of mouse events.
+ - Correction of some specific historical graphic plot type.
+ - Support for (current) round time period for Vega 3 historical plot.
+ - New markup for "get" attribute for digital points (OFF|ON) messages.
+ - Fixed problem with center of rotatation (for "rotate" attribute).
+ - Fixed problem with positioning o radar charts.
+ - !EVAL expressions now have access to the SVG DOM reference (thisobj) for the 
+   container of the markup object.
+
+Events Viewer:
+ - Fixed problem showing silent button when acknowledging alarms.
+
+Webserver.exe:
+ - Do not load command points with SUPCMD=0.
+ - Implemented watchdog timeout for absence of HTTP requests
+   as the server sometimes stops listening under Wine/Linux.
+ - Can now output files SQL text files compatible w/ Postgresql/Timescale.
+ - Configuration of timezone moved to conf/hmi.ini | [webserver] | TIMEZONE.
+
+HMIShell:
+ - Do not search for already opened Viewers on Linux.
+ - Fixed problem with screen_list.js strings size.
+ - Fixed remote beep issue.
+
+Linux: 
+ - New scripts for running on Linux.
+ - Referece Linux distribuition is now Mint 18.3 XFCE 32bits.
+ - QTester104 natively compiled.
+ - Script to beep for alarms out of Wine.
+
+DNP3 driver:
+ - Updated to version 0.5.
+ - Added support for binary counters and frozen counters.
+
+Documentation:
+ - New instructions for installation on Linux Mint.
+ - Instructions to install PostgreSQL/Timescale and Grafana add-ons.
+
+Docs Viewer:
+ - Moved to htdocs/lsitdocs.php.
+
+SQLite:
+ - Updated to version 3.24.0.
 
 -------------------------------------------------------------------
 

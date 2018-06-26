@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// HMI SHELL - Copyright 2008-2016 - Ricardo L. Olsen
+// HMI SHELL - Copyright 2008-2018 - Ricardo L. Olsen
 //
 // Este programa tem por objetivo proporcionar um shell para o Windows
 // específico para controlar o IHM. De forma a restringir o acesso
@@ -83,7 +83,7 @@ void ExecExternApp(char * cmd)
 // Para o linux:
 int Linux_ShowWindow(String WinTitle)
 {
-WinExec( ( (String)"/usr/bin/wmctrl -a \"" + WinTitle + (String)"\"" ).c_str(), SW_SHOWNORMAL );
+// WinExec( ( (String)"cmd /c show_win.bat '" + WinTitle + (String)"'" ).c_str(), SW_SHOWNORMAL );
 return 0;
 }
 //---------------------------------------------------------------------------
@@ -93,21 +93,25 @@ return 0;
 // retorna 0 se achou e não zero se não achou
 int Linux_FindWindow(String WinTitle, String urlexe="")
 {
+/*
     String cmd;
     int ret;
 
-    cmd = "/bin/sh -c \"/usr/bin/xwininfo -root -tree | /bin/grep -c -m 1 -q -s -i '";
-    cmd = cmd + WinTitle;
-//  cmd = cmd + (String) "' ; ret=$?; if [ $ret = 1 ] ; then /usr/bin/wget -nv --spider '"+urlexe+(String)"' ; fi \"";
-    cmd = cmd + (String) "' ; ret=$?; if [ $ret = 1 ] ; then " + urlexe + " ; fi \"";
+    cmd = "cmd /c find_win.bat '" + WinTitle + (String)"' " + urlexe;
     ret = WinExec(cmd.c_str(), SW_SHOWNORMAL);
     if ( ret > 31 ) // se conseguiu executar, está no linux, então faz de conta que encontrou para não abrir janela de novo
       {
       JANELA_ENCONTRADA = (void*)1;
       Linux_ShowWindow( WinTitle );
       }
-
+    else
+      {
+      ExecExternApp(urlexe.c_str());
+      }
 return ret > 31;
+*/
+
+return 0;
 }
 //---------------------------------------------------------------------------
 
@@ -701,10 +705,10 @@ tbHist->Enabled = true;
 tbAnormais->Enabled = true;
 tbTabular->Enabled = true;
 tbCurvas->Enabled = true;
-if ( NMHTTP1->Body.Pos("HA_ALARMES=1") )
+if ( NMHTTP1->Body.Pos("'beep': 1") )
   AtivaBeep( BEEP_NORMAL );
 else
-if ( NMHTTP1->Body.Pos("HA_ALARMES=2") )
+if ( NMHTTP1->Body.Pos("'beep': 2") )
   AtivaBeep( BEEP_CRITICO );
 else
   SilenciaBeep();
@@ -825,7 +829,7 @@ if (fp)
         Lbl->Font->Style = TFontStyles();
         Lbl->Font->Size = 14;
         Lbl->Color = (TColor)CLR_SCR_BGD_NOTSELECTED;
-        Lbl->Caption = S + S.StringOfChar(' ', 30-S.Length());
+        Lbl->Caption = S + S.StringOfChar(' ', (30-S.Length()>0)?30-S.Length():0 );
         Lbl->Top = Lbl->Height + grpindex*(Lbl->Height+lblspc);
         Lbl->Left = leftmargin + 4;
         Lbl->Cursor = crHandPoint;

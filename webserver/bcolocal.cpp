@@ -630,6 +630,14 @@ if (fp)
         endereco = nponto; // endereco==0 significa que é o endereco físico do protocolo é igual ao nponto
       }
 
+    // descarta ponto de comando sem supervisionado associado  
+    if ( origem == CODORIGEM_COMANDO && nponto_sup<=0 )
+      {
+      Loga( (String)"Error in point list! Command with no related supervised point. Point number " + (String)nponto + (String)", Line " + (String)cntline );
+      cnterr++;
+      continue;
+      }
+
     // testa se alarme (ou comando digital) tem os estados separados pela '/'
     if ( strchr( alarme, '/' ) == NULL &&
          (
@@ -640,7 +648,7 @@ if (fp)
          )
        )
       {
-      Loga( (String)"Error in point list! Column alarm without the '/' separator. Line " + cntline );
+      Loga( (String)"Error in point list! Column alarm without the '/' separator. Point number " + (String)nponto + (String)", Line " + (String)cntline );
       cnterr++;
       continue;
       }

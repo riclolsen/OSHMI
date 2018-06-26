@@ -71,6 +71,8 @@ int HIST_RECORD = 1;
 int HIST_DEADBANDFACTOR = 100;
 int HIST_LIFETIME = 36;
 
+int DB_POSTGRESQL=0; // enable write postgresql files
+
 int HIDE = 0;
 int IHM_FINALIZANDO = 0;
 int SIMULACAO = 0;
@@ -88,6 +90,16 @@ String RUN_PROCPONTOS = "hidec.exe ..\\db\\process_dumpdb.bat";
 String END_PROCHIST = "hidec.exe ..\\db\\terminate_hist.bat";
 String END_PROCEVENTOS = "hidec.exe ..\\db\\terminate_soe.bat";
 String END_PROCPONTOS = "hidec.exe ..\\db\\terminate_dumpdb.bat";
+
+String PG_START = "hidec.exe ..\\PostgreSQL\\postgresql_start.bat";
+String RUN_PGPROCHIST = "hidec.exe ..\\db\\process_pg_hist.bat";
+String RUN_PGPROCEVENTOS = "hidec.exe ..\\db\\process_pg_soe.bat";
+String RUN_PGPROCPONTOS = "hidec.exe ..\\db\\process_pg_dumpdb.bat";
+String END_PGPROCHIST = "hidec.exe ..\\db\\terminate_pg_hist.bat";
+String END_PGPROCEVENTOS = "hidec.exe ..\\db\\terminate_pg_soe.bat";
+String END_PGPROCPONTOS = "hidec.exe ..\\db\\terminate_pg_dumpdb.bat";
+
+String GRAFANA_START = "hidec.exe ..\\grafana\\grafana_start.bat";
 
 int Config_Le( void )
 {
@@ -125,6 +137,7 @@ ALARMA_DUPLA_TRANSICAO = pIni->ReadInteger( "WEBSERVER", "DOUBLE_TRANSITION_ALAR
 HIST_RECORD = pIni->ReadInteger( "HIST", "RECORD", HIST_RECORD );
 HIST_DEADBANDFACTOR = pIni->ReadInteger( "HIST", "DEADBAND_FACTOR", HIST_DEADBANDFACTOR );
 HIST_LIFETIME = pIni->ReadInteger( "HIST", "LIFETIME", HIST_LIFETIME );
+DB_POSTGRESQL = pIni->ReadInteger( "HIST", "DB_POSTGRESQL", DB_POSTGRESQL );
 
 HIDE = pIni->ReadInteger( "RUN", "HIDE", 0 );
 SIMULACAO = pIni->ReadInteger( "RUN", "SIMULATION", 0 );

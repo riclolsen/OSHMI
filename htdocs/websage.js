@@ -387,7 +387,7 @@ if ( obj.inittransform === null )
   }
 
 if ( xd != 0 || yd != 0 )
-  obj.setAttributeNS( null, 'transform', obj.inittransform + ' translate(' + parseFloat(xd) + ',' + parseFloat(yd) + ')' );  
+  obj.setAttributeNS( null, 'transform', obj.inittransform + ' translate(' + parseFloat(xd) + ' ' + parseFloat(yd) + ')' );  
 }
 
 function histdata( i, pnt ) 
@@ -682,8 +682,9 @@ if ( isNaN( parseInt(tag) )  )
     }
   }
 
-// if ( isInt( tag ) )
-if ( WebSAGE.lstpnt.indexOf( "," + tag + "," ) < 0 ) // se não tem, acrescenta | append if not already in the list
+if ( (WebSAGE.lstpnt.indexOf( "," + tag + "," ) < 0) && 
+     !(WebSAGE.lstpnt.indexOf( tag + "," ) === 0)
+   ) // se já não tem na lista, acrescenta | append if not already in the list
   { 
     WebSAGE.lstpnt = WebSAGE.lstpnt + tag + ','; 
   }
@@ -1443,7 +1444,7 @@ doResize : function ()
 },
 
 // retorna o valor do ponto, se houver, interpreta tags tipo !ALMnnnnn e !TMPnnnnn
-valorTagueado: function ( tag )
+valorTagueado: function ( tag, obj )
 { 
   var retnok = "????";
   var t,n,f;
@@ -1662,7 +1663,7 @@ valorTagueado: function ( tag )
       t = tag.substr(5).trim();
       try 
         {
-        return eval(t);
+        return eval('var thisobj=window.SVGDoc.querySelector("svg").getElementById("' + obj.id + '"); ' + t);  
         }
       catch( err )
         {
@@ -1680,12 +1681,12 @@ valorTagueado: function ( tag )
 },
 
 // imprime valor do ponto formatado padrão printf extendido, com código para setas direcionais
-interpretaFormatoC: function( fmt, tag )
+interpretaFormatoC: function( fmt, tag, obj )
 {
 var valr;
 var tptag = 0;
 
-valr = WebSAGE.valorTagueado( tag );
+valr = WebSAGE.valorTagueado( tag, obj );
 
 if ( valr === "????" )
   { 
@@ -1966,12 +1967,12 @@ var i, xright, bb, ybottom, dif, tl;
       if ( grp.groupDistribType === "vertical" )       
         {
         dif = parseFloat( ybottom - bb.top + grp.groupDistribSpacing ) + grp.children[i].lastXlate;
-        tl = ' translate(0,' + dif + ')';   
+        tl = ' translate(0 ' + dif + ')';   
         }
       else  
         {
         dif = parseFloat( xright - bb.left + grp.groupDistribSpacing ) + grp.children[i].lastXlate;
-        tl = ' translate(' + dif + ',0)';
+        tl = ' translate(' + dif + ' 0)';
         }
         
       grp.children[i].setAttributeNS( null, 'transform', grp.children[i].inittransform + tl );
@@ -2160,13 +2161,13 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                jsoncfg.color = d3.scale.ordinal().range( [ item.style.fill ] );
                item.chart.config( jsoncfg );
                var svg = d3.select( SVGDoc.getElementsByTagName("svg").item(0) );
-               // insert the chart under layer1 of the Inkscape drawing
-               item.cht = svg.select("#layer1").append('g').datum(item.dta).call( item.chart );
+               // insert the chart in the parent of rect object (hopefully its inkscape layer)
+               item.cht = svg.select("#"+SVGDoc.getElementById(item.id).parentNode.id).append('g').datum(item.dta).call( item.chart );
                // position according to the rectangle
                item.cht[0][0].setAttributeNS( null, 
                                         'transform', 
                                         ( item.getAttributeNS( null, "transform" ) || "" )  + 
-                                        " translate(" + item.getAttributeNS( null, "x" ) + "," + 
+                                        " translate(" + item.getAttributeNS( null, "x" ) + " " + 
                                         item.getAttributeNS( null, "y" ) + ") " ); 
                break;
             case "#exec_once": // exec a script one time
@@ -2306,6 +2307,13 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
            item.appendChild( animation );
            item.changeAnim = animation;
            }
+         else
+           {
+           if ( inksage_labelvec[lbv].parent.childNodes[0].textContent.indexOf("|") >= 0 ) // guarda mensagens OFF|ON|FAILED
+             {
+             inksage_labelvec[lbv].txtOFFON = inksage_labelvec[lbv].parent.childNodes[0].textContent.split("|");
+             }             
+           }  
          break;
       case "color":
          if ( item.style !== null )
@@ -2497,7 +2505,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                                                dtn.getTime() % (Math.abs(inksage_labelvec[lbv].width) * 1000) +
                                                (dtn.getTimezoneOffset()*60*1000)  % (Math.abs(inksage_labelvec[lbv].width) * 1000);
                inksage_labelvec[lbv].datafim = inksage_labelvec[lbv].dataini + Math.abs(inksage_labelvec[lbv].width * 1000);
-               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + '&D=' + inksage_labelvec[lbv].dataini/1000 + '&E=' + ( inksage_labelvec[lbv].datafim/1000 ) + '&I=' + inksage_labelvec[lbv].x + '&F=S' + '&B=histdata(' + WebSAGE.InkSage.length + ','+inksage_labelvec[lbv].tag+');histdata' + '"' + ' );';
+               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + '&U=' + inksage_labelvec[lbv].dataini/1000 + '&I=' + inksage_labelvec[lbv].x + '&F=S' + '&B=histdata(' + WebSAGE.InkSage.length + ','+inksage_labelvec[lbv].tag+');histdata' + '"' + ' );';
                }
              WebSAGE.g_timeshift = WebSAGE.g_timeshift + 2000;
              setTimeout( calltps , WebSAGE.g_timeshift );
@@ -2536,7 +2544,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
            inksage_labelvec[lbv].tooltipText = tooltiptext;           
            }
          break;      
-        case "slider":
+      case "slider":
          if ( item.getAttributeNS( null, "transform" ) === null )
            {
            inksage_labelvec[lbv].inittransform = "";
@@ -2566,6 +2574,8 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
            var clonetfm = clone.getAttributeNS( null, "transform" );
            var st1 = clonetfm.indexOf("(");
            var st2 = clonetfm.indexOf(",");
+           if (st2 === -1)
+             st2 = clonetfm.indexOf(" ");           
            var st3 = clonetfm.indexOf(")");
            if (st2==-1)
              st2=st3;
@@ -2637,7 +2647,7 @@ preprocessaTela: function()
     }
     catch ( err )
     {
-      $('#SP_STATUS').text( "Erro na tela!" + " [4]" );
+      $('#SP_STATUS').text( "Error!" + " [4]" );
       document.getElementById("SP_STATUS").title = err.stack;
     }      
 
@@ -2679,7 +2689,13 @@ preprocessaTela: function()
       {
       if ( nohs[i].nodeName != "g" )  // grupos já foram processados no início
         { 
+          try {
           WebSAGE.le_inkscapeSAGETags( nohs[i] ); 
+          }
+          catch ( err ) {
+            $('#SP_STATUS').text( "Error!" + " [5]" );
+            document.getElementById("SP_STATUS").title = "Obj ID=" + nohs[i].id + " " + err.stack;
+          }
         }
       }
 },
@@ -2876,7 +2892,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
     if ( WebSAGE.InkSage[i].tag != undefined )
       {
       tag = WebSAGE.InkSage[i].tag;
-      vt = WebSAGE.valorTagueado( tag );
+      vt = WebSAGE.valorTagueado( tag, WebSAGE.InkSage[i].parent );
       WebSAGE.visibEtiq( tag );      
       } 
 
@@ -2901,7 +2917,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                case "#radar": // radar chart animation
                  for ( j = 0; j < WebSAGE.InkSage[i].parent.pnts.length; j++ )
                    {
-                   WebSAGE.InkSage[i].parent.dta[0].axes[j].value = WebSAGE.valorTagueado( WebSAGE.InkSage[i].parent.pnts[j] );
+                   WebSAGE.InkSage[i].parent.dta[0].axes[j].value = WebSAGE.valorTagueado( WebSAGE.InkSage[i].parent.pnts[j], WebSAGE.InkSage[i].parent );
                    WebSAGE.InkSage[i].parent.dta[0].axes[j].axis = BAYS[ WebSAGE.InkSage[i].parent.pnts[j] ] || "";
                    }
                  WebSAGE.InkSage[i].parent.cht.datum( WebSAGE.InkSage[i].parent.dta ).call( WebSAGE.InkSage[i].parent.chart );
@@ -3007,7 +3023,17 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
               }
             break;
          case "get" :  // coloca o valor no texto
-            val = WebSAGE.interpretaFormatoC( WebSAGE.InkSage[i].formatoC, tag );
+            if ( typeof WebSAGE.InkSage[i].txtOFFON !== 'undefined' )        
+              {
+              if (WebSAGE.valorTagueado(tag, WebSAGE.InkSage[i].parent) === 0 )  
+                val = WebSAGE.InkSage[i].txtOFFON[1];
+              else  
+                val = WebSAGE.InkSage[i].txtOFFON[0];
+              }
+            else
+              {
+              val = WebSAGE.interpretaFormatoC( WebSAGE.InkSage[i].formatoC, tag, WebSAGE.InkSage[i].parent );
+              }
             if ( val != WebSAGE.InkSage[i].parent.childNodes[0].textContent ) // value changed?
               { 
                 if ( WebSAGE.InkSage[i].parent.changeAnim != undefined )
@@ -3025,7 +3051,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                   }
 
                 WebSAGE.InkSage[i].parent.childNodes[0].textContent = val;
-                if ( typeof( WebSAGE.InkSage[i].parent.changeAnim.beginElement ) === "function" )
+                if ( typeof WebSAGE.InkSage[i].parent.changeAnim !== 'undefined' && typeof WebSAGE.InkSage[i].parent.changeAnim.beginElement === "function" )
                   {
                   WebSAGE.InkSage[i].parent.changeAnim.endElement();
                   WebSAGE.InkSage[i].parent.changeAnim.beginElement();
@@ -3054,7 +3080,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
               if ( tag !==  WebSAGE.InkSage[i].list[j].tag ) 
                 {
                 tag = WebSAGE.InkSage[i].list[j].tag;
-                vt = WebSAGE.valorTagueado( tag );
+                vt = WebSAGE.valorTagueado( tag, WebSAGE.InkSage[i].parent );
                 }
 
               if ( typeof(WebSAGE.getFlags(tag)) === 'undefined' )
@@ -3266,7 +3292,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
               { 
                 tcy = 0; 
               }
-            var xcen = bb.x + bb.width/2 - tcx;
+            var xcen = bb.x + bb.width/2 + tcx;
             var ycen = bb.y + bb.height/2 - tcy;
             var ang = ( vt - WebSAGE.InkSage[i].min ) / ( WebSAGE.InkSage[i].max - WebSAGE.InkSage[i].min ) * 360;
             WebSAGE.InkSage[i].parent.setAttributeNS( null, 'transform', WebSAGE.InkSage[i].inittransform +
@@ -3316,7 +3342,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                }
             var proporcao = ( vt - WebSAGE.InkSage[i].min ) / ( WebSAGE.InkSage[i].max - WebSAGE.InkSage[i].min );
             WebSAGE.InkSage[i].parent.setAttributeNS( null, 'transform', WebSAGE.InkSage[i].inittransform +
-               ' translate(' + proporcao * WebSAGE.InkSage[i].rangex + ',' + proporcao * WebSAGE.InkSage[i].rangey + ') ' );
+               ' translate(' + proporcao * WebSAGE.InkSage[i].rangex + ' ' + proporcao * WebSAGE.InkSage[i].rangey + ') ' );
             WebSAGE.blinkSeAlarmado( tag, WebSAGE.InkSage[i].parent );
             break;        
          case "text":
@@ -3361,7 +3387,10 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
             }
             if ( txt != WebSAGE.InkSage[i].parent.textContent )
               { 
-                WebSAGE.InkSage[i].parent.textContent = txt; 
+                if ( WebSAGE.InkSage[i].parent.firstChild && WebSAGE.InkSage[i].parent.firstChild.tagName==="tspan" )
+                  WebSAGE.InkSage[i].parent.firstChild.textContent = txt; 
+                else  
+                  WebSAGE.InkSage[i].parent.textContent = txt; 
               }
 
             WebSAGE.blinkSeAlarmado( tag, WebSAGE.InkSage[i].parent );
@@ -3375,7 +3404,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
   }
   
   if ( typeof(xPlain) != "undefined" )
-  if ( BrowserDetect.browser != 'Firefox' )
+  if ( BrowserDetect.browser === 'Chrome' )
     {
     // ugly solution for Chrome bug related to redraw of inline <use> svg elements (simulate a mouse down/up)
     setTimeout(function(){ 
@@ -3599,7 +3628,7 @@ produzEtiq : function ( obj , ponto )
   if ( xfm === null )
     xfm = "";
 
-  block.setAttributeNS( null, 'transform', xfm + " translate(" + x + "," + y + ") " ); 
+  block.setAttributeNS( null, 'transform', xfm + " translate(" + x + " " + y + ") " ); 
  
  // SVGDoc.documentElement.appendChild( block );
  obj.parentNode.appendChild( block );
@@ -3743,7 +3772,7 @@ produzRelac : function ( obj , ponto )
  if ( xfm === null )
     xfm = "";
   
- block.setAttributeNS( null, 'transform', xfm + " translate(" + x + "," + y + ") " ); 
+ block.setAttributeNS( null, 'transform', xfm + " translate(" + x + " " + y + ") " ); 
   
  block.textContent = ponto;
  
@@ -4274,6 +4303,8 @@ makeDraggable: function( obj )
   if ( !obj )
     return; 
   
+  obj.style.cursor='crosshair';
+
   obj.drgDragging = false;
   obj.drgX = 0;
   obj.drgY = 0;
@@ -4285,15 +4316,17 @@ makeDraggable: function( obj )
   $(obj).bind('mousedown', function(event){
     if ( obj.style.display == 'none' )
       { // do not initiate drag if object already not displayed
+      obj.style.cursor='crosshair';
       obj.drgDragging = false;
       obj.drgMouseOffsetX = 0;
       obj.drgMouseOffsetY = 0;
-      window.parent.drgObject = null;
+      window.drgObject = null;
       return;
       }
       
+    obj.style.cursor='move';
     obj.drgDragging = true;
-    window.parent.drgObject = obj;
+    window.drgObject = obj;
     var p = SVGDoc.documentElement.createSVGPoint();
     p.x = event.clientX;
     p.y = event.clientY;
@@ -4303,10 +4336,11 @@ makeDraggable: function( obj )
   });
   
   $(obj).bind('mouseup', function(event){
+    obj.style.cursor='crosshair';
     obj.drgDragging = false;
     obj.drgMouseOffsetX = 0;
     obj.drgMouseOffsetY = 0;
-    window.parent.drgObject = null;
+    window.drgObject = null;
   });
     
   $(obj).bind('mousemove', function(event){
@@ -4320,8 +4354,8 @@ makeDraggable: function( obj )
       p.y -= obj.drgMouseOffsetY;
 
       // avoids moving full document
-      window.parent.MOUSEX = event.clientX;
-      window.parent.MOUSEY = event.clientY;
+      window.MOUSEX = event.clientX;
+      window.MOUSEY = event.clientY;
       
       // move the object in svg coordinates
       obj.drgX = p.x;
@@ -4695,7 +4729,7 @@ if ( typeof(xPlain) == "undefined" )
     }
   catch ( err )
     {
-      $('#SP_STATUS').text( "Erro na tela!" + " [0]" );
+      $('#SP_STATUS').text( "Error!" + " [0]" );
       document.getElementById("SP_STATUS").title = err.stack;
     }      
 
@@ -4729,11 +4763,15 @@ if ( typeof(xPlain) == "undefined" )
                            
   // arraste do mouse para mover a tela
   $(rootnode).bind('mousedown', function(event){
+    if (!event.originalEvent.isTrusted && event.clientX===80 && event.clientY===20) // artificial event?
+      return;
     window.MOUSEX=event.clientX;
     window.MOUSEY=event.clientY;
     window.SVGDoc.getElementsByTagName('svg').item(0).style.cursor='move';
     });
   $(rootnode).bind('mouseup', function(event){
+    if (!event.originalEvent.isTrusted && event.clientX===80 && event.clientY===20) // artificial event?
+      return;
     window.SVGDoc.getElementsByTagName('svg').item(0).style.cursor='default';
     if ( window.MOUSEX > event.clientX ) window.WebSAGE.zoomPan(3, (window.MOUSEX - event.clientX)/30 ); else window.WebSAGE.zoomPan(5, (event.clientX - window.MOUSEX )/30 ); 
     if ( window.MOUSEY > event.clientY ) window.WebSAGE.zoomPan(1, (window.MOUSEY - event.clientY)/20 ); else window.WebSAGE.zoomPan(7, (event.clientY - window.MOUSEY )/20 );
@@ -4753,4 +4791,4 @@ if ( typeof(xPlain) == "undefined" )
 var $V = WebSAGE.getValue;
 var $F = WebSAGE.getFlags;
 var $T = WebSAGE.getTime;
-
+var $W = WebSAGE;

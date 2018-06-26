@@ -7,7 +7,7 @@ header("Content-Type: application/json; charset=utf-8");
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");
     
-require_once '../conf/timezone.php';
+require_once 'timezone.php';
 
 try {
     $db = new PDO( 'sqlite:../db/notes.sl3' );

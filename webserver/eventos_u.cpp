@@ -322,13 +322,22 @@ DWORD ini = GetTickCount();
     FILE * fp;
     String fname;
     fname = fname.sprintf( "..\\db\\soe_i%u.sql", GetTickCount() );
-    fp = fopen( fname.c_str(), "at" );   
+    fp = fopen( fname.c_str(), "at" );
+
+    FILE * fppg = NULL;
+    if (DB_POSTGRESQL)
+      {
+      fname = fname.sprintf( "..\\db\\pg_soe_i%u.sql", GetTickCount() );
+      fppg = fopen( fname.c_str(), "at" );
+      }
 
     if ( fp != NULL )
       {
-      String SQL;
+      String SQL, PGSQL;
       SQL = SQL + (String)"BEGIN DEFERRED TRANSACTION;\n";
       SQL = SQL + (String)"insert or ignore into soe (nponto, data, hora, msec, utr, estado, recon, ts) values ";
+      PGSQL = PGSQL + (String)"START TRANSACTION;\n";
+      PGSQL = PGSQL + (String)"insert into soe (nponto, data, hora, msec, utr, estado, recon, ts) values ";
       String EvSQL;
 
       while ( ! ListaInsSQL.empty() ) // enquanto houver algo
@@ -339,6 +348,7 @@ DWORD ini = GetTickCount();
         // vou usar insert or replace para fazer valer o último estado quando repetir a hora
         // também é útil para não dar erro
         SQL = SQL + (String)"(" + EvSQL + (String)"),";
+        PGSQL = PGSQL + (String)"(" + EvSQL + (String)"),";
         if ( cnt++ > 200 ) //  evita trancar aqui por muito tempo e limite de insert composto em SQLITE é 500
           break;
         }
@@ -348,6 +358,14 @@ DWORD ini = GetTickCount();
       SQL = SQL + (String) "COMMIT;\n";
       fputs( SQL.c_str(), fp );
       fclose( fp );
+      PGSQL[PGSQL.Length()] = ' '; // troca a última vírgula por espaço
+      PGSQL = PGSQL + (String) "ON CONFLICT DO NOTHING;\n"; // avoid duplication error to cause failed transaction
+      PGSQL = PGSQL + (String) "COMMIT;\n";
+      if ( fppg != NULL )
+        {
+        fputs( PGSQL.c_str(), fppg );
+        fclose( fppg );
+        }
       }
     }
 
@@ -356,13 +374,21 @@ DWORD ini = GetTickCount();
     FILE * fp;
     String fname;
     fname = fname.sprintf( "..\\db\\soe_r%u.sql", GetTickCount() );
-    fp = fopen( fname.c_str(), "at" );   
+    fp = fopen( fname.c_str(), "at" );
+
+    FILE * fppg = NULL;
+    if (DB_POSTGRESQL)
+      {
+      fname = fname.sprintf( "..\\db\\pg_soe_r%u.sql", GetTickCount() );
+      fppg = fopen( fname.c_str(), "at" );
+      }
 
     if ( fp != NULL )
       {
-      String SQL = "PRAGMA synchronous = NORMAL;\n";
+      String SQL = "PRAGMA synchronous = NORMAL;\n", PGSQL;
       SQL = SQL + (String)"PRAGMA journal_mode = WAL;\n";
       SQL = SQL + (String)"BEGIN DEFERRED TRANSACTION;\n";
+      PGSQL = PGSQL + (String)"START TRANSACTION;\n";
       String EvSQL;
 
       while ( ! ListaRecSQL.empty() ) // enquanto houver algo
@@ -373,6 +399,7 @@ DWORD ini = GetTickCount();
         // vou usar insert or replace para fazer valer o último estado quando repetir a hora
         // também é útil para não dar erro
         SQL = SQL + EvSQL + (String)";\n";
+        PGSQL = PGSQL + EvSQL + (String)";\n";
         if ( cnt++ > 200 ) //  evita trancar aqui por muito tempo
           break;
         }
@@ -380,6 +407,12 @@ DWORD ini = GetTickCount();
       SQL = SQL + (String) "COMMIT;\n";
       fputs( SQL.c_str(), fp );
       fclose( fp );
+      PGSQL = PGSQL + (String) "COMMIT;\n";
+      if ( fppg != NULL )
+        {
+        fputs( PGSQL.c_str(), fppg );
+        fclose( fppg );
+        }
       }
     }
 

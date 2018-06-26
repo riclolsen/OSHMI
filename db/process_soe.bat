@@ -10,13 +10,13 @@ cd \oshmi\db
 IF EXIST forfiles.exe (
 
 FOR /L %%i IN (0,0,0) DO ( 
-FORFILES -msoe_*.sql    -c"CMD /c ..\bin\sqlite3.exe -init pragmas_soe.sql -batch soe.sl3    < @FILE & del @FILE & ECHO @FILE" & PING -n 2 127.0.0.1 > nul 
+FORFILES -msoe_*.sql    -c"CMD /c ..\bin\sqlite3.exe -init pragmas_soe.sql -batch soe.sl3    < @FILE && del @FILE & ECHO @FILE" & PING -n 2 127.0.0.1 > nul 
 )
 
 ) ELSE (
 
 FOR /L %%i IN (0,0,0) DO ( 
-FORFILES -m soe_*.sql    -c "CMD /c ..\bin\sqlite3.exe -init pragmas_soe.sql -batch soe.sl3    < @FILE & del @FILE & ECHO @FILE" & PING -n 2 127.0.0.1 > nul 
+FORFILES -m soe_*.sql    -c "CMD /c ..\bin\sqlite3.exe -init pragmas_soe.sql -batch soe.sl3    < @FILE && del @FILE & ECHO @FILE" & PING -n 2 127.0.0.1 > nul 
 )
 
 )

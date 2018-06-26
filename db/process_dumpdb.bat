@@ -10,13 +10,13 @@ cd \oshmi\db
 IF EXIST forfiles.exe (
 
 FOR /L %%i IN (0,0,0) DO ( 
-FORFILES -mdumpdb_*.sql -c"CMD /c ..\bin\sqlite3.exe -init pragmas_dumpdb.sql -batch dumpdb.sl3 < @FILE & del @FILE & ECHO @FILE" & PING -n 3 127.0.0.1 > nul 
+FORFILES -mdumpdb_*.sql -c"CMD /c ..\bin\sqlite3.exe -init pragmas_dumpdb.sql -batch dumpdb.sl3 < @FILE && del @FILE & ECHO @FILE" & PING -n 3 127.0.0.1 > nul 
 )
 
 ) ELSE (
 
 FOR /L %%i IN (0,0,0) DO ( 
-FORFILES -m dumpdb_*.sql -c "CMD /c ..\bin\sqlite3.exe -init pragmas_dumpdb.sql -batch dumpdb.sl3 < @FILE & del @FILE & ECHO @FILE" & PING -n 3 127.0.0.1 > nul 
+FORFILES -m dumpdb_*.sql -c "CMD /c ..\bin\sqlite3.exe -init pragmas_dumpdb.sql -batch dumpdb.sl3 < @FILE && del @FILE & ECHO @FILE" & PING -n 3 127.0.0.1 > nul 
 )
 
 )
