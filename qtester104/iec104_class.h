@@ -1,6 +1,6 @@
 /*
 * This software implements an IEC 60870-5-104 protocol tester.
-* Copyright © 2010,2011,2012 Ricardo L. Olsen
+* Copyright Â© 2010-2017 Ricardo L. Olsen
 *
 * Disclaimer
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -134,7 +134,7 @@ class iec104_class
     static const unsigned int SELECT = 1;
     static const unsigned int EXECUTE = 0;
 
-    TLogMsg mLog;
+    TLogMsg mLog;   
 
     // ---- user called funcions, must be called by the user -----------------
     iec104_class(); // user called constructor on derived class
@@ -184,7 +184,10 @@ class iec104_class
     static const int gi_retry_time = 45; // wait time to retry when requested a GI and not responded
 
     protected:
+    void LogFrame(char * frame, int size, bool is_send);
+    void LogPoint(int address, float val, char * qualifier, cp56time2a * timetag);
     void parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond = true); // parse APDU, ( accountandrespond == false : process the apdu out of the normal handshake )
+    char * trim(char *s);
 
     int msg_supervisory;
 

@@ -157,7 +157,7 @@ TPonto::TPonto()
   EventoAnalogico = false;
   EnviaComandoPortaModbus = false;
   TipoAD = ' ';
-  strcpy( Anotacao, "" );
+  SetAnotacao("");
   strcpy( Tag, "" );
   strcpy( Unidade, "" );
   strcpy( Estacao, "" );
@@ -699,8 +699,9 @@ if (fp)
     MapNPontoPorEndUTR[ findpt ] = nponto;
 
     strncpy( descricao, strchr(buff, '\"') + 1, sizeof(descricao) - 1 );
-    if ( strlen(descricao) > 2 )
-      descricao[strlen(descricao)-2] = 0; // tira o último "
+    char * endquoteptr = strchr(descricao, '\"');
+    if ( endquoteptr != NULL ) // tira o último "
+       *endquoteptr = 0;
     S = Trim(descricao);
 
     if ( tipo == 'D' || origem == CODORIGEM_COMANDO )
@@ -882,7 +883,7 @@ if (fp)
         }
       }
 
-    if ( tipo == 'D' && tpeq==CODTPEQ_DJ && info==0 && origem!=7 && ocr==2 ) // se é estado de disjuntor
+    if ( tipo == 'D' && tpeq==CODTPEQ_DJ && info==0 && origem!=CODORIGEM_COMANDO && ocr==2 ) // se é estado de disjuntor
       { // relaciona o estado do DJ com o módulo (para uso do simulador)
       DisjModulo[ (String)Pontos[nponto].Estacao + (String)Pontos[nponto].Modulo ] = nponto;
       }
@@ -991,7 +992,8 @@ if ( fp )
       cntpar++;
       }
 
-    Pontos[nponto].Parcelas[cntpar] = parcela;
+    if ( cntpar < MAX_PARCELAS )
+      Pontos[nponto].Parcelas[cntpar] = parcela;
 
     npontoant = nponto;
     }
@@ -1134,7 +1136,6 @@ EstadoOff[NPONTO_SUPSCRIPT_5]="OK";
 EstadoOn[NPONTO_SUPSCRIPT_5]="ERRO";
 Pontos[NPONTO_SUPSCRIPT_5].Descricao;
 EscrevePonto(NPONTO_SUPSCRIPT_5, 1, 0x01, 1);
-*/
 
 EscrevePonto(NPONTO_CMDSCRIPT_1, 1, 0x01, 1);
 Pontos[NPONTO_CMDSCRIPT_1].TipoAD = 'D';
@@ -1185,6 +1186,8 @@ strcpy(Pontos[NPONTO_CMDSCRIPT_5].EstadoOff,"");
 strcpy(Pontos[NPONTO_CMDSCRIPT_5].EstadoOn,"EXEC");
 strcpy(Pontos[NPONTO_CMDSCRIPT_5].Descricao,"Exec Script 5");
 Pontos[NPONTO_CMDSCRIPT_5].CodOrigem = CODORIGEM_COMANDO;
+*/
+
 }
 
 TBancoLocal::~TBancoLocal()
@@ -1361,6 +1364,7 @@ if ( it == Pontos.end() )
       ((*it).second).NPonto = nponto;
       ((*it).second).PontoSupCmd = 0;
       ((*it).second).PontoCmdSup = 0;
+      ((*it).second).SetAnotacao("");
   }
 
 // não atualiza ponto calculado
@@ -2368,8 +2372,8 @@ try
   switch ((*it).second.Formula)
     {
     case COD_FORMULA_CORRENTE:
-       if (Pontos[(*it).second.Parcelas[2]].Valor > 0)
-         r = ( 577.35027 *
+        if (Pontos[(*it).second.Parcelas[2]].Valor > 0)
+          r = ( 577.35027 *
                sqrt( ( Pontos[(*it).second.Parcelas[0]].Valor * Pontos[(*it).second.Parcelas[0]].Valor ) +
                      ( Pontos[(*it).second.Parcelas[1]].Valor * Pontos[(*it).second.Parcelas[1]].Valor )
                    )
@@ -2391,7 +2395,7 @@ try
     case COD_FORMULA_PAI:
          r = (Pontos[(*it).second.Parcelas[0]].Valor * Pontos[(*it).second.Parcelas[1]].Valor * 1.73205080757) / 1000;
          q.Falha = Pontos[(*it).second.Parcelas[0]].Qual.Falha ||
-                                  Pontos[(*it).second.Parcelas[1]].Qual.Falha;
+                   Pontos[(*it).second.Parcelas[1]].Qual.Falha;
          q.Tipo = TIPO_ANALOGICO;
         break;
     case COD_FORMULA_E:

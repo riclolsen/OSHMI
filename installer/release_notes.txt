@@ -149,7 +149,12 @@ QTester104:
 
 -------------------------------------------------------------------
 
-Notes for version 5.0:
+Notes for version 5.0 PRE-UTF8!:
+
+UPDATE OLDER VERSION WARNING!
+This is a major update that can break things when installed over an older version.
+So, it is highly recommended to backup config files and uninstall any existing old 
+version before installing this new.
 
 This version leverages the power of Timescale PostgreSQL database extension that 
 optimizes insertion and query of time series data. The preconfigured add-on can run 
@@ -164,7 +169,7 @@ supplant that of expensive commercial SCADA systems.
 
 Integration of analytics capabilities now include: 
  - PostgreSQL (fully featured open source database)
- - Timescale (time series extension)
+ - Timescale (time series extension for PostgreSQL)
  - Grafana (via PostgreSQL)
  - Power BI (via OData, JSON and PostgreSQL) 
  - Tableau (via OData, JSON and PostgreSQL)
@@ -195,6 +200,9 @@ Webserver.exe:
    as the server sometimes stops listening under Wine/Linux.
  - Can now output files SQL text files compatible w/ Postgresql/Timescale.
  - Configuration of timezone moved to conf/hmi.ini | [webserver] | TIMEZONE.
+ - Limited number of parcels in calculated points.
+ - Safer annotation code, sync.
+ - Fixed reading of point_list.txt last field after end quote.
 
 HMIShell:
  - Do not search for already opened Viewers on Linux.
@@ -203,8 +211,8 @@ HMIShell:
 
 Linux: 
  - New scripts for running on Linux.
- - Referece Linux distribuition is now Mint 18.3 XFCE 32bits.
- - QTester104 natively compiled.
+ - Referece Linux distribuition is now Mint 19.0 XFCE 32bits.
+ - QTester104 v.1.23 natively compiled.
  - Script to beep for alarms out of Wine.
 
 DNP3 driver:
@@ -216,10 +224,21 @@ Documentation:
  - Instructions to install PostgreSQL/Timescale and Grafana add-ons.
 
 Docs Viewer:
- - Moved to htdocs/lsitdocs.php.
+ - Moved to htdocs/listdocs.php.
+
+Report generator:
+ - New tool to create interactive reports by changing a database query.
+ - Can export CSV files.
 
 SQLite:
  - Updated to version 3.24.0.
+ - Reduced delay time for events processing from 2 to 1 second.
+
+PHP:
+ - Updated to version 7.2.7 NTS.
+
+Nginx:
+ - Updated to version 1.15.
 
 -------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 /*
  * This software implements an IEC 60870-5-104 protocol tester.
- * Copyright � 2010,2011,2012 Ricardo L. Olsen
+ * Copyright © 2010-2017 Ricardo L. Olsen
  *
  * Disclaimer
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -60,8 +60,8 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_cbLog_clicked();
-    void on_pbSendCommandsButton_clicked();
+    void on_cbLog_clicked(); // Check box for log messages changed
+    void on_pbSendCommandsButton_clicked(); // Send Command pressed
     void on_pbConnect_clicked(); // connect button pressed
     void on_pbGI_clicked(); // GI button pressed
     void slot_timer_logmsg(); // timer for log messages
@@ -75,9 +75,8 @@ private slots:
     void slot_commandActConfIndication( iec_obj *obj );
     void slot_commandActTermIndication( iec_obj *obj );
 
-    void on_pbCopyClipb_clicked();
-
-    void on_pbCopyVals_clicked();
+    void on_pbCopyClipb_clicked(); // copy log messages to clipboard
+    void on_pbCopyVals_clicked(); // copy values table to clipboard
 
 private:
     std::map <int, QTableWidgetItem *> mapPtItem_ColAddress; // map of points to cells of table

@@ -7,12 +7,12 @@ echo $NUMBEEP
 
 if [ $NUMBEEP = '1' ]
 then 
-  /usr/bin/aplay -q -D default /usr/share/sounds/purple/receive.wav
+  /usr/bin/aplay -q -D default ~/oshmi/linux/receive.wav
 fi
 
 if [ $NUMBEEP = '2' ]
 then 
-  /usr/bin/aplay -q -D default /usr/share/sounds/purple/alert.wav
+  /usr/bin/aplay -q -D default ~/oshmi/linux/alert.wav
 fi
 
 if [ $NUMBEEP = '1' ]

@@ -1795,8 +1795,8 @@ void __fastcall TfmWebServ::NMHTTP1Success(CmdType Cmd)
         pt.SetHister( hister );
       if ( alrin != 0 )
         pt.SetAlrIn( alrin );
-      if ( S != "" )
-        pt.SetAnotacao( S.c_str() );
+      //if ( S != "" ) // will erase when empy on redundant machine.
+      pt.SetAnotacao( S.c_str() );
       if ( alarme != 0 )
         {
         pt.Alarmar();

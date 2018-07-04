@@ -1,6 +1,6 @@
 /*
  * This software implements an IEC 60870-5-104 protocol tester.
- * Copyright © 2010,2011,2012 Ricardo L. Olsen
+ * Copyright Â© 2010-2017 Ricardo L. Olsen
  *
  * Disclaimer
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -39,6 +39,9 @@
 #include "ui_mainwindow.h"
 
 using namespace std;
+
+#define QTESTER_VERSION "v1.23"
+#define QTESTER_COPYRIGHT "Copyright Â© 2010-2018 Ricardo Lastra Olsen"
 
 //-------------------------------------------------------------------------------------------------------------------------
 
@@ -144,6 +147,14 @@ MainWindow::MainWindow(QWidget *parent)
         i104.enable_connect();
         ui->lbMode->setText( "<font color='green'>Primary</font>" );
     }
+
+    ui->lbCopyright->setText( (QString)QTESTER_VERSION + (QString)" - " + (QString)QTESTER_COPYRIGHT );
+
+    QFont font = QFont("Consolas");
+    font.setStyleHint(QFont::Monospace);
+    font.setPointSize(9);
+    font.setFixedPitch(true);
+    ui->lwLog->setFont(font);
 }
 
 MainWindow::~MainWindow()
@@ -196,8 +207,7 @@ void MainWindow::on_pbConnect_clicked()
         mapPtItem_ColTimeTag.clear();
         ui->twPontos->clearContents();
         ui->twPontos->setRowCount ( 0 );
-        ui->lwLog->clear();
-
+        // ui->lwLog->clear();
         i104.tmKeepAlive->start(1000);
     }
 }
@@ -207,19 +217,20 @@ void MainWindow::slot_BDTR_pronto_para_ler()
 {
     char buf[5000];
     char bufOut[1600];  // buffer para mensagem bdtr
-    buf[0]=0;
 
     unsigned char br[2000]; // buffer de recepcao
     int bytesrec;
 
     while ( udps->hasPendingDatagrams() )
     {
-
     QHostAddress address;
     quint16 port;
     bytesrec = udps->readDatagram ( (char *)br, sizeof(br), &address, &port );
 
-    sprintf( buf+strlen(buf), "%3d: ", bytesrec );
+    if ( bytesrec <= 0)
+       return;
+
+    sprintf( buf, "%3d: BDTR: ", bytesrec );
     for ( int i=0; i< bytesrec; i++ )
         sprintf (buf+strlen(buf), "%02x ", br[i]);
     BDTR_Loga( buf );
@@ -235,7 +246,7 @@ void MainWindow::slot_BDTR_pronto_para_ler()
 
             if ( msg->TIPO == REQ_GRUPO && msg->ID == 0 ) // GI
             {
-                BDTR_Loga( " --> BDTR: REQ GI" );
+                BDTR_Loga( "R--> BDTR: REQ GI" );
                 i104.solicitGI();
             }
             if ( msg->TIPO == REQ_GRUPO && msg->ID == 255 ) // request group 255: show form
@@ -247,9 +258,9 @@ void MainWindow::slot_BDTR_pronto_para_ler()
             else
             {
                 if ( msg->TIPO == REQ_HORA )
-                  BDTR_Loga( " --> BDTR: IGNORED (TIME REQ)" );
+                  BDTR_Loga( "R--> BDTR: IGNORED (TIME REQ)" );
                 else
-                  BDTR_Loga( " --> BDTR: IGNORED (REQ ?)" );
+                  BDTR_Loga( "R--> BDTR: IGNORED (REQ ?)" );
             }
         }
         break;
@@ -258,7 +269,7 @@ void MainWindow::slot_BDTR_pronto_para_ler()
         // if BDTRForcePrimary==0 become secondary when received keep alive messages from other machine
         if ( address == BDTR_host_dual && i104.BDTRForcePrimary == 0 )
           {
-          BDTR_Loga( " --> BDTR: KEEPALIVE RECEIVED FROM DUAL MACHINE(TIME)");
+          BDTR_Loga( "R--> BDTR: KEEPALIVE RECEIVED FROM DUAL MACHINE(TIME)");
           if ( isPrimary )
             {
               BDTR_Loga( " BECOMING SECONDARY" );
@@ -269,7 +280,7 @@ void MainWindow::slot_BDTR_pronto_para_ler()
           BDTR_CntDnToBePrimary = BDTR_CntToBePrimary; // restart count to be primary
           }
         else
-          BDTR_Loga( " --> BDTR: IGNORED (TIME)" );
+          BDTR_Loga( "R--> BDTR: IGNORED (TIME)" );
         break;
     case T_COM: // COMANDO
         {
@@ -289,7 +300,7 @@ void MainWindow::slot_BDTR_pronto_para_ler()
 
             if ( msg->TVAL == T_DIG ) // DIGITAL
             {
-                BDTR_Loga("    DIGITAL");
+                BDTR_Loga("    BDTR DIGITAL");
                 msg_ack *ms;
                 ms = (msg_ack*)bufOut;
                 // status bits 11 and 00 are used for command blocking
@@ -338,7 +349,7 @@ void MainWindow::slot_BDTR_pronto_para_ler()
                     // forward command to IEC104
                     i104.sendCommand( &obj );
                     LastCommandAddress = obj.address;
-                    // Vai enviar ack pelo BDTR ao receber o activation em nível de 104
+                    // Vai enviar ack pelo BDTR ao receber o activation em nivel de 104
                     }
                 else
                     { // REJECT COMMAND (ASDU not supported)
@@ -351,14 +362,14 @@ void MainWindow::slot_BDTR_pronto_para_ler()
                     if ( BDTR_HaveDualHost() )
                       udps->writeDatagram ( (const char *) bufOut, sizeof( msg_ack ), BDTR_host_dual, BDTR_porta );
 
-                    BDTR_Loga( " <-- BDTR: COMMAND REJECTED, UNSUPPORTED ASDU" );
+                    BDTR_Loga( "T<-- BDTR: COMMAND REJECTED, UNSUPPORTED ASDU" );
                     }
                 }
             }
             else
-            if ( msg->TVAL == T_FLT || msg->TVAL == T_NORM || msg->TVAL == T_ANA ) // ANALÓGICOS
+            if ( msg->TVAL == T_FLT || msg->TVAL == T_NORM || msg->TVAL == T_ANA ) // ANALOGICOS
             {
-                BDTR_Loga("    ANALOG");
+                BDTR_Loga("    BDTR ANALOG");
                 msg_ack *ms;
                 ms = (msg_ack*)bufOut;
                 iec_obj obj;
@@ -370,15 +381,15 @@ void MainWindow::slot_BDTR_pronto_para_ler()
 
                 switch ( msg->PONTO.VALOR.COM_SEMBANCOANA.ASDU )
                   {
-                  case iec104_class::C_SE_NA_1: // analógico normalizado
-                  case iec104_class::C_SE_TA_1: // analógico normalizado com time tag
+                  case iec104_class::C_SE_NA_1: // analogico normalizado
+                  case iec104_class::C_SE_TA_1: // analogico normalizado com time tag
                     obj.value = msg->PONTO.VALOR.COM_SEMBANCOANA.NRM;
                     obj.type = msg->PONTO.VALOR.COM_SEMBANCOANA.ASDU;
                     enviar=true;
                     break;
 
-                  case iec104_class::C_SE_NB_1: // analógico escalado
-                  case iec104_class::C_SE_TB_1: // analógico escalado com time tag
+                  case iec104_class::C_SE_NB_1: // analogico escalado
+                  case iec104_class::C_SE_TB_1: // analogico escalado com time tag
                     obj.value = msg->PONTO.VALOR.COM_SEMBANCOANA.ANA;
                     obj.type = msg->PONTO.VALOR.COM_SEMBANCOANA.ASDU;
                     enviar=true;
@@ -386,8 +397,8 @@ void MainWindow::slot_BDTR_pronto_para_ler()
 
                   case 0: // 0: use floating point, without time
                     msg->PONTO.VALOR.COM_SEMBANCO.ASDU = iec104_class::C_SE_NC_1;
-                  case iec104_class::C_SE_NC_1: // analógico float
-                  case iec104_class::C_SE_TC_1: // analógico float com time tag
+                  case iec104_class::C_SE_NC_1: // analogico float
+                  case iec104_class::C_SE_TC_1: // analogico float com time tag
                     obj.value = msg->PONTO.VALOR.COM_SEMBANCOANA.FLT;
                     obj.type = msg->PONTO.VALOR.COM_SEMBANCOANA.ASDU;
                     enviar=true;
@@ -403,7 +414,7 @@ void MainWindow::slot_BDTR_pronto_para_ler()
                 // forward command to IEC104
                 i104.sendCommand( &obj );
                 LastCommandAddress = obj.address;
-                // Vai enviar ack pelo BDTR ao receber o activation em nível de 104
+                // Vai enviar ack pelo BDTR ao receber o activation em nivel de 104
                 }
             else
                 { // REJECT COMMAND (ASDU not supported)
@@ -416,16 +427,16 @@ void MainWindow::slot_BDTR_pronto_para_ler()
                 if ( BDTR_HaveDualHost() )
                   udps->writeDatagram ( (const char *) bufOut, sizeof( msg_ack ), BDTR_host_dual, BDTR_porta );
 
-                BDTR_Loga( " <-- BDTR: COMMAND REJECTED, UNSUPPORTED ASDU" );
+                BDTR_Loga( "T<-- BDTR: COMMAND REJECTED, UNSUPPORTED ASDU" );
                 }
             }
         }
         break;
     case T_DIG:
-        BDTR_Loga( " --> BDTR: IGNORED MSG (DIGITAL)" );
+        BDTR_Loga( "R--> BDTR: IGNORED MSG (DIGITAL)" );
         break;
     default:
-        BDTR_Loga( " --> BDTR: IGNORED MSG" );
+        BDTR_Loga( "R--> BDTR: IGNORED MSG" );
         break;
     }
     }
@@ -437,7 +448,7 @@ void MainWindow::BDTR_processPoints( iec_obj *obj, int numpoints )
     TFA_Qual qfa;
     int tam_msg;
 
-    // Atenção, vou deixar o bit T_CONV do código da mensagem para sinalizar varredor sem banco
+    // Atencao, vou deixar o bit T_CONV do cï¿½digo da mensagem para sinalizar varredor sem banco
 
     switch ( obj->type )
       {
@@ -617,7 +628,7 @@ void MainWindow::BDTR_processPoints( iec_obj *obj, int numpoints )
         break;
 
       default:
-         i104.mLog.pushMsg( " --> IEC104 UNSUPPORTED TYPE, NOT FORWARDED TO BDTR" );
+         i104.mLog.pushMsg( "R--> IEC104 UNSUPPORTED TYPE, NOT FORWARDED TO BDTR" );
          break;
       }
 }
@@ -698,8 +709,6 @@ void MainWindow::BDTR_Loga( QString str, int id )
     if  (BDTR_Logar && id == 0 )
     {
         i104.mLog.pushMsg( (char*) str.toStdString().c_str(), 0 );
-        if ( ui->cbAutoScroll->isChecked() )
-          ui->lwLog->scrollToBottom();
     }
 }
 
@@ -716,7 +725,7 @@ void MainWindow::slot_dataIndication( iec_obj *obj, int numpoints )
 
     for (int i=0; i< numpoints; i++, obj++)
     {
-        sprintf( buf, "%05u", obj->address );
+        sprintf( buf, "%06u", obj->address );
 
         pitem = NULL;
         pitem = mapPtItem_ColAddress[obj->address];
@@ -826,6 +835,8 @@ void MainWindow::slot_timer_logmsg()
 {
     static int count = 0;
     static int rowant = 0;
+    static const int logBufSize = 30000;
+    static int cntLogMsgs = 0; // index for circular buffer of log messages
 
     if ( Hide )
       if ( this->isVisible() )
@@ -845,18 +856,56 @@ void MainWindow::slot_timer_logmsg()
 
     if ( i104.mLog.haveMsg() )
     {
-      if (ui->lwLog->count() > 20000)
-      {
-          ui->lwLog->clear();
-          ui->lwLog->addItem( "*** Message list auto cleaned!" );
-      }
+      //if (ui->lwLog->count() > logBufSize )
+      //{
+      //    ui->lwLog->clear();
+      //    ui->lwLog->addItem( "*** Message list auto cleaned!" );
+      //}
 
       while ( i104.mLog.haveMsg() )
       {
-          ui->lwLog->addItem( i104.mLog.pullMsg().c_str() );
+          if ( ui->lwLog->count() < logBufSize )
+            { // buffer not filled: create new lines
+              ui->lwLog->addItem( i104.mLog.pullMsg().c_str() );
+            }
+          else
+            { // buffer filled: rewrite lines
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setText( i104.mLog.pullMsg().c_str() );
+              // Marks end of circular buffer
+              ui->lwLog->item( (cntLogMsgs + 1) % logBufSize )->setText( "=================================================" );
+              ui->lwLog->item( (cntLogMsgs + 1) % logBufSize )->setForeground(Qt::green);
+              ui->lwLog->item( (cntLogMsgs + 1) % logBufSize )->setBackground(Qt::yellow);
+            }
+
+          if ( ui->lwLog->item( cntLogMsgs % logBufSize )->text().indexOf("BDTR") >= 0 )
+             {
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setForeground(Qt::lightGray);
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setBackground(Qt::transparent);
+             }
+          else
+          if ( ui->lwLog->item( cntLogMsgs % logBufSize )->text().indexOf("COMMAND") >=0 )
+             {
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setForeground(Qt::black);
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setBackground(Qt::lightGray);
+             }
+          else
+          if ( ui->lwLog->item( cntLogMsgs % logBufSize )->text().indexOf("[") >= 0 )
+             {
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setForeground(Qt::red);
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setBackground(Qt::transparent);
+             }
+          else
+             {
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setForeground(Qt::black);
+              ui->lwLog->item( cntLogMsgs % logBufSize )->setBackground(Qt::transparent);
+             }
+          cntLogMsgs++;
       }
-      if (ui->cbAutoScroll->isChecked())
-        ui->lwLog->scrollToBottom();
+
+      if ( ui->cbAutoScroll->isChecked() )
+        {
+          ui->lwLog->scrollToItem( ui->lwLog->item( (cntLogMsgs - 1) % logBufSize ), QAbstractItemView::PositionAtBottom );
+        }
     }
 }
 
@@ -872,7 +921,7 @@ m.PONTOS[0] = 0;
 udps->writeDatagram ( (const char *) &m, sizeof( msg_req ), BDTR_host, BDTR_porta );
 if ( BDTR_HaveDualHost() )
   udps->writeDatagram ( (const char *) &m, sizeof( msg_req ), BDTR_host_dual, BDTR_porta );
-BDTR_Loga( " <-- BDTR: INTERROGATION BEGIN" );
+BDTR_Loga( "T<-- BDTR: INTERROGATION BEGIN" );
 }
 
 void  MainWindow::slot_interrogationActTermIndication()
@@ -887,7 +936,7 @@ m.PONTOS[0] = 0;
 udps->writeDatagram ( (const char *) &m, sizeof( msg_req ), BDTR_host, BDTR_porta );
 if ( BDTR_HaveDualHost() )
     udps->writeDatagram ( (const char *) &m, sizeof( msg_req ), BDTR_host_dual, BDTR_porta );
-BDTR_Loga( " <-- BDTR: INTERROGATION END" );
+BDTR_Loga( "T<-- BDTR: INTERROGATION END" );
 }
 
 void MainWindow::slot_tcpconnect()
@@ -979,24 +1028,24 @@ bool is_select = false;
             if ( obj->pn == iec104_class::NEGATIVE )
             {
                 ms->ID |= 0x80;
-                BDTR_Loga( " <-- BDTR: COMMAND REJECTED BY IEC104 SLAVE" );
+                BDTR_Loga( "T<-- BDTR: COMMAND REJECTED BY IEC104 SLAVE" );
             }
             else
             {
-                BDTR_Loga( " <-- BDTR: COMMAND ACCEPTED BY IEC104 SLAVE" );
+                BDTR_Loga( "T<-- BDTR: COMMAND ACCEPTED BY IEC104 SLAVE" );
             }
             udps->writeDatagram ( (const char *) bufOut, sizeof(msg_ack), BDTR_host, BDTR_porta );
             if ( BDTR_HaveDualHost() )
                 udps->writeDatagram ( (const char *) bufOut, sizeof(msg_ack), BDTR_host_dual, BDTR_porta );
         }
     }
-};
+}
 
 void MainWindow::slot_commandActTermIndication( iec_obj *obj )
 {
     if ( LastCommandAddress == obj->address )
       i104.mLog.pushMsg("     COMMAND ACT TERM INDICATION");
-};
+}
 
 void MainWindow::closeEvent( QCloseEvent *event )
 {
@@ -1048,7 +1097,12 @@ void MainWindow::slot_timer_BDTR_kamsg()
 void MainWindow::on_cbLog_clicked()
 {
     if ( ui->cbLog->isChecked() )
+        {
         i104.mLog.activateLog();
+        QDate dt = QDate::currentDate();
+        QString str = dt.toString() + (QString)" - " + (QString)QTESTER_VERSION;
+        i104.mLog.pushMsg(str.toStdString().c_str());
+        }
     else
         i104.mLog.deactivateLog();
 }

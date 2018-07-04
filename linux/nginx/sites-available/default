@@ -33,7 +33,7 @@ server {
 	#
 	# include snippets/snakeoil.conf;
 
-	root /home/operator/.wine/drive_c/oshmi/;
+	root /home/operador/.wine/drive_c/oshmi/;
 
 	# Add index.php to the list if you are using PHP
 	index index.html index.htm index.nginx-debian.html;
@@ -51,12 +51,17 @@ server {
         #allow 192.168.3.3;
 	}
 
-
     # blocks access to files other than those inside /htdocs and /svg and partially in the /conf folder.
-    location ~ /(bin|browser|browser-data|conf_templates|db|etc|extprogs|linux|nginx_php|scripts|conf/point_list.txt|conf/point_calc.txt|conf/hmi.ini|conf/hmishell.ini|conf/qtester104.ini|conf/nginx_access_control.conf|conf/nginx_http.conf|conf/nginx_https.conf|conf/nginx.crt|conf/nginx.key|conf/ca.crt) {
-       deny all;
-       return 404;
-    }
+        location ~ /(bin|browser|browser-data|conf_templates|db|etc|extprogs|linux|nginx_php|scripts|conf/.+(\.ini|\.txt|\.xlsm|\.bak|\.conf)$|htdocs/eventsync.php) {
+            deny all;
+            return 404;
+        }
+
+   # use utf8 for js libs
+   location ~ htdocs/lib/.+\.js$ {
+            add_header Content-Type "application/javascript; charset=UTF-8"; 
+            root           /home/operador/.wine/drive_c/oshmi/;
+        }
 
     # reverse proxy, redirect ajax requests to OSHMI webserver.exe
     # to be disabled for secure access (https) only
@@ -71,18 +76,18 @@ server {
 
     # use utf8 for OSHMI SVG content
     location ~ .svg$ {
-       add_header Content-Type "image/svg+xml;charset=UTF-8"; 
-       root           /home/operator/.wine/drive_c/oshmi/;
+       add_header Content-Type "image/svg+xml; charset=UTF-8"; 
+       root           /home/operador/.wine/drive_c/oshmi/;
     }
 
 	# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
 	#
 	location ~ \.php$ {
 		include snippets/fastcgi-php.conf;
-	    # With php7.0-cgi alone:
+	    # With php7.2-cgi alone:
 		#fastcgi_pass 127.0.0.1:9000;
-	    # With php7.0-fpm:
-		fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+	    # With php7.2-fpm:
+		fastcgi_pass unix:/run/php/php7.2-fpm.sock;
 	}
 
 	# deny access to .htaccess files, if Apache's document root

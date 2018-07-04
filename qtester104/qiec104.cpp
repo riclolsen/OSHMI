@@ -1,6 +1,6 @@
 /*
  * This software implements an IEC 60870-5-104 protocol tester.
- * Copyright © 2010,2011,2012 Ricardo L. Olsen
+ * Copyright Â© 2010-2017 Ricardo L. Olsen
  *
  * Disclaimer
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -115,7 +115,11 @@ void QIec104::sendTCP( char * data, int sz )
 {
     if ( tcps->state() == QAbstractSocket::ConnectedState )
     if ( !mEnding )
-      tcps->write( data, sz );
+      {
+        tcps->write( data, sz );
+        if (mLog.isLogging())
+          LogFrame(data, sz, true);
+      }
 }
 
 void QIec104::slot_tcpconnect()

@@ -191,6 +191,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateDirectory "$INSTDIR\inkscape"
   CreateDirectory "$INSTDIR\fonts"
   CreateDirectory "$INSTDIR\linux"
+  CreateDirectory "$INSTDIR\linux\nginx"
+  CreateDirectory "$INSTDIR\linux\nginx\sites-available"
   CreateDirectory "$INSTDIR\logs"
   CreateDirectory "$INSTDIR\nginx_php"
   CreateDirectory "$INSTDIR\scripts"
@@ -228,6 +230,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\linux
   File /a "..\linux\*.*"
   File /a "..\linux\QTester104"
+  SetOutPath $INSTDIR\linux\nginx\sites-available
+  File /a "..\linux\nginx\sites-available\default"
 
   SetOutPath $INSTDIR\db\db_cold
   File /a "..\db\db_cold\*.*"
@@ -307,6 +311,9 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\htdocs\lib
   File /a /r "..\htdocs\lib\*.*"
 
+  SetOutPath $INSTDIR\htdocs\report
+  File /a /r "..\htdocs\report\*.*"
+
   SetOutPath "$INSTDIR\htdocs\images"
   File /a "..\htdocs\images\*.*"
 
@@ -363,8 +370,10 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\etc
   File /a "..\etc\*.bat"
 
-  ; move old http conf to a backup file to allow for the new one to be written
-  Rename  $INSTDIR\conf\nginx_http.conf  $INSTDIR\conf\nginx_http.conf.bak
+  ; rename old (possibly incompatible) files to allow for the new ones to be written
+  Rename  $INSTDIR\conf\nginx_http.conf  $INSTDIR\conf\nginx_http.pre_${VERSION}.conf.bak
+  Rename  $INSTDIR\conf\nginx_https.conf  $INSTDIR\conf\nginx_https.pre_${VERSION}.conf.bak
+  Rename  $INSTDIR\conf\oshmi_config_manager.xlsm  $INSTDIR\conf\oshmi_config_manager.pre_${VERSION}.xlsm.bak
 
   SetOutPath $INSTDIR\conf
   File /a "..\conf_templates\oshmi_config_manager.xlsm"
@@ -372,7 +381,6 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\conf_templates\point_list.txt"
   File /a "..\conf_templates\point_calc.txt"
   File /a "..\conf_templates\qtester104.ini"  
-  File /a "..\conf_templates\dnp3.ini"  
   File /a "..\conf_templates\dnp3.ini"  
   File /a "..\conf_templates\modbus_queue.ini"
   File /a "..\conf_templates\hmi.ini"

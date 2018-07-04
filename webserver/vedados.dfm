@@ -1,5 +1,5 @@
 object fmVeDados: TfmVeDados
-  Left = 238
+  Left = 240
   Top = 294
   Width = 898
   Height = 609

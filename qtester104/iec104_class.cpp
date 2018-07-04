@@ -1,6 +1,6 @@
 /*
  * This software implements an IEC 60870-5-104 protocol tester.
- * Copyright © 2010,2011,2012 Ricardo L. Olsen
+ * Copyright Â© 2010-2017 Ricardo L. Olsen
  *
  * Disclaimer
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 #include <string>
 #include <sstream>
 
@@ -194,7 +195,7 @@ void iec104_class::onTimerSecond()
                 apdu.NS = TESTFRACT;
                 apdu.NR = 0;
                 sendTCP((char *)&apdu, 6);
-                mLog.pushMsg("T<-- TESTFRACT");
+                mLog.pushMsg("     TESTFRACT");
             }
           }
     }
@@ -223,7 +224,7 @@ void iec104_class::solicitGI()
     wapdu.dados[3] = 0x14;
     sendTCP((char *)&wapdu, 16);
     VS += 2;
-    mLog.pushMsg( "T<-- INTERROGATION " );
+    mLog.pushMsg( "     INTERROGATION " );
     tout_gi = gi_retry_time;
 }
 
@@ -259,7 +260,7 @@ void iec104_class::confTestCommand()
     sendTCP( (char *)&wapdu, 22+2 );
     VS += 2;
 
-    mLog.pushMsg( "T<-- TEST COMMAND CONF " );
+    mLog.pushMsg( "     TEST COMMAND CONF " );
 }
 
 void iec104_class::sendStartDTACT()
@@ -271,7 +272,7 @@ void iec104_class::sendStartDTACT()
     apdu.NS=STARTDTACT;
     apdu.NR=0;
     sendTCP((char *)&apdu, 6);
-    mLog.pushMsg("T<-- STARTDTACT");
+    mLog.pushMsg("     STARTDTACT");
     tout_startdtact=t1_startdtact;
 }
 
@@ -285,6 +286,7 @@ void iec104_class::packetReadyTCP()
     int bytesrec;
     unsigned char byt;
     unsigned char len;
+    static char buflog[10000];
 
     while (true) {
 
@@ -327,11 +329,14 @@ void iec104_class::packetReadyTCP()
 
       if (mLog.isLogging())
         {
-        char buflog[5000];
-
         sprintf (buflog, "R--> %03d: ", (int)len+2);
-        for (int i=0; i< len+2 && i<25 ; i++) // log up to 25 caracteres
+        int lim = 100;
+        for (int i=0; i< len+2 && i<lim; i++) // log up to 50 caracteres
+           {
            sprintf (buflog+strlen(buflog), "%02x ", br[i]);
+           }
+        if ( len > lim-2 )
+          sprintf (buflog+strlen(buflog), "...");
         mLog.pushMsg(buflog);
         }
 
@@ -365,6 +370,68 @@ void iec104_class::packetReadyTCP()
 */
 }
 
+
+void iec104_class::LogFrame(char * frame, int size, bool is_send)
+{
+    static char buflog[10000];
+    char * cp = frame;
+
+    if ( mLog.isLogging() )
+      {
+        if (is_send)
+          sprintf (buflog, "T<-- %03d: ", (int)size);
+        else
+          sprintf (buflog, "R--> %03d: ", (int)size);
+        int lim = 100;
+        for (int i=0; i< size && i<lim; i++) // log up to 50 caracteres
+           {
+           sprintf(buflog+strlen(buflog), "%02x ", (unsigned char)cp[i]);
+           }
+        if ( size > lim )
+          sprintf (buflog+strlen(buflog), "...");
+        mLog.pushMsg(buflog);
+      }
+}
+
+char * iec104_class::trim(char *s) {
+    int i;
+    if (!s)
+        return NULL;   // handle NULL string
+    if (!*s)
+        return s;      // handle empty string
+    while (isspace (*s)) s++;   // skip left side white spaces
+    for (i = strlen (s) - 1; (isspace (s[i])); i--) ;   // skip right side white spaces
+    s[i + 1] = '\0';
+    return s;
+}
+
+// Log point, write to log when address is -1
+void iec104_class::LogPoint(int address, float val, char * qualifier, cp56time2a * timetag)
+{
+    static char buf[10000]="     ";
+
+    if ( mLog.isLogging() )
+      {
+      if ( address == -1 )
+        {
+          mLog.pushMsg( buf );
+          strcpy(buf, "     ");
+          return;
+        }
+
+      if ( ceilf(val) == val ) // test val for integer whole value
+        sprintf( buf + strlen(buf), "[%d %1.0f %s", address, val, qualifier );
+      else
+        sprintf( buf + strlen(buf), "[%d %1.3f %s", address, val, qualifier );
+
+      trim(buf);
+
+      if ( timetag != NULL )
+        sprintf( buf + strlen(buf), " %04d/%02d/%02d %02d:%02d:%02d.%03d%s%s", timetag->year+2000, timetag->month, timetag->mday, timetag->hour, timetag->min,  timetag->msec/1000, timetag->msec%1000, timetag->iv?".iv":"", timetag->su?".su":"" );
+      sprintf( buf + strlen(buf), "] ");
+      }
+}
+
 void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
 {
     iec_apdu wapdu;      // buffer to assemble apdu to send
@@ -378,7 +445,7 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
         return;
     }
 
-    if ( papdu->asduh.ca != slaveAddress && papdu->asduh.ca != slaveASDUAddrCmd && sz>6)
+    if ( papdu->asduh.ca != slaveAddress && papdu->asduh.ca != slaveASDUAddrCmd && sz>6 )
     { // invalid frame
         mLog.pushMsg("R--> ASDU WITH UNEXPECTED ORIGIN! Ignoring...");
         return;
@@ -396,7 +463,7 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             wapdu.NS=STARTDTCON;
             wapdu.NR=0;
             sendTCP((char *)&wapdu, 6);
-            mLog.pushMsg("T<-- STARTDTCON");
+            mLog.pushMsg("     STARTDTCON");
             break;
             
         case TESTFRACT:
@@ -406,7 +473,7 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             wapdu.NS=TESTFRCON;
             wapdu.NR=0;
             sendTCP((char *)&wapdu, 6);
-            mLog.pushMsg("T<-- TESTFRCON");
+            mLog.pushMsg("     TESTFRCON");
             break;
             
         case STARTDTCON:
@@ -513,7 +580,14 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].nt=pobj->nt;
                       piecarr[i].sb=pobj->sb;
                       piecarr[i].iv=pobj->iv;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->sp?"on ":"off ", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, NULL );
+                        }                      
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -553,7 +627,15 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].nt=pobj->nt;
                       piecarr[i].sb=pobj->sb;
                       piecarr[i].iv=pobj->iv;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          static const char* dblmsg[] = { "tra ", "off ", "on ", "ind " };
+                          sprintf( buf, "%s%s%s%s%s", dblmsg[pobj->dp], pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, NULL );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -594,7 +676,14 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].nt=pobj->nt;
                       piecarr[i].sb=pobj->sb;
                       piecarr[i].iv=pobj->iv;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s%s", pobj->t?"t ":"", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, NULL );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -634,7 +723,14 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].nt=pobj->nt;
                       piecarr[i].sb=pobj->sb;
                       piecarr[i].iv=pobj->iv;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, NULL );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -674,7 +770,14 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].nt=pobj->nt;
                       piecarr[i].sb=pobj->sb;
                       piecarr[i].iv=pobj->iv;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, NULL );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -714,7 +817,14 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].nt=pobj->nt;
                       piecarr[i].sb=pobj->sb;
                       piecarr[i].iv=pobj->iv;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, NULL );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -761,7 +871,15 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].timetag.min=pobj->time.min;
                       piecarr[i].timetag.msec=pobj->time.msec;
                       piecarr[i].timetag.iv=pobj->time.iv;
+                      piecarr[i].timetag.su=pobj->time.su;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->sp?"on ":"off ", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, &piecarr[i].timetag );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -808,7 +926,16 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].timetag.min=pobj->time.min;
                       piecarr[i].timetag.msec=pobj->time.msec;
                       piecarr[i].timetag.iv=pobj->time.iv;
+                      piecarr[i].timetag.su=pobj->time.su;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          static const char* dblmsg[] = { "tra ", "off ", "on ", "ind " };
+                          sprintf( buf, "%s%s%s%s%s", dblmsg[pobj->dp], pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, &piecarr[i].timetag );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -856,7 +983,15 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].timetag.min=pobj->time.min;
                       piecarr[i].timetag.msec=pobj->time.msec;
                       piecarr[i].timetag.iv=pobj->time.iv;
+                      piecarr[i].timetag.su=pobj->time.su;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s%s", pobj->t?"t ":"", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, &piecarr[i].timetag );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -909,7 +1044,15 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].timetag.min=pobj->time.min;
                       piecarr[i].timetag.msec=pobj->time.msec;
                       piecarr[i].timetag.iv=pobj->time.iv;
+                      piecarr[i].timetag.su=pobj->time.su;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, &piecarr[i].timetag );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -956,7 +1099,15 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].timetag.min=pobj->time.min;
                       piecarr[i].timetag.msec=pobj->time.msec;
                       piecarr[i].timetag.iv=pobj->time.iv;
+                      piecarr[i].timetag.su=pobj->time.su;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, &piecarr[i].timetag );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -1003,7 +1154,15 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                       piecarr[i].timetag.min=pobj->time.min;
                       piecarr[i].timetag.msec=pobj->time.msec;
                       piecarr[i].timetag.iv=pobj->time.iv;
+                      piecarr[i].timetag.su=pobj->time.su;
+                      if ( mLog.isLogging() )
+                        {
+                          char buf[100];
+                          sprintf( buf, "%s%s%s%s%s", pobj->ov?"ov ":"", pobj->bl?"bl ":"", pobj->nt?"nt ":"", pobj->sb?"sb ":"", pobj->iv?"iv ":"" );
+                          LogPoint( piecarr[i].address, piecarr[i].value, buf, &piecarr[i].timetag );
+                        }
                    }
+                LogPoint(-1, 0, NULL, NULL);
                 dataIndication(piecarr, papdu->asduh.num);
                 delete[] piecarr;
             }
@@ -1013,26 +1172,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type45 *pobj;
             pobj =  &papdu->nsq45.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "SINGLE COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq45.ioa16 + ((unsigned)papdu->nsq45.ioa8 << 16)
-                    << " SCS "
-                    << (unsigned)pobj->scs
-                    << " QU "
-                    << (int) pobj->qu
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "SINGLE COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq45.ioa16 + ((unsigned)papdu->nsq45.ioa8 << 16)
+                        << " SCS "
+                        << (unsigned)pobj->scs
+                        << " QU "
+                        << (int) pobj->qu
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1055,26 +1217,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type46 *pobj;
             pobj =  &papdu->nsq46.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "DOUBLE COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq46.ioa16 + ((unsigned)papdu->nsq46.ioa8 << 16)
-                    << " DCS "
-                    << (unsigned)pobj->dcs
-                    << " QU "
-                    << (int) pobj->qu
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "DOUBLE COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq46.ioa16 + ((unsigned)papdu->nsq46.ioa8 << 16)
+                        << " DCS "
+                        << (unsigned)pobj->dcs
+                        << " QU "
+                        << (int) pobj->qu
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1097,26 +1262,30 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type47 *pobj;
             pobj =  &papdu->nsq47.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "STEP REG. COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq47.ioa16 + ((unsigned)papdu->nsq47.ioa8 << 16)
-                    << " RCS "
-                    << (unsigned)pobj->rcs
-                    << " QU "
-                    << (int) pobj->qu
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "STEP REG. COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq47.ioa16 + ((unsigned)papdu->nsq47.ioa8 << 16)
+                        << " RCS "
+                        << (unsigned)pobj->rcs
+                        << " QU "
+                        << (int) pobj->qu
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
+
             // send indication to user
             iec_obj iobj;
             iobj.address = papdu->nsq47.ioa16 + ((unsigned)papdu->nsq47.ioa8 << 16);
@@ -1139,26 +1308,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type58 *pobj;
             pobj =  &papdu->nsq58.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "SINGLE COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq58.ioa16 + ((unsigned)papdu->nsq58.ioa8 << 16)
-                    << " SCS "
-                    << (unsigned)pobj->scs
-                    << " QU "
-                    << (int) pobj->qu
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "SINGLE COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq58.ioa16 + ((unsigned)papdu->nsq58.ioa8 << 16)
+                        << " SCS "
+                        << (unsigned)pobj->scs
+                        << " QU "
+                        << (int) pobj->qu
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1181,26 +1353,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type59 *pobj;
             pobj =  &papdu->nsq59.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "DOUBLE COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq59.ioa16 + ((unsigned)papdu->nsq59.ioa8 << 16)
-                    << " DCS "
-                    << (unsigned)pobj->dcs
-                    << " QU "
-                    << (int) pobj->qu
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "DOUBLE COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq59.ioa16 + ((unsigned)papdu->nsq59.ioa8 << 16)
+                        << " DCS "
+                        << (unsigned)pobj->dcs
+                        << " QU "
+                        << (int) pobj->qu
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1223,26 +1398,30 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type60 *pobj;
             pobj =  &papdu->nsq60.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "STEP REG. COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq60.ioa16 + ((unsigned)papdu->nsq60.ioa8 << 16)
-                    << " RCS "
-                    << (unsigned)pobj->rcs
-                    << " QU "
-                    << (int) pobj->qu
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "STEP REG. COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq60.ioa16 + ((unsigned)papdu->nsq60.ioa8 << 16)
+                        << " RCS "
+                        << (unsigned)pobj->rcs
+                        << " QU "
+                        << (int) pobj->qu
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
+
             // send indication to user
             iec_obj iobj;
             iobj.address = papdu->nsq60.ioa16 + ((unsigned)papdu->nsq60.ioa8 << 16);
@@ -1265,26 +1444,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type48 *pobj;
             pobj =  &papdu->nsq48.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "NORMALISED COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq48.ioa16 + ((unsigned)papdu->nsq48.ioa8 << 16)
-                    << " VAL "
-                    << pobj->nva
-                    << " QL "
-                    << (int) pobj->ql
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "NORMALISED COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq48.ioa16 + ((unsigned)papdu->nsq48.ioa8 << 16)
+                        << " VAL "
+                        << pobj->nva
+                        << " QL "
+                        << (int) pobj->ql
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1308,26 +1490,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type61 *pobj;
             pobj =  &papdu->nsq61.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "NORMALISED COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq61.ioa16 + ((unsigned)papdu->nsq61.ioa8 << 16)
-                    << " VAL "
-                    << pobj->nva
-                    << " QL "
-                    << (int) pobj->ql
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "NORMALISED COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq61.ioa16 + ((unsigned)papdu->nsq61.ioa8 << 16)
+                        << " VAL "
+                        << pobj->nva
+                        << " QL "
+                        << (int) pobj->ql
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1351,26 +1536,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type49 *pobj;
             pobj =  &papdu->nsq49.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "SCALED COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq49.ioa16 + ((unsigned)papdu->nsq49.ioa8 << 16)
-                    << " VAL "
-                    << pobj->sva
-                    << " QL "
-                    << (int) pobj->ql
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "SCALED COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq49.ioa16 + ((unsigned)papdu->nsq49.ioa8 << 16)
+                        << " VAL "
+                        << pobj->sva
+                        << " QL "
+                        << (int) pobj->ql
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1394,26 +1582,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type62 *pobj;
             pobj =  &papdu->nsq62.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "SCALED COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq62.ioa16 + ((unsigned)papdu->nsq62.ioa8 << 16)
-                    << " VAL "
-                    << pobj->sva
-                    << " QL "
-                    << (int) pobj->ql
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "SCALED COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq62.ioa16 + ((unsigned)papdu->nsq62.ioa8 << 16)
+                        << " VAL "
+                        << pobj->sva
+                        << " QL "
+                        << (int) pobj->ql
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1437,26 +1628,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type50 *pobj;
             pobj =  &papdu->nsq50.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "FLOAT COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq50.ioa16 + ((unsigned)papdu->nsq50.ioa8 << 16)
-                    << " VAL "
-                    << pobj->r32
-                    << " QL "
-                    << (int) pobj->ql
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "FLOAT COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq50.ioa16 + ((unsigned)papdu->nsq50.ioa8 << 16)
+                        << " VAL "
+                        << pobj->r32
+                        << " QL "
+                        << (int) pobj->ql
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1480,26 +1674,29 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
             iec_type63 *pobj;
             pobj =  &papdu->nsq63.obj;
 
-            oss.str("");
-            oss << "     ";
-            if (papdu->asduh.cause==ACTCONFIRM)
-                oss << "ACTIVATION CONFIRMATION ";
-            else
-            if (papdu->asduh.cause==ACTTERM)
-                oss << "ACTIVATION TERMINATION ";
-            if (papdu->asduh.pn==POSITIVE)
-                oss << "POSITIVE ";
-            else
-                oss << "NEGATIVE ";
-            oss << "FLOAT COMMAND ADDRESS "
-                    << (unsigned)papdu->nsq63.ioa16 + ((unsigned)papdu->nsq63.ioa8 << 16)
-                    << " VAL "
-                    << pobj->r32
-                    << " QL "
-                    << (int) pobj->ql
-                    << " SE "
-                    << (unsigned)pobj->se;
-            mLog.pushMsg((char*)oss.str().c_str());
+            if ( mLog.isLogging() )
+              {
+                oss.str("");
+                oss << "     ";
+                if (papdu->asduh.cause==ACTCONFIRM)
+                    oss << "ACTIVATION CONFIRMATION ";
+                else
+                if (papdu->asduh.cause==ACTTERM)
+                    oss << "ACTIVATION TERMINATION ";
+                if (papdu->asduh.pn==POSITIVE)
+                    oss << "POSITIVE ";
+                else
+                    oss << "NEGATIVE ";
+                oss << "FLOAT COMMAND ADDRESS "
+                        << (unsigned)papdu->nsq63.ioa16 + ((unsigned)papdu->nsq63.ioa8 << 16)
+                        << " VAL "
+                        << pobj->r32
+                        << " QL "
+                        << (int) pobj->ql
+                        << " SE "
+                        << (unsigned)pobj->se;
+                mLog.pushMsg((char*)oss.str().c_str());
+              }
 
             // send indication to user
             iec_obj iobj;
@@ -1534,7 +1731,7 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
                 {
                 mLog.pushMsg("     INTERROGATION ACT TERM ------------------------------------------------------------------------");
                 oss.str("");
-                oss << "    Total objects in GI: "
+                oss << "     Total objects in GI: "
                         << GIObjectCnt;
                 mLog.pushMsg((char*)oss.str().c_str());
 
@@ -1606,7 +1803,7 @@ sendTCP((char *)&apdu, 6);
 
 oss.str("");
 oss.setf ( ios::hex, ios::basefield );
-oss << "T<-- SUPERVISORY " << VR;
+oss << "     SUPERVISORY " << VR;
 mLog.pushMsg((char*)(oss.str().c_str()));
 }
 
@@ -1646,18 +1843,21 @@ switch (obj->type)
     sendTCP( (char *)&apducmd, apducmd.length + sizeof(apducmd.start) + sizeof(apducmd.length) );
     VS+=2;
 
-    oss.str("");
-    oss << "T<-- SINGLE COMMAND ADDRESS "
-            << (unsigned)obj->address
-            << " SCS "
-            << (unsigned)obj->scs
-            << " CA "
-            << obj->ca
-            << " QU "
-            << (int) obj->qu
-            << " SE "
-            << (unsigned)obj->se;
-    mLog.pushMsg((char*)oss.str().c_str());
+    if ( mLog.isLogging() )
+      {
+        oss.str("");
+        oss << "     SINGLE COMMAND ADDRESS "
+                << (unsigned)obj->address
+                << " SCS "
+                << (unsigned)obj->scs
+                << " CA "
+                << obj->ca
+                << " QU "
+                << (int) obj->qu
+                << " SE "
+                << (unsigned)obj->se;
+        mLog.pushMsg((char*)oss.str().c_str());
+      }
 
     break;
   case C_DC_NA_1:
@@ -1682,7 +1882,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- DOUBLE COMMAND ADDRESS "
+    oss << "     DOUBLE COMMAND ADDRESS "
             << (unsigned)obj->address
             << " DCS "
             << (unsigned)obj->dcs
@@ -1715,7 +1915,7 @@ switch (obj->type)
     sendTCP( (char *)&apducmd, apducmd.length + sizeof(apducmd.start) + sizeof(apducmd.length) );
     VS+=2;
     oss.str("");
-    oss << "T<-- STEP REG. COMMAND ADDRESS "
+    oss << "     STEP REG. COMMAND ADDRESS "
             << (unsigned)obj->address
             << " RCS "
             << (unsigned)obj->rcs
@@ -1764,7 +1964,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- SINGLE COMMAND W/TIME ADDRESS "
+    oss << "     SINGLE COMMAND W/TIME ADDRESS "
             << (unsigned)obj->address
             << " SCS "
             << (unsigned)obj->scs
@@ -1813,7 +2013,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- DOUBLE COMMAND W/TIME ADDRESS "
+    oss << "     DOUBLE COMMAND W/TIME ADDRESS "
             << (unsigned)obj->address
             << " DCS "
             << (unsigned)obj->dcs
@@ -1860,7 +2060,7 @@ switch (obj->type)
     sendTCP( (char *)&apducmd, apducmd.length + sizeof(apducmd.start) + sizeof(apducmd.length) );
     VS+=2;
     oss.str("");
-    oss << "T<-- STEP REG. COMMAND W/TIME ADDRESS "
+    oss << "     STEP REG. COMMAND W/TIME ADDRESS "
             << (unsigned)obj->address
             << " RCS "
             << (unsigned)obj->rcs
@@ -1894,7 +2094,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- NORMALISED COMMAND ADDRESS "
+    oss << "     NORMALISED COMMAND ADDRESS "
         << (unsigned)obj->address
         << " VAL "
         << (short)obj->value
@@ -1940,7 +2140,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- NORMALISED COMMAND W/TIME ADDRESS "
+    oss << "     NORMALISED COMMAND W/TIME ADDRESS "
         << (unsigned)obj->address
         << " VAL "
         << (short)obj->value
@@ -1972,7 +2172,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- SCALED COMMAND ADDRESS "
+    oss << "     SCALED COMMAND ADDRESS "
         << (unsigned)obj->address
         << " VAL "
         << (short)obj->value
@@ -2018,7 +2218,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- SCALED COMMAND W/TIME ADDRESS "
+    oss << "     SCALED COMMAND W/TIME ADDRESS "
         << (unsigned)obj->address
         << " VAL "
         << (short)obj->value
@@ -2050,7 +2250,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- FLOAT COMMAND ADDRESS "
+    oss << "     FLOAT COMMAND ADDRESS "
         << (unsigned)obj->address
         << " VAL "
         << obj->value
@@ -2096,7 +2296,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- SCALED COMMAND W/TIME ADDRESS "
+    oss << "     SCALED COMMAND W/TIME ADDRESS "
         << (unsigned)obj->address
         << " VAL "
         << obj->value
@@ -2126,7 +2326,7 @@ switch (obj->type)
     VS+=2;
 
     oss.str("");
-    oss << "T<-- CLOCK SYNC COMMAND "
+    oss << "     CLOCK SYNC COMMAND "
         << " CA "
         << obj->ca;
     mLog.pushMsg((char*)oss.str().c_str());
