@@ -1,6 +1,8 @@
 # OSHMI - Open Substation HMI
 A modern SCADA HMI for substations and other automation applications.
 
+This project exists because we believe that by combining existing open source projects and tools we can create a very capable, mobile and cloud-friendly HMI system that can rival proprietary software. This approach makes it possible to sum the forces of each project (Chromium, SVG/HTML5, PHP, Lua, SQLite, Inkscape, OpenDNP3, Nginx, Vega, PostgreSQL, Grafana,…) to achieve a great set of open, evergreen, modular and customizable tools for building great HMIs for automation projects. If you also believe this is possible, please give OSHMI a try and collaborate with the project!
+
 - Mobile and Cloud friendly.
 - Created for substation automation and control centers, but can be used for general SCADA HMI automation applications.
 - Built with open source, web based technologies and tools: SVG, HTML5, Javascript, PHP, Lua, QT, SQLite, Nginx, Inkscape, Vega.
