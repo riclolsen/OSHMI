@@ -1,5 +1,5 @@
 <?php
-// Serve como proxy para carregar conteúdo dinâmico de origem diferente em javascript
+// Serve como proxy para carregar conteÃºdo dinÃ¢mico de origem diferente em javascript
 
 error_reporting(0);
 ini_set('display_errors', 0);

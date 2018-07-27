@@ -130,6 +130,7 @@ __published:	// IDE-managed Components
         void __fastcall Timer11Timer(TObject *Sender);
         void __fastcall lblScreenClick(TObject *Sender);
         void __fastcall lblScreenMouseMove(TObject *Sender, TShiftState Shift, int X, int Y);
+        void __fastcall FormActivate(TObject *Sender);
 private:	// User declarations
         int glAlpha;
         static const int glAlphaMax = 250;

@@ -54,6 +54,9 @@ Acknowledgements:
   PHP - http://php.net
   WGet - http://www.gnu.org/software/wget
   SQLite - https://www.sqlite.org
+  PostgreSQL - https://www.postgresql.org/
+  BIGSQL - https://www.openscg.com/bigsql/package-manager.jsp/
+  Grafana - https://grafana.com/
   Some icons from: http://keyamoon.com/icomoon and http://raphaeljs.com/icons
   CSS Loaders from Luke Haas - https://projects.lukehaas.me/css-loaders/
   
@@ -149,12 +152,13 @@ QTester104:
 
 -------------------------------------------------------------------
 
-Notes for version 5.0 PRE-UTF8!:
+Notes for version 5.0:
 
-UPDATE OLDER VERSION WARNING!
-This is a major update that can break things when installed over an older version.
-So, it is highly recommended to backup config files and uninstall any existing old 
-version before installing this new.
+The full web interface was converted to UTF-8 encoding for better internationalization and
+better integration with the modern sotfware ecosystem.
+Point database txt files now must be encoded in UTF-8. Old files that contains 
+international characters must be converted to or recreated in UTF-8. 
+This can be easily accomplished using Notepad++, iconv (see below) or some other tool.
 
 This version leverages the power of Timescale PostgreSQL database extension that 
 optimizes insertion and query of time series data. The preconfigured add-on can run 
@@ -167,6 +171,12 @@ such as big power plants and control centers.
 The historical data storage and analytics capabilities of OSHMI now match or 
 supplant that of expensive commercial SCADA systems.
 
+There in now the possibility to provide a Mobile/Intranet/Internet Gateway.
+This can be used to OSHMI viewers remotely via a modern web browser.
+The access via gateway is for monitoring only (cannot control devices or ack alarms).
+The database backend for the gateway can be PostgreSQL (strongly recommended) or SQLite.
+The enabling of the gateway is configured at the end of c:\oshmi\nginx_http.conf file.
+
 Integration of analytics capabilities now include: 
  - PostgreSQL (fully featured open source database)
  - Timescale (time series extension for PostgreSQL)
@@ -176,7 +186,8 @@ Integration of analytics capabilities now include:
  - Excel (via web query and PostgreSQL/ODBC)
 
 PostgreSQL/Timescale, Grafana:
- - PostgreSQL/Timescale and Grafana now available as add-ons on 64bit Windows.
+ - PostgreSQL/Timescale and Grafana now available as addons for 64bit Windows only.
+ - PostgreSQL/Timescale and Grafana can be installed on other platforms manually.
  - New scripts to process the SQL text files compatible w/ Postgresql/Timescale.
 
 Screen Viewer:
@@ -187,12 +198,17 @@ Screen Viewer:
  - Support for (current) round time period for Vega 3 historical plot.
  - New markup for "get" attribute for digital points (OFF|ON) messages.
  - Fixed problem with center of rotatation (for "rotate" attribute).
- - Fixed problem with positioning o radar charts.
+ - Fixed problem with positioning of radar charts.
  - !EVAL expressions now have access to the SVG DOM reference (thisobj) for the 
    container of the markup object.
 
 Events Viewer:
  - Fixed problem showing silent button when acknowledging alarms.
+ - Fixed problem of error when setting table cell width in IE.
+ - Readability improvements.
+
+Tabular/Alarms Viewers:
+ - Fixed problem of error when setting table cell width in IE.
 
 Webserver.exe:
  - Do not load command points with SUPCMD=0.
@@ -203,6 +219,8 @@ Webserver.exe:
  - Limited number of parcels in calculated points.
  - Safer annotation code, sync.
  - Fixed reading of point_list.txt last field after end quote.
+ - Tuning of historical files generation.
+ - Commas in description or states of point are converted to points.
 
 HMIShell:
  - Do not search for already opened Viewers on Linux.
@@ -236,9 +254,23 @@ SQLite:
 
 PHP:
  - Updated to version 7.2.7 NTS.
+ - Fixed unnecessary kill of cmd.exe when stopping php/NGinx services.
+ - PostgreSQL PDO driver enabled.
 
 Nginx:
  - Updated to version 1.15.
+
+Other:
+ - Included utility convert-config-to-utf8.bat to convert old config files 
+   encoded as ISO8859-1 (Latin1) to UTF8.
+ - Fixed problem with quotes in annotations.
+ - Improvments to OData and JSON exporters for SQLite.
+ - New OData and JSON exporters for PostgreSQL.
+ - More precise scripts to stop OSHMI process.
+ - Included binaries for 'iconv' command line tool that can convert text files
+   to and from various encoding schemes (including UTF-8 and ISO8859-1).
+   Example, convert from ISO8859-1 to UTF-8: 
+     ..\bin\iconv  -f ISO8859-1 -t UTF-8 point_list.txt > point_list_utf8.txt
 
 -------------------------------------------------------------------
 

@@ -9,7 +9,7 @@
 
 $tz = 'America/Sao_Paulo';
 $match = [];
-$ini = file_get_contents("../conf/hmi.ini");
+$ini = @file_get_contents("../conf/hmi.ini");
 if ($ini === false)
   $ini = file_get_contents("../../conf/hmi.ini");
 preg_match('/^TIMEZONE=(.*)$/m', $ini, $match);

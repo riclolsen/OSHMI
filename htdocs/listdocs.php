@@ -1,6 +1,6 @@
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="UTF-8">
 <meta name="application-name" content="OSHMI-Open Substation HMI">
 <meta name="description" content="About OSHMI">
 <meta name="author" content="Ricardo L. Olsen">

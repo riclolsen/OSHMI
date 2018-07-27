@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>OSHMI</title>
+  <meta name="description" content="OSHMI - Open Substation HMI">
+  <meta name="author" content="Ricardo Olsen">
+  <link rel="shortcut icon" type="image/x-icon" href="htdocs/images/favicon.ico"/>
+  <style>
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url(htdocs/lib/SourceSansPro-Regular.woff2) format('woff2');
+    }
+
+    .blocks {
+      display: flex;
+      flex: 0 1 min-content;
+      position: relative;
+      float: left;
+      flex-wrap: wrap;
+      background-color: rgb(141, 160, 182);
+      color: white;
+      vertical-align: middle;
+      margin: 5px;
+      padding: 5px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+      transition: 1s;
+    }
+    h1 {
+      text-align: center;
+    }
+    a {
+      text-align: center;
+    }
+    a:link {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    a:visited {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: inherit;
+    }
+
+    a:active {
+      text-decoration: underline;
+      color: inherit;
+    }
+   body  {
+    font-family: Source Sans Pro, helvetica, arial; 
+    font-size: 20px; 
+    background: linear-gradient(to bottom, #deefff 0%,#98bede 100%);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+   }
+   html {
+    height: 100%;
+   }
+  </style>
+</head>
+
+<body>
+  <h1>
+    OSHMI - Open Substation HMI
+  </h1>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/about.html'>
+      <img height=40 src='htdocs/images/oshmi.svg'><br>About OSHMI
+    </a>
+  </div>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/screen.html'>
+      <img height=40 src='htdocs/images/tela.png'><br>Screen Viewer
+    </a>
+  </div>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/tabular.html?SELMODULO=TODOS_ANORMAIS'>
+      <img height=40 src='htdocs/images/firstaid.svg'><br>Alarms Viewer
+    </a>
+  </div>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/events.html'>
+      <img height=40 src='htdocs/images/chrono.svg'><br>Events Viewer
+    </a>
+  </div>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/tabular.html'>
+      <img height=40 src='htdocs/images/tabular.svg'><br>Tabular Viewer
+    </a>
+  </div>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/histwebview/histwebview.php'>
+      <img height=40 src='htdocs/images/plot.svg'><br>Curves Viewer
+    </a>
+  </div>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/listdocs.php'>
+      <img height=40 src='htdocs/images/help2.svg'><br>Documents
+    </a>
+  </div>
+  <div class='blocks'>
+    <a target='_blank' href='htdocs/listlogs.php'>
+      <img height=40 src='htdocs/images/info.svg'><br>Log Files
+    </a>
+  </div>
+  <div class='blocks' title='Requires Addon!'>
+    <a target='_blank' href='grafana'>
+      <img height=40 src='htdocs/images/grafana.ico'><br>Grafana Dashboards
+    </a>
+  </div>
+
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="UTF-8">
 <meta name="application-name" content="OSHMI-Open Substation HMI">
 <meta name="description" content="Point Info Dialog">
 <meta name="author" content="Ricardo L. Olsen">
@@ -58,14 +58,14 @@ function selchg(obj)
 function init() 
 { // executa quando termina de carregar o documento
 
-  // desabilita o botão direito 
+  // desabilita o botÃ£o direito 
   document.oncontextmenu = function() { return false; };
 
   // vai nos objetos com 'id' e coloca como 'title' a mensagem correspondente de Titles, carrega as imagens (de images.js)        
   //document.body.background=Imgs.INFBACKGROUND;
   $('img[id]').attr( 'src', function(index) { return Imgs[this.id]; } );
   
-  // contorna problema de aumentar estes ícones (parece ser bug do Chromium)
+  // contorna problema de aumentar estes Ã­cones (parece ser bug do Chromium)
   // $('#IMGTABULAR').attr( 'width', 32 ); 
   // $('#IMGTEND').attr( 'width', 32 );
   
@@ -107,7 +107,7 @@ function init()
   setInterval( testOpener, 1000 );
   window.opener.WebSAGE.showValsInfo2( 0 );
   
-  // torna elementos não selecionáveis
+  // torna elementos nÃ£o selecionÃ¡veis
   $("html > head").append("<style> body { user-select:none; -webkit-user-select:none; } </style>");  
   // acerta tamanho da janela
   if ( ($('#SAIR').position().top + 70) > window.innerHeight )

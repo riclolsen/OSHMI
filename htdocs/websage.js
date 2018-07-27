@@ -5,11 +5,11 @@
 // Real time values are obtainded by requesting and evaluating javascript code from a special webserver.
 // 
 // Este script procura por objetos (com id como PNTnponto) 
-// ou tags especifÌcos de animaÁ„o linkados a pontos da base num arquivo SVG embutido no html
+// ou tags especif√≠cos de anima√ß√£o linkados a pontos da base num arquivo SVG embutido no html
 // passa a lista de pontos para o script pntserver.rjs que devolve um 
-// trecho de cÛdigo em javascript que atualiza os valores e flags dos pontos solicitados.
-// Este cÛdigo È apendado dinamicamente ‡ p·gina e executado.
-// Com os valores obtidos dos pontos s„o atualizados os objetos (DJ, SC e medidas) no SVG.
+// trecho de c√≥digo em javascript que atualiza os valores e flags dos pontos solicitados.
+// Este c√≥digo √© apendado dinamicamente √† p√°gina e executado.
+// Com os valores obtidos dos pontos s√£o atualizados os objetos (DJ, SC e medidas) no SVG.
 // DEPENDENCIAS : util.js, jquery.js, jquery.ui, core.js, shortcut.js, messages.js, config_viewers.js  (todas devem estar incluidas antes deste script)  
 
 // OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
@@ -34,38 +34,38 @@
 /*global ScreenViewer_AlmBoxGridColor: true, ScreenViewer_BarBreakerSwColor: true, ScreenViewer_ShowScreenNameTB: true  */
 
 
-// Vari·veis providas pelo webserver | Server provide values
+// Vari√°veis providas pelo webserver | Server provide values
 var L = [];  // lista de eventos | Event list
 var V = []; // valores dos pontos | Point values
 var F = []; // flags dos pontos | Point quality flags
 var T = []; // tags de tempo de alarme dos pontos | Alarm time tags 
 var TAGS = []; // tags (ids) dos pontos | point tag names
-var NPTS = []; // n˙mero de ponto pelo tag | point numbers by tags names
-var SUBS = []; // subestaÁıes | subtations
-var BAYS = []; // mÛdulo do pontos | bay of point
-var DCRS = []; // descriÁ„o dos pontos | point description
-var ANOTS = []; // anotaÁıes dos pontos | point annotation
+var NPTS = []; // n√∫mero de ponto pelo tag | point numbers by tags names
+var SUBS = []; // subesta√ß√µes | subtations
+var BAYS = []; // m√≥dulo do pontos | bay of point
+var DCRS = []; // descri√ß√£o dos pontos | point description
+var ANOTS = []; // anota√ß√µes dos pontos | point annotation
 var STONS = []; // textos de estado on | on status texts
 var STOFS = []; // textos de estado off | off status texts
-var Data = ''; // hora da atualizaÁ„o | Time of the last real time data obtained from the server 
-var NUM_VAR = 0; // n˙mero de variaÁıes digitais | Number of digital values changed
-var HA_ALARMES = 0; // informa que h· alarme sonoro ativo | Indicates the presence of beep alarm
-var Sha1Ana = ''; // hash dos valores analogicos (para detectar mudanÁas) | Hash of analog values for change detection
-var Sha1Dig = ''; // hash dos valores digitais (para detectar mudanÁas) | Hash of digital values for change detection
+var Data = ''; // hora da atualiza√ß√£o | Time of the last real time data obtained from the server 
+var NUM_VAR = 0; // n√∫mero de varia√ß√µes digitais | Number of digital values changed
+var HA_ALARMES = 0; // informa que h√° alarme sonoro ativo | Indicates the presence of beep alarm
+var Sha1Ana = ''; // hash dos valores analogicos (para detectar mudan√ßas) | Hash of analog values for change detection
+var Sha1Dig = ''; // hash dos valores digitais (para detectar mudan√ßas) | Hash of digital values for change detection
 var LIMSUPS = []; // Analog superior limits for points
 var LIMINFS = []; // Analog inferior limits for points
 
-var HA_ALARMES_ANT = 0; // estado anterior da vari·vel HA_ALARMES | last state of HA_ALARMES variable
-var NUM_VAR_ANT = 0; // estado anterior da vari·vel NUM_VAR | last state of NUM_VAR variable
+var HA_ALARMES_ANT = 0; // estado anterior da vari√°vel HA_ALARMES | last state of HA_ALARMES variable
+var NUM_VAR_ANT = 0; // estado anterior da vari√°vel NUM_VAR | last state of NUM_VAR variable
 
 var SVGDoc = null; // documento SVG (DOM) | SVG Document
 var SVGSnap = null; // SVG Snap surface object
 
-// vari·veis para os di·logos de info/comando | variables to communicate with point access/command diaglogs
+// vari√°veis para os di√°logos de info/comando | variables to communicate with point access/command diaglogs
 var NPTO = 0, ID, ESTACAO, MODULO, DESC, ST_ON, ST_OFF, CNPTO, CID, CDESC, CST_ON, CST_OFF;
 var LIMS, LIMI, HISTER, ALRIN, ANOT, VLNOR, ESTALM, UNIDADE, SIMULACAO = 0;
-var ComandoAck = ''; // texto para confirmaÁ„o do comando 
-var ANIMA = 0x01; // controla nÌvel de animaÁıes (m·scara de: 0x00=sem animaÁ„o, 0x01=seleÁ„o, 0x02=etiqueta).
+var ComandoAck = ''; // texto para confirma√ß√£o do comando 
+var ANIMA = 0x01; // controla n√≠vel de anima√ß√µes (m√°scara de: 0x00=sem anima√ß√£o, 0x01=sele√ß√£o, 0x02=etiqueta).
 
 var CLICK_POSX = 0;
 var CLICK_POSY = 0;
@@ -74,7 +74,7 @@ var ComandoEnviado = "";
 
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
-// requestAnimationFrame polyfill by Erik Mˆller. fixes from Paul Irish, Tino Zijdel, and Jonathan Neal
+// requestAnimationFrame polyfill by Erik M√∂ller. fixes from Paul Irish, Tino Zijdel, and Jonathan Neal
 // MIT license
 if (!window.requestAnimationFrame) (function() {
 	'use strict';
@@ -150,14 +150,14 @@ var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
      
     for ( i = 0; i < WebSAGE.g_seltela.length; i++ )
     {
-        if ( indtela > 0 && indtela == i ) // quando o par‚metro da URL INDTELA for um n˙mero, abre a tela correspondente
+        if ( indtela > 0 && indtela == i ) // quando o par√¢metro da URL INDTELA for um n√∫mero, abre a tela correspondente
         {
             WebSAGE.g_seltela.selectedIndex = i;
             document.fmTELA.submit();
             return;
         }
     
-        if ( WebSAGE.g_seltela.options[i].value == tela )  // tela: vari·vel do screen.html
+        if ( WebSAGE.g_seltela.options[i].value == tela )  // tela: vari√°vel do screen.html
         { 
             if ( typeof( WebSAGE.g_seltela.options[i].filtroalmbox ) != "undefined" )
             if ( WebSAGE.g_seltela.options[i].filtroalmbox != "" )
@@ -169,7 +169,7 @@ var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
 
             // seleciona tela aberta no combo box
             WebSAGE.g_seltela.selectedIndex = i;
-            // coloca o nome da tela na barra de tÌtulo
+            // coloca o nome da tela na barra de t√≠tulo
             titu = WebSAGE.g_seltela.options[i].text;
             pos = titu.indexOf("[");
             if ( pos <= 0 ) 
@@ -181,7 +181,7 @@ var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
             titu = titu.substring( 0, pos );
             titu = titu.replace( new RegExp("[\\s.]+$", "g"), "" );
             WebSAGE.g_titulo_janela = titu + " - " + Msg.NomeVisorTelas + " - " + Msg.NomeProduto + " - " + Msg.VersaoProduto;
-            document.title = "."; // necess·rio devido a um bug do chromium!
+            document.title = "."; // necess√°rio devido a um bug do chromium!
             document.title = WebSAGE.g_titulo_janela;
             // coloca o nome da tela na toolbar, se configurado
             if ( ScreenViewer_ShowScreenNameTB )
@@ -223,9 +223,9 @@ var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
                 }
           }
 
-          // acerta o estado dos botıes de prÛxima tela e tela anterior
+          // acerta o estado dos bot√µes de pr√≥xima tela e tela anterior
           if ( WebSAGE.g_seltela.selectedIndex <= 1 )
-          { // È a primeira tela
+          { // √© a primeira tela
               document.getElementById("ANTETELAID").style.opacity = 0.2;
               document.getElementById("ANTETELAID").style.cursor = '';
           }
@@ -235,7 +235,7 @@ var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
           } 
 
           if ( WebSAGE.g_seltela.selectedIndex >= WebSAGE.g_seltela.length - 1 )
-          { // È a ˙ltima tela
+          { // √© a √∫ltima tela
               document.getElementById("PROXTELAID").style.opacity = 0.2;
               document.getElementById("PROXTELAID").style.cursor = '';
           }
@@ -262,9 +262,9 @@ var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
             if ( nohs[i].id != undefined )
               {
               idtela = nohs[i].id;
-              // faz um trimleft dos caracteres espaÁo e '+' para permitir multiplos link para uma mesma tela
+              // faz um trimleft dos caracteres espa√ßo e '+' para permitir multiplos link para uma mesma tela
               idtela = idtela.replace(/^[ \+]+/, "");
-              if ( idtela.substr(0,3)=='PNT' || idtela.substr(0,3)=='NPT' || idtela=='' ) // estou procurando nome de tela e n„o numero de ponto
+              if ( idtela.substr(0,3)=='PNT' || idtela.substr(0,3)=='NPT' || idtela=='' ) // estou procurando nome de tela e n√£o numero de ponto
                  { 
                  continue; 
                  }
@@ -299,7 +299,7 @@ function LoadImage( elem, imgpath )
   elem.setAttributeNS("http://www.w3.org/1999/xlink", "href", imgpath );   
 }
 
-// Remove todas as animaÁıes
+// Remove todas as anima√ß√µes
 function RemoveAnimate( elem )
 {
   var i;
@@ -322,7 +322,7 @@ function RemoveAnimate( elem )
     }    
 }
 
-// Permite criar uma animaÁ„o em SVG
+// Permite criar uma anima√ß√£o em SVG
 // window.parent.Animate( thisobj, "animate", {'attributeName': 'ry', 'from': 0, 'to': 10, 'fill': 'freeze', 'repeatCount': 5, 'dur': 5 } );
 // window.parent.Animate( thisobj, 'animate', {'attributeName': 'width', 'from': 45, 'to': 55, 'repeatCount':5,'dur': 1 });
 function Animate( elem, animtype, params )
@@ -423,6 +423,7 @@ var WebSAGE =
 {
 g_remoteServer : PNTServer,
 g_timePntServer : TimePNTServer,
+g_docAnnotationServer: DocAnnotationServer,
 g_isInkscape : false,
 g_DirTelas : "./",
 g_nponto_sup : 0,
@@ -434,21 +435,21 @@ g_timeoutFalhaID : 0,
 g_timeoutSlideID : 0,
 g_data_ant : "",
 g_timeOutRefresh : 1000 * ScreenViewer_RefreshTime, // tempo de refresh dos dados
-g_timeOutFalha : 30000, // tempo para falha dos dados, caso servidor n„o responda
+g_timeOutFalha : 30000, // tempo para falha dos dados, caso servidor n√£o responda
 g_toutID : 0,
 g_toutStatusID : 0,
 g_blinktimerID : 0,
 g_blinkperiod : 1000,
 g_blinkcnt : 0, 
 g_blinkList: [], // lista objetos piscantes digitais
-g_blinkListAna: [], // lista objetos piscantes analÛgicos
+g_blinkListAna: [], // lista objetos piscantes anal√≥gicos
 g_blinkListOld: [], // lista objetos piscantes digitais (anterior)
-g_blinkListAnaOld: [], // lista objetos piscantes analÛgicos (anterior)
+g_blinkListAnaOld: [], // lista objetos piscantes anal√≥gicos (anterior)
 C : [], // para as cores das medidas
-T : [], // formato numÈrico das medidas
+T : [], // formato num√©rico das medidas
 Pass : 0, // conta as chamadas de CallServer
 g_showValsInterval : 0,
-RectFundo : 0, // ret‚ngulo do fundo do SVG
+RectFundo : 0, // ret√¢ngulo do fundo do SVG
 g_seltela : 0,
 g_inicio : 1,
 g_MostraQualAna : 0,
@@ -479,9 +480,9 @@ g_timeshift: 0, // control calls for historic data plot
 g_idprefixes:[], // id prefixes to aggregate to TAGs when TAG in form $$#1_POINT_TAG (set from script or passed to by URL parameter IDPREFIX1, IDPREFIX2,...)
 
 // Passa ao servidor uma lista de pontos cujos valores devem ser retornados
-// o retorno vem na vari·vel global V que È um objeto que tem propriedades PNTnumero com o valor do ponto
+// o retorno vem na vari√°vel global V que √© um objeto que tem propriedades PNTnumero com o valor do ponto
 // Ex: V['PNT8056'] ou V.PNT8056
-// A lista de pontos È obtida dos DIV com ID=PNTnumero neste documento, ex: ID=PNT8056
+// A lista de pontos √© obtida dos DIV com ID=PNTnumero neste documento, ex: ID=PNT8056
 // var par='';
 lstpnt : '',
 
@@ -569,7 +570,7 @@ tooltipRelac: function(item, pnt)
 if ( pnt == 0 || pnt == 99999 || pnt == 99989 || item.hasTooltip )
   return;
 
-// d· um tempo para receber as descriÁıes, etc. do ponto
+// d√° um tempo para receber as descri√ß√µes, etc. do ponto
 setTimeout( function(){
   if ( item.hasTooltip || item.parentNode.hasTooltip )
     return;
@@ -622,7 +623,7 @@ for ( i = 0; i < WebSAGE.g_seltela.length; i++ )
   }  
 },   
 
-// funÁ„o auxiliar para escrever dados na janela de comando pelo id do objeto
+// fun√ß√£o auxiliar para escrever dados na janela de comando pelo id do objeto
 cmdWriteById : function( win, id, txt )
 {    
   win.$( '#' + id ).text( txt );
@@ -684,7 +685,7 @@ if ( isNaN( parseInt(tag) )  )
 
 if ( (WebSAGE.lstpnt.indexOf( "," + tag + "," ) < 0) && 
      !(WebSAGE.lstpnt.indexOf( tag + "," ) === 0)
-   ) // se j· n„o tem na lista, acrescenta | append if not already in the list
+   ) // se j√° n√£o tem na lista, acrescenta | append if not already in the list
   { 
     WebSAGE.lstpnt = WebSAGE.lstpnt + tag + ','; 
   }
@@ -765,13 +766,13 @@ showValsInfo1 : function()
   // esconde o destaque anterior, imediatamente
   WebSAGE.escondeDestaqPonto( WebSAGE.g_destaqList[WebSAGE.g_indSelPonto] );
 
-  // abre nova janela, d· um tempo e vai  preencher os dados da nova janela em outra funcao
+  // abre nova janela, d√° um tempo e vai  preencher os dados da nova janela em outra funcao
   // (para dar tempo de abrir a janela)
   WebSAGE.g_win_1stdraw = 1;
   WebSAGE.g_win_cmd = window.open( 'dlginfo.html','wsinfo','dependent=yes,height=480,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes' );
   WebSAGE.g_tminfoID = setTimeout( 'WebSAGE.g_win_cmd.close()', 3000 );
 /*
-  // tentei bolar um cÛdigo para mover a janela de acesso ao ponto para n„o ficar por cima do objeto clicou, mas d· pau com multimonitor
+  // tentei bolar um c√≥digo para mover a janela de acesso ao ponto para n√£o ficar por cima do objeto clicou, mas d√° pau com multimonitor
   if (CLICK_POSX>600)
     CLICK_POSX=50;
   else   
@@ -785,7 +786,7 @@ showValsInfo1 : function()
  
   WebSAGE.g_wait_win = 0;  // contador para esperar abrir a janela
   
-  // showValsInfo2 ser· chamado pela prÛpria nova janela aberta em onload
+  // showValsInfo2 ser√° chamado pela pr√≥pria nova janela aberta em onload
 }, 
 
 // Mostra os dados sobre o ponto em janela popup 
@@ -793,7 +794,7 @@ showValsInfo2 : function( mot )
 {
 try
   {
-  // testa se a janela est· carregada
+  // testa se a janela est√° carregada
   if ( NPTO == 0 ||
        typeof( WebSAGE.g_win_cmd.document ) === "unknown" ||
        WebSAGE.g_win_cmd.document === null ||
@@ -808,7 +809,7 @@ try
      {
      if ( mot == 0 )
        {
-       if ( WebSAGE.g_wait_win < 4 ) // n„o carregou, vai retentando mais um tempo
+       if ( WebSAGE.g_wait_win < 4 ) // n√£o carregou, vai retentando mais um tempo
          { 
            WebSAGE.g_wait_win++;
            WebSAGE.g_timerID = setTimeout( 'WebSAGE.showValsInfo2(0)', 300 );
@@ -844,11 +845,11 @@ try
   if ( V[NPTO]&0x01 != 0 )
     { 
       WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); 
-    } // n„o zero È off 
+    } // n√£o zero √© off 
   else  
     { 
       WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); 
-    } // zero È on
+    } // zero √© on
     
   if ( Q & 0x80 )
      {
@@ -904,7 +905,7 @@ try
   
   WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'QUALIF', Msg.Qualific + ': ' + SQ );
 
-  if ( WebSAGE.g_win_1stdraw ) // escreve par‚metros sÛ na primeira vez que abriu a janela
+  if ( WebSAGE.g_win_1stdraw ) // escreve par√¢metros s√≥ na primeira vez que abriu a janela
     {
     clearTimeout( WebSAGE.g_tminfoID );
     WebSAGE.g_win_1stdraw = 0;
@@ -915,7 +916,7 @@ try
     //WebSAGE.g_win_cmd.document.getElementById("TABULAR").href="tabular.html?SELMODULO="+ID.substring(0,9);
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("TABULAR"), "click", WebSAGE.tabular );
 
-    if ( ID.charAt(21) == 'M' ) // Manual n„o apresenta opÁ„o de inibir
+    if ( ID.charAt(21) == 'M' ) // Manual n√£o apresenta op√ß√£o de inibir
       { 
         WebSAGE.g_win_cmd.document.getElementById('DIVINIB').style.display = 'none'; 
       }
@@ -924,7 +925,7 @@ try
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("CURVAS"), "click", WebSAGE.curvas );
 
     if ( Q & 0x20 )
-      { // mostra par‚metros de limites sÛ para pontos analÛgicos
+      { // mostra par√¢metros de limites s√≥ para pontos anal√≥gicos
       WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS").style.display = "";
       Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS"), "click", WebSAGE.tendencias );
 
@@ -977,7 +978,7 @@ try
         }
       }
 
-    // torna visÌvel bot„o de comandar, caso haja comando associado
+    // torna vis√≠vel bot√£o de comandar, caso haja comando associado
     if ( CNPTO != 0 )
       {
       WebSAGE.g_win_cmd.document.getElementById("COMANDAR").style.display = "";
@@ -989,7 +990,7 @@ try
     // get nonblocking annotation
     $.ajax( {
             dataType: "json",
-            url: "annotation.php?N=" + NPTO, 
+            url: WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
             success: 
               function(data) {
                  if ( data[0] && data[0].hasOwnProperty('CONTENT') )
@@ -1001,7 +1002,7 @@ try
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
     }
 
-  // bloqueio autom·tico de comando por presenÁa de anotaÁ„o
+  // bloqueio autom√°tico de comando por presen√ßa de anota√ß√£o
   if ( CNPTO != 0 )
     {
     if ( WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value != "" )
@@ -1082,10 +1083,10 @@ showValsCmd1 : function()
 
   WebSAGE.g_win_cmd = NPTO; // mark window to be opened for point NPTO  
 
-  // abre nova janela, d· um tempo e vai  preencher os dados da nova janela em outra funcao
+  // abre nova janela, d√° um tempo e vai  preencher os dados da nova janela em outra funcao
   setTimeout( "WebSAGE.g_win_cmd=window.open('dlgcomando.html','wscomando','dependent=yes,height=450,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');", 500 );
 
-  // ser· chamado pela prÛpria janela
+  // ser√° chamado pela pr√≥pria janela
 },
 
 // Mostra os dados sobre o ponto de comando em janela popup 
@@ -1111,9 +1112,9 @@ showValsCmd2 : function()
     { // digital
     if ( V[NPTO] > 0 )
       { 
-      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); // n„o zero È off 
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); // n√£o zero √© off 
       // se o estado atual (off) bate com o valor do comando off (3 primeiras letras do texto), 
-      // assume que deve a intenÁ„o È comandar ON, portanto sombreia a opÁ„o OFF
+      // assume que deve a inten√ß√£o √© comandar ON, portanto sombreia a op√ß√£o OFF
       if ( CST_OFF.toUpperCase().substring( 0, 2 ) === ST_OFF.toUpperCase().substring( 0, 2 ) && 
            CST_ON.toUpperCase().substring( 0, 2 ) !== ST_OFF.toUpperCase().substring( 0, 2 )  
          )
@@ -1123,9 +1124,9 @@ showValsCmd2 : function()
       }
     else  
       {
-      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); // zero È on
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); // zero √© on
       // se o estado atual (on) bate com o valor do comando on (3 primeiras letras do texto),
-      // assume que deve a intenÁ„o È comandar OFF, portanto sombreia a opÁ„o ON
+      // assume que deve a inten√ß√£o √© comandar OFF, portanto sombreia a op√ß√£o ON
       if ( CST_ON.toUpperCase().substring( 0, 2 ) === ST_ON.toUpperCase().substring( 0, 2 ) &&
            CST_OFF.toUpperCase().substring( 0, 2 ) !== ST_ON.toUpperCase().substring( 0, 2 ) 
          )
@@ -1136,7 +1137,7 @@ showValsCmd2 : function()
     WebSAGE.g_win_cmd.document.getElementById("ESTADO_HID").style.display = "";
     }
   else
-    { // analÛgico
+    { // anal√≥gico
     WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'VALOR_SUP', V[NPTO] + " " + UNIDADE + " (" + Msg.QValor + ")" );
     WebSAGE.g_win_cmd.document.getElementById("VALOR_HID").style.display = "";
     }
@@ -1236,7 +1237,7 @@ writeParams : function()
        return; 
      }
 
-  if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotaÁ„o
+  if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anota√ß√£o
     { 
       WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value = ""; 
     }
@@ -1284,7 +1285,7 @@ writeParams : function()
                "&LS=" + ls + 
                "&HI=" + hs + 
                "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked ? 1 : 0 ) + 
-               // troca os \n por |^ e tira as aspas e & que d„o problema no javascript 
+               // troca os \n por |^ e tira as aspas e & que d√£o problema no javascript 
                "&AN=" + ANOTS[NPTO] +
                "&VN=" + 0
              );  
@@ -1295,7 +1296,7 @@ writeAnnotDoc : function()
 {
   $.ajax( {
           type: "POST",
-          url: "annotation.php?W=1&N=" + NPTO,
+          url: WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
           data:  { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
           // success: success,
           // dataType: "text"
@@ -1399,7 +1400,7 @@ timerBlinkDraw : function()
     if ( ! WebSAGE.g_blinkList[i].allowblink )  
        {
          continue;
-       } // evita piscar quando È usado atributo opacity
+       } // evita piscar quando √© usado atributo opacity
 
     if ( WebSAGE.g_blinkcnt % 2 )
       { 
@@ -1417,7 +1418,7 @@ timerBlinkDraw : function()
     if ( ! WebSAGE.g_blinkListAna[i].allowblink )  
       { 
         continue; 
-      } // evita piscar quando È usado atributo opacity
+      } // evita piscar quando √© usado atributo opacity
 
     if ( WebSAGE.g_blinkcnt % 2 )
       { 
@@ -1680,7 +1681,7 @@ valorTagueado: function ( tag, obj )
   return retnok;
 },
 
-// imprime valor do ponto formatado padr„o printf extendido, com cÛdigo para setas direcionais
+// imprime valor do ponto formatado padr√£o printf extendido, com c√≥digo para setas direcionais
 interpretaFormatoC: function( fmt, tag, obj )
 {
 var valr;
@@ -1693,7 +1694,7 @@ if ( valr === "????" )
     return valr; 
   }
  
-// se n„o tiver formato definido, retorna padr„o
+// se n√£o tiver formato definido, retorna padr√£o
 if ( typeof( fmt ) == 'undefined' || fmt.indexOf("%") < 0 )
   {
   if ( isNaN( parseFloat( valr ) ) )  
@@ -1756,7 +1757,7 @@ if ( Flg & 0x20 )
       }
     }  
 
-  // trata cÛdigo para setas  
+  // trata c√≥digo para setas  
   if ( fmt.search(/[udrla]\^/) >= 0 )
      {      
      fmt = fmt.replace( 'u^', String.fromCharCode(valr >= 0 ? 0x2191:0x2193) ); // u^ up arrow
@@ -2075,7 +2076,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
          pnt = WebSAGE.acrescentaPontoLista( inksage_labelvec[lbv].tag );
          if ( pnt != 99999 ) // dummy point   
          if ( typeof(item.blockPopup) == "undefined" )
-         if ( item.pontoPopup == undefined ) // se j· n„o tem popup definido
+         if ( item.pontoPopup == undefined ) // se j√° n√£o tem popup definido
            {
            WebSAGE.tooltipRelac(item, pnt);
            item.setAttributeNS( null, "onclick", WebSAGE.g_obj_onclick.replace(/PONTO/g, pnt) );         
@@ -2351,7 +2352,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                }
              else
                {
-               // executa traduÁ„o dos atalhos de cores definidos no config_visores.js
+               // executa tradu√ß√£o dos atalhos de cores definidos no config_visores.js
                arrcores = [];
                arrcores = inksage_labelvec[lbv].list[j].param.split("|"); 
                inksage_labelvec[lbv].list[j].cfill = WebSAGE.TraduzCor( arrcores[0] );
@@ -2367,7 +2368,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
 
              if ( pnt != 99999 ) // dummy point     
              if ( typeof(item.blockPopup) == "undefined" )
-             if ( item.pontoPopup === undefined ) // se j· n„o tem popup definido
+             if ( item.pontoPopup === undefined ) // se j√° n√£o tem popup definido
              if ( j === 0 ) // linka o clic no primeiro ponto (tag) de cor, ignora as demais
                {
                WebSAGE.tooltipRelac(item, pnt);
@@ -2428,7 +2429,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
              }  
            }
          else
-           { // Source type = TAG : gr·fico, deve ser um ret‚ngulo
+           { // Source type = TAG : gr√°fico, deve ser um ret√¢ngulo
            if ( item.tagName === "rect" )
              {
              // values plot
@@ -2442,7 +2443,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                  inksage_labelvec[lbv].grafico.setAttributeNS( null, "transform", tfm );
                }
 
-             // faz a cor e espessura do gr·fico igual ao do ret‚ngulo que o contÈm
+             // faz a cor e espessura do gr√°fico igual ao do ret√¢ngulo que o cont√©m
              if ( item.style != undefined )
                {
                if ( item.style.strokeWidth != "" )
@@ -2476,7 +2477,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
              inksage_labelvec[lbv].bb.bottom = inksage_labelvec[lbv].bb.y + inksage_labelvec[lbv].bb.height;             
              pnt = WebSAGE.acrescentaPontoLista( inksage_labelvec[lbv].tag );
              if ( typeof(item.blockPopup) == "undefined" )
-             if ( item.pontoPopup == undefined ) // se j· n„o tem popup definido
+             if ( item.pontoPopup == undefined ) // se j√° n√£o tem popup definido
                {
                WebSAGE.tooltipRelac(item, pnt);
                item.setAttributeNS( null, "onclick", WebSAGE.g_obj_onclick.replace(/PONTO/g, pnt) );
@@ -2584,7 +2585,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
            }
          break;               
       case "zoom":
-         // quando o objeto for clicado, amplia e apaga o objeto clicado (desobstrui a ·rea).
+         // quando o objeto for clicado, amplia e apaga o objeto clicado (desobstrui a √°rea).
          bb = item.getBoundingClientRect();
          item.setAttributeNS( null, "onclick", 
                               " window.parent.WebSAGE.g_zpX = " + ( bb.left ) + 
@@ -2687,7 +2688,7 @@ preprocessaTela: function()
 
     for ( i = 0; i < nohs.length; i++ )
       {
-      if ( nohs[i].nodeName != "g" )  // grupos j· foram processados no inÌcio
+      if ( nohs[i].nodeName != "g" )  // grupos j√° foram processados no in√≠cio
         { 
           try {
           WebSAGE.le_inkscapeSAGETags( nohs[i] ); 
@@ -2702,7 +2703,7 @@ preprocessaTela: function()
 
 callServer : function () 
 {
-  if ( $('#timemachinecontrols').css('display') != "none" ) // vÍ se timemachine est· ativo
+  if ( $('#timemachinecontrols').css('display') != "none" ) // v√™ se timemachine est√° ativo
     { 
     return; 
     }
@@ -2712,13 +2713,13 @@ callServer : function ()
   var tipo;
   var nohs;
 
-  // o argumento PASS È sÛ para mudar a URL de forma garantir a que o cache n„o seja usado pelo browser
+  // o argumento PASS √© s√≥ para mudar a URL de forma garantir a que o cache n√£o seja usado pelo browser
 
   Data = ''; // apaga data, vai ser atualizada pelo script abaixo
 
   WebSAGE.g_timeoutFalhaID = setTimeout( WebSAGE.falhaTudo, WebSAGE.g_timeOutFalha );
 
-  // pede dados de tempo real ao servidor, con informaÁıes sobre os pontos na primeira vez
+  // pede dados de tempo real ao servidor, con informa√ß√µes sobre os pontos na primeira vez
   // asks for real time data from the server, with point info on the first time
   WebSAGE.getScript( WebSAGE.g_remoteServer + 
                     '?P=' + // leave P parameter empty, list of points will be in the E (HTTP POST) parameter
@@ -2728,14 +2729,14 @@ callServer : function ()
                     'E=' + WebSAGE.lstpnt // force post, list of points in the E (HTTP POST) parameter
                    );
 
-  // vou testar, na metade do tempo, o status do webserver para ver se houve alguma mudanÁa 
+  // vou testar, na metade do tempo, o status do webserver para ver se houve alguma mudan√ßa 
   WebSAGE.g_toutStatusID = setTimeout( WebSAGE.getServerStatus, WebSAGE.g_timeOutRefresh / 2 );
-  // prÛximo refresh
+  // pr√≥ximo refresh
   WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh );
   WebSAGE.Pass++;    
 },
 
-// pega status do servidor, vari·vel HA_ALARMES
+// pega status do servidor, vari√°vel HA_ALARMES
 getServerStatus: function()
 {
   if ( typeof(xPlain) === "undefined" )
@@ -2780,7 +2781,7 @@ blinkSeAlarmado: function(tag, item)
 {
 var f;
 if ( typeof ( item.allowblink ) != 'undefined' )  
-if ( !item.allowblink ) // se n„o deve piscar, retira da lista
+if ( !item.allowblink ) // se n√£o deve piscar, retira da lista
   { 
     var i = WebSAGE.g_blinkList.indexOf(item);
     if ( i !== -1 )
@@ -2833,7 +2834,7 @@ var i, j;
 var mudou_ana = WebSAGE.g_sha1ant_ana=='' || WebSAGE.g_sha1ant_ana!=Sha1Ana;
 var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
 
-  // guarda os hashes anteriores para detecÁ„o de mudanÁas de valores
+  // guarda os hashes anteriores para detec√ß√£o de mudan√ßas de valores
   WebSAGE.g_sha1ant_ana = Sha1Ana;
   WebSAGE.g_sha1ant_dig = Sha1Dig;
 
@@ -2863,7 +2864,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
   
   if ( mudou_ana || mudou_dig) // se mudou algo
   {
-    if ( mudou_ana ) // se tem n„o tem hash ou mudou, atualiza
+    if ( mudou_ana ) // se tem n√£o tem hash ou mudou, atualiza
       {
       // coloca toda lista de objetos piscantes com opacidade 1
       for ( i = 0; i < WebSAGE.g_blinkListAna.length; i++ )
@@ -2873,7 +2874,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
       WebSAGE.g_blinkListAna.length = 0; // esvazia blink list
       WebSAGE.g_blinkcnt = 1;
       }
-    if ( mudou_dig ) // se tem n„o tem hash ou mudou, atualiza
+    if ( mudou_dig ) // se tem n√£o tem hash ou mudou, atualiza
       {
       // coloca toda lista de objetos piscantes com opacidade 1
       for ( i = 0; i < WebSAGE.g_blinkList.length; i++ )
@@ -2957,7 +2958,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                   WebSAGE.InkSage[i].datas[tag].push( d.getTime() );
                   bb = WebSAGE.InkSage[i].bb;
                   if ( WebSAGE.InkSage[i].width > 0 )
-                  // Gr·fico tipo trending com janela de tempo escorregando
+                  // Gr√°fico tipo trending com janela de tempo escorregando
                   for ( indv = WebSAGE.InkSage[i].valores[tag].length-1; indv >= 0 ; indv--  )
                     {
                     var secdif = ( d.getTime() - WebSAGE.InkSage[i].datas[tag][indv] ) / 1000;
@@ -2983,7 +2984,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                       }
                     }
                   else  
-                  // Gr·fico tipo carga prevista, parte de uma data/hora redonda, de janela mÛvel somente quando superada
+                  // Gr√°fico tipo carga prevista, parte de uma data/hora redonda, de janela m√≥vel somente quando superada
                   for ( indv = WebSAGE.InkSage[i].valores[tag].length-1; indv >= 0 ; indv--  )
                     {
                     var secdif = ( WebSAGE.InkSage[i].datas[tag][indv] - WebSAGE.InkSage[i].dataini ) / 1000;
@@ -3125,7 +3126,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                       val = parseFloat( ch );
                       
                       if ( 
-                           ( ch === "n" && (ft & 0x800) ) || // n„o normal 
+                           ( ch === "n" && (ft & 0x800) ) || // n√£o normal 
                            ( ch === "c" && (ft & 0x1000) ) || // congelado
                            ( ch === "a" && (ft & 0x100) ) || // alarmado
                            ( ch === "f" && (ft & 0x80) ) || // falha
@@ -3473,7 +3474,7 @@ doSilenciaBeep : function ()
   WebSAGE.getScript( WebSAGE.g_remoteServer + "?Z=1" );
 },
 
-// cria as elipses amarelas de destaque de seleÁ„o de objetos 
+// cria as elipses amarelas de destaque de sele√ß√£o de objetos 
 produzDestaq : function ( obj , ponto )
 {
  var svg_ns, block, bb, x, y, rx, ry, id, aux, el, xfm;
@@ -3564,7 +3565,7 @@ produzDestaq : function ( obj , ponto )
      }
 },      
 
-// cria as etiquetas de anotaÁ„o 
+// cria as etiquetas de anota√ß√£o 
 produzEtiq : function ( obj , ponto )
 {
  var animation, svg_ns, block, bb, x, y, id, eletq, aux, xfm;
@@ -3660,7 +3661,7 @@ produzEtiq : function ( obj , ponto )
 },      
 
 // Processa visibilidade das etiquetas
-// Existem dois tipos de etiquetas com cores diferentes, para anotaÁ„o e alarme inibido 
+// Existem dois tipos de etiquetas com cores diferentes, para anota√ß√£o e alarme inibido 
 visibEtiq : function ( ponto )
 { 
   var eid, eletq, Fl;
@@ -3672,7 +3673,7 @@ visibEtiq : function ( ponto )
   
   if ( eletq !== null ) // existe a etiqueta?
   {
-    if ( Fl & 0x200 ) // anotaÁ„o
+    if ( Fl & 0x200 ) // anota√ß√£o
     {
       if ( eletq.getAttributeNS(null, 'display') !== 'inline' )
         {
@@ -3682,7 +3683,7 @@ visibEtiq : function ( ponto )
         eletq.setAttributeNS( null, 'display', 'inline');  // mostra etiqueta
         }
 
-      // tooltip de anotaÁ„o, para funcionar h· que se resolver problemas de sincronizaÁ„o entre as IHM's
+      // tooltip de anota√ß√£o, para funcionar h√° que se resolver problemas de sincroniza√ß√£o entre as IHM's
       // var p = ponto;
       // if ( isNaN(parseInt(ponto)) )
       //   p = NPTS[ponto];
@@ -3784,7 +3785,7 @@ produzRelac : function ( obj , ponto )
  */
 },      
 
-// mostra/esconde os relacionamentos, atravÈs dos objetos criados na funÁ„o produzRelac
+// mostra/esconde os relacionamentos, atrav√©s dos objetos criados na fun√ß√£o produzRelac
 mostraescRelac : function ()
 {
   var nohs = SVGDoc.getElementsByTagName( "text" );
@@ -3810,10 +3811,10 @@ falhaTudo: function ()
   WebSAGE.showValsSVG();
 },
   
-// faz sumir e aparecer a barra superior de botıes  
+// faz sumir e aparecer a barra superior de bot√µes  
 hideShowBar : function ()
 { 
-// n„o permite esconder a toolbar quando tem m·quina do tempo
+// n√£o permite esconder a toolbar quando tem m√°quina do tempo
 if ( document.getElementById("timemachinecontrols").style.display!="none" )
     return;
 if ( document.getElementById("svgdiv").style.top == '0px' )
@@ -3939,23 +3940,23 @@ pauseSlideshow: function()
     clearTimeout( WebSAGE.g_timeoutSlideID );
 },
 
-// recarrega a p·gina 1x por dia para contornar leak de memÛria
+// recarrega a p√°gina 1x por dia para contornar leak de mem√≥ria
 reload: function( whattodo )
 {
   if ( whattodo === "init" )
     {
-    var dt =  new Date ( (new Date()).getTime() + 1000 * 60 * 60 * 24 ); // prÛximo dia
+    var dt =  new Date ( (new Date()).getTime() + 1000 * 60 * 60 * 24 ); // pr√≥ximo dia
     dt.setHours( 4 ); // fixa 4 horas
-    dt.setMinutes( Math.random() * 60 ); // minuto aleatÛrio
-    var dif = dt - (new Date()); // quanto falta para chegar ‡s 4:xx h do dia seguinte
-    setTimeout( WebSAGE.reload, dif ); // vai chamar ‡s 4 h
+    dt.setMinutes( Math.random() * 60 ); // minuto aleat√≥rio
+    var dif = dt - (new Date()); // quanto falta para chegar √†s 4:xx h do dia seguinte
+    setTimeout( WebSAGE.reload, dif ); // vai chamar √†s 4 h
     return;
     }
 
-  // sÛ recarrego se a janela de info/comando estiver fechada
+  // s√≥ recarrego se a janela de info/comando estiver fechada
   if ( NPTO == 0 )
     {  
-    // mantÈm as telas carregadas e o nÌvel de zoom
+    // mant√©m as telas carregadas e o n√≠vel de zoom
     if ( document.getElementById("PLAY").value == 1 )
       {
       document.getElementById("PLAY").name="PLAY";
@@ -4036,13 +4037,13 @@ setaCorFundo: function( cor )
       // seta cor de background no div do svg
       $('#svgdiv').css( 'background-color', cor );   
         
-      // se tela n„o for editada pelo inkscape
+      // se tela n√£o for editada pelo inkscape
       if ( WebSAGE.g_isInkscape )  
         { // Inkscape
         }
       else  
-        { // N„o Inkscape
-        // faz o primeiro ret‚ngulo na cor do background
+        { // N√£o Inkscape
+        // faz o primeiro ret√¢ngulo na cor do background
         if ( typeof(WebSAGE.RectFundo) == 'object' )
           { 
             WebSAGE.RectFundo.setAttributeNS( null, 'style', 'fill:' + cor ); 
@@ -4085,7 +4086,7 @@ escondeDestaqPonto: function( nponto )
       }
 },
 
-// lista os pontos que tem objeto associado na tela, para seleÁ„o pelo teclado
+// lista os pontos que tem objeto associado na tela, para sele√ß√£o pelo teclado
 listaDestacaveis: function ()
 {
     var id;
@@ -4124,7 +4125,7 @@ mostraDestaqSel: function( direction, cmd )
          ind = 0;
        }
 
-    if ( cmd == 1 ) // procura o prÛximo com comando
+    if ( cmd == 1 ) // procura o pr√≥ximo com comando
       {
       var loc = -1;
       for ( var i = ind ; ( i < WebSAGE.g_destaqList.length ) && ( i >= 0 ) ; i = i + direction )
@@ -4149,11 +4150,11 @@ mostraDestaqSel: function( direction, cmd )
     }
 },
 
-// Prepara a m·quina do tempo
+// Prepara a m√°quina do tempo
 setupTimeMachine: function()
 {
   $( '#TIMEMACHINE_ID' ).bind( 'click', 
-     function() { // mostra controles da m·quina do tempo
+     function() { // mostra controles da m√°quina do tempo
               clearTimeout( WebSAGE.g_toutID );
               clearTimeout( WebSAGE.g_toutStatusID );
               document.fmTELA.style.display = 'none';     
@@ -4177,7 +4178,7 @@ setupTimeMachine: function()
               } );
 
   $( '#TIMEMACHINECLOSE_ID' ).bind( 'click', 
-     function() { // sai da m·quina do tempo, retornando ao tempo real
+     function() { // sai da m√°quina do tempo, retornando ao tempo real
               document.fmTELA.style.display = '';     
               $('#timemachinecontrols').css( 'display', 'none' );
               $('#HORA_ATU').css( 'color', ScreenViewer_DateColor );  
@@ -4385,12 +4386,12 @@ init: function()
   $('#SELTELA_OPC1').text( Msg.SELTELA_OPC1 );
   $('#HORA_ATU').css( 'color', ScreenViewer_DateColor ); 
 
-  if ( location.host.indexOf("127.0.0.1") >= 0 || location.host.indexOf("localhost") >=0 ) // se est· acessando m·quina local
-     { // na m·quina local o webserver abre nova janela do navegador
+  if ( location.host.indexOf("127.0.0.1") >= 0 || location.host.indexOf("localhost") >=0 ) // se est√° acessando m√°quina local
+     { // na m√°quina local o webserver abre nova janela do navegador
      $( '#ANORM_ID' ).bind( 'click', function() { WebSAGE.getScript( WebSAGE.g_remoteServer + "?x=6" ); } ); 
      }
   else  
-     { // na m·quina remota abre uma janela nova tipo popup
+     { // na m√°quina remota abre uma janela nova tipo popup
      $( '#ANORM_ID' ).bind( 'click', function() {window.open( 'tabular.html?SELMODULO=TODOS_ANORMAIS', 'Anormais', 'dependent=no,height=700,width=900,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no' );} );
      }
 
@@ -4420,7 +4421,7 @@ init: function()
       
       if ( SVGDoc == null && tela !== "" ) // if SVG not loaded, reload page
         {
-        // faz uma retentativa apÛs meio segundo, pois talvez n„o deu tempo para carregar o arquivo SVG
+        // faz uma retentativa ap√≥s meio segundo, pois talvez n√£o deu tempo para carregar o arquivo SVG
         if ( typeof( window.Retentativa ) == 'undefined' )
            {
            window.Retentativa = 1;
@@ -4432,15 +4433,15 @@ init: function()
           return;
         }
         
-      // Quando clicado o SVG, puxa o foco para a barra de seleÁ„o e libera. Necess·rio para que funcionem as teclas de atalho.
-      if ( BrowserDetect.OS != "iPad" ) // n„o sendo iPad      
+      // Quando clicado o SVG, puxa o foco para a barra de sele√ß√£o e libera. Necess√°rio para que funcionem as teclas de atalho.
+      if ( BrowserDetect.OS != "iPad" ) // n√£o sendo iPad      
         { 
           if ( SVGDoc != null )
             SVGDoc.onclick = function () { var elem = window.document.getElementById('SELTELA'); elem.focus(); elem.blur(); }; 
         }
       else
         { 
-          ANIMA = 0x00; // no IPad n„o anima etiquetas e destaques.           
+          ANIMA = 0x00; // no IPad n√£o anima etiquetas e destaques.           
         }
       
       if ( SVGDoc != null )
@@ -4464,9 +4465,9 @@ init: function()
   catch( exception ) 
     {
     if ( tela !== "" )
-      {  // foi passada uma tela como par‚metro e n„o renderizou, pede plugin
+      {  // foi passada uma tela como par√¢metro e n√£o renderizou, pede plugin
       
-      // faz uma retentativa apÛs meio segundo, pois talvez n„o deu tempo para carregar o arquivo SVG
+      // faz uma retentativa ap√≥s meio segundo, pois talvez n√£o deu tempo para carregar o arquivo SVG
       if ( typeof( window.Retentativa ) == 'undefined' )
          {
          window.Retentativa = 1;
@@ -4480,7 +4481,7 @@ init: function()
       return;      
       }
     else  
-      { // n„o foi passada nenhuma tela como par‚metro, ent„o deixa assim
+      { // n√£o foi passada nenhuma tela como par√¢metro, ent√£o deixa assim
         
       }
     }
@@ -4570,7 +4571,7 @@ if ( typeof(xPlain) == "undefined" )
                 function() {WebSAGE.mostraescRelac();},
                 {'type':'keydown', 'propagate':false, 'target':document} );
   shortcut.add( "esc",
-                function() { // sai da m·quina do tempo, retornando ao tempo real
+                function() { // sai da m√°quina do tempo, retornando ao tempo real
                                  clearTimeout( WebSAGE.g_toutID );
                                  document.fmTELA.style.display = '';     
                                  $('#timemachinecontrols').css( 'display', 'none' );
@@ -4661,10 +4662,10 @@ if ( typeof(xPlain) == "undefined" )
     $('#PAUSE_ID').css('display', '');
     }
  
-  // desabilita o bot„o direito 
+  // desabilita o bot√£o direito 
   document.oncontextmenu = function() { return false; };
 
-  // torna elementos n„o selecion·veis
+  // torna elementos n√£o selecion√°veis
   $("html > head").append("<style> body { user-select:none; -webkit-user-select:none; } </style>");
   
   if ( typeof(SVGDoc) != "undefined" )
@@ -4682,7 +4683,7 @@ if ( typeof(xPlain) == "undefined" )
     $('#DIV_HORA').css('right', "1650"); // reposiciona a hora para aparecer de acordo com o viewport
     }  
 
-  // ajusta largura e altura do gr·fico SVG para os valores configurados
+  // ajusta largura e altura do gr√°fico SVG para os valores configurados
   if ( typeof(SVGDoc) != "undefined" )
   if ( SVGDoc != null )
     {
@@ -4693,7 +4694,7 @@ if ( typeof(xPlain) == "undefined" )
       rootnode.setAttributeNS( null, "height", ScreenViewer_SVGMaxHeight );          
       }
   
-    // evita seleÁ„o do texto em SVG  
+    // evita sele√ß√£o do texto em SVG  
     SVGDoc.onselectstart = new Function( "return false;" );
     }
       
@@ -4733,7 +4734,7 @@ if ( typeof(xPlain) == "undefined" )
       document.getElementById("SP_STATUS").title = err.stack;
     }      
 
-  // acerta nÌvel de zoom, se necess·rio | adjust zoom levels for page reloads
+  // acerta n√≠vel de zoom, se necess√°rio | adjust zoom levels for page reloads
   if ( !isNaN( parseInt( gup("ZPX") ) ) ||  
        !isNaN( parseInt( gup("ZPY") ) ) ||  
        !isNaN( parseInt( gup("ZPW") ) ) ||  

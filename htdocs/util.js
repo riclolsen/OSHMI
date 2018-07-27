@@ -1,10 +1,10 @@
-// Rotinas utilitárias diversas
+// Rotinas utilitÃ¡rias diversas
 //
 // OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
-// requestAnimationFrame polyfill by Erik Möller
+// requestAnimationFrame polyfill by Erik MÃ¶ller
 // fixes from Paul Irish and Tino Zijdel
 (function() {
     var lastTime = 0;
@@ -32,7 +32,7 @@
 }());
 
 // ----------------------------------------------------------------------------------------
-// Testa se storage API está disponível
+// Testa se storage API estÃ¡ disponÃ­vel
 function storageAvailable(type) {
 	try {
 		var storage = window[type],
@@ -47,7 +47,7 @@ function storageAvailable(type) {
 }
 
 // ----------------------------------------------------------------------------------------
-// extrai parâmetros da URL
+// extrai parÃ¢metros da URL
 function gup( name )
 {  
 name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");  
@@ -71,7 +71,7 @@ function dateToYMDString( dt )
 // ----------------------------------------------------------------------------------------
 function LoadFavicon( href )
 {
-  // Define o favicon da aplicação
+  // Define o favicon da aplicaÃ§Ã£o
   var link = document.createElement('link');
   link.type = 'image/x-icon';
   link.rel = 'shortcut icon';
@@ -170,7 +170,7 @@ function CpyClip( theField )
     {
     var therange = tempval.createTextRange();
     therange.execCommand("Copy");
-    window.status = "Dados copiados para a área de transferência!";
+    window.status = "Dados copiados para a Ã¡rea de transferÃªncia!";
     setTimeout( "window.status=''", 2400 );
     }
   tempval.style.display = "none";
@@ -440,7 +440,7 @@ function printf(fstring)
 // Function printf() END 
 
 // ----------------------------------------------------------------------------------------
-// Funções auxiliares para gerenciar cookies
+// FunÃ§Ãµes auxiliares para gerenciar cookies
 // http://www.quirksmode.org/js/cookies.html
 function createCookie(name,value,days) {
 	if (days) {

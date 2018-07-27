@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="UTF-8">
 <meta name="application-name" content="OSHMI-Open Substation HMI">
 <meta name="description" content="Command Dialog">
 <meta name="author" content="Ricardo L. Olsen">
@@ -34,7 +34,7 @@ var toutMaxCnt = 35;
 var cntAck = 0;
 var cnttout = toutMaxCnt;
 
-// altera o texto do botão de comando conforme opção selecionada
+// altera o texto do botÃ£o de comando conforme opÃ§Ã£o selecionada
 function selchg()
 {
 var obj = document.getElementById( "COMANDO" );
@@ -46,7 +46,7 @@ if ( obj.selectedIndex != -1 )
   }
 }
 
-// altera o texto do botão de comando conforme o valor digitado
+// altera o texto do botÃ£o de comando conforme o valor digitado
 function anachg()
 {
   document.getElementById('EXECUTAR').innerHTML = document.getElementById( "COMANDOANA" ).value + " !";
@@ -56,7 +56,7 @@ function anachg()
 
 function testOpener()
 {
-selchg(); // faço o ajuste do texto do botão de comando repetidas vezes pois às vezes não trocava o texto quando era feito uma única vez.
+selchg(); // faÃ§o o ajuste do texto do botÃ£o de comando repetidas vezes pois Ã s vezes nÃ£o trocava o texto quando era feito uma Ãºnica vez.
 
 if ( opener && !opener.closed )
   {
@@ -158,7 +158,7 @@ if ( ($('#SAIR').position().top + 70) > window.innerHeight )
 
 function init() { // executa quando termina de carregar o documento
 
-  // desabilita o botão direito 
+  // desabilita o botÃ£o direito 
   document.oncontextmenu = function() { return false; };
 
   // vai nos objetos com 'id' e coloca como 'title' a mensagem correspondente de Titles (de messages.js)        
@@ -190,7 +190,7 @@ function init() { // executa quando termina de carregar o documento
   window.opener.WebSAGE.showValsCmd2( 0 );
   setTimeout( tout_cmd, 2000 );
 
-  // torna elementos não selecionáveis
+  // torna elementos nÃ£o selecionÃ¡veis
   $("html > head").append("<style> body { user-select:none; -webkit-user-select:none; } </style>");
   setTimeout( 'document.getElementById("forceread").style.display="none";document.getElementById("fc_mod").className="pulse";document.getElementById("fc_info").className="pulse";document.getElementById("fc_mod").style.opacity="1";document.getElementById("fc_info").style.opacity="1";', 3800 );
   if ( ($('#SAIR').position().top + 70) > window.innerHeight )

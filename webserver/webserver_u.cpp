@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2016 - Ricardo L. Olsen
+	Copyright 2008-2018 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1610,7 +1610,7 @@ if ( !AResponseInfo->HeaderHasBeenWritten )
   else
 */
   if (ARequestInfo->Document.Pos(".js") || is_dinpg)
-    AResponseInfo->ContentType = "application/x-javascript; charset=ISO-8859-1";
+    AResponseInfo->ContentType = "application/x-javascript; charset=UTF-8";
   else
     AResponseInfo->ContentType = "text/plain";
 

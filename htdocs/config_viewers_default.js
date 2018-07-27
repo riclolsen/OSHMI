@@ -1,4 +1,4 @@
-// Viewers Configuration Parameters
+ï»¿// Viewers Configuration Parameters
 
 // list of colors representing priorities for the alarms/tabular/events viewers
 var ColorOfPriority = [ "red", "yellow", "goldenrod", "plum", "silver", "silver", "silver", "silver", "silver", "silver", "silver" ];
@@ -8,14 +8,14 @@ var ColorOfSubstation = [ "cadetblue", "brown", "green", "magenta", "orange", "d
 // Events Viewer --------------------------------------------------------------------------------
 var EventsViewer_ToolbarColor = '#BBBBBB'; // toolbar color
 
-var EventsViewer_Font = 'Source Sans Pro,calibri,consolas,arial,helvetica'; // font 
+var EventsViewer_Font = 'Segoe UI,Source Sans Pro,calibri,consolas,arial,helvetica'; // font 
 
-var EventsViewer_TableColor = '#E0E0E0'; // table background color
-var EventsViewer_GridColor = '#F0F0F0'; // table grid color
+var EventsViewer_TableColor = '#E8E8E8'; // table background color
+var EventsViewer_GridColor = '#00000011'; // table grid color
 
-var EventsViewer_AlmTxtColor = 'blue'; // alarmed color
+var EventsViewer_AlmTxtColor = 'mediumblue'; // alarmed color
 var EventsViewer_FailTxtColor = 'white'; // failed value color
-var EventsViewer_AckTxtColor = '#484848'; // acknowledged event color
+var EventsViewer_AckTxtColor = '#606060'; // acknowledged event color
 var EventsViewer_ElimTxtColor = '#B0B0B0'; // eliminated event color (until removed)
 
 var EventsViewer_LineColor = '#E0E0E0'; // line color
@@ -44,12 +44,12 @@ function EventsViewer_NotificationClick( nponto, id, subest ) {
 // Tabular Viewer ----------------------------------------------------------------------------------
 var TabularViewer_ToolbarColor = '#AA9E97'; // toolbar color
 
-var TabularViewer_Font = 'Source Sans Pro,calibri,consolas,arial,helvetica'; // font 
+var TabularViewer_Font = 'Segoe UI,Source Sans Pro,calibri,consolas,arial,helvetica'; // font 
 
 var TabularViewer_TableColor = '#DCDCEE'; // table background color 
 var TabularViewer_GridColor = '#ECECEE'; // table grid color
 
-var TabularViewer_AlmTxtColor = 'blue'; // alarmed color
+var TabularViewer_AlmTxtColor = 'mediumblue'; // alarmed color
 var TabularViewer_FailTxtColor = 'white'; // failed value color
 var TabularViewer_AckTxtColor = '484848'; // acknowledged alarm color
 
@@ -101,7 +101,7 @@ ScreenViewer_ColorTable[11] = 'red'; // medida fora de faixa
 ScreenViewer_ColorTable[12] = 'white'; // medida ou estado falhado
 ScreenViewer_ColorTable[13] = ScreenViewer_BarBreakerSwColor; // titulo da tela (SE)
 ScreenViewer_ColorTable[14] = ScreenViewer_BarBreakerSwColor; // texto de linha
-ScreenViewer_ColorTable[15] = '#777777'; // número de equipamento
+ScreenViewer_ColorTable[15] = '#777777'; // nÃºmero de equipamento
 ScreenViewer_ColorTable[16] = ScreenViewer_BarBreakerSwColor; // barra 230kV
 ScreenViewer_ColorTable[17] = ScreenViewer_BarBreakerSwColor; // barra 138kV 
 ScreenViewer_ColorTable[18] = ScreenViewer_BarBreakerSwColor; // barra de 69kV
@@ -119,12 +119,12 @@ ScreenViewer_ColorTable[29] = 'darkred'; // estado on
 ScreenViewer_ColorTable[30] = 'red'; // estado de alarme
 ScreenViewer_ColorTable[31] = 'lightgray'; // quadro de estados
 ScreenViewer_ColorTable[32] = 'black'; // borda do quadro de estados
-ScreenViewer_ColorTable[33] = '#D7D7D7'; // área de operação
-ScreenViewer_ColorTable[34] = 'gray'; // símbolo de aterramento
+ScreenViewer_ColorTable[33] = '#D7D7D7'; // Ã¡rea de operaÃ§Ã£o
+ScreenViewer_ColorTable[34] = 'gray'; // sÃ­mbolo de aterramento
 ScreenViewer_ColorTable[35] = ScreenViewer_BarBreakerSwColor; // estado normal
 ScreenViewer_ColorTable[36] = 'mediumvioletred'; // estado anormal
 ScreenViewer_ColorTable[37] = 'red'; // estado alarmado
-ScreenViewer_ColorTable[38] = '#999999'; // texto estático
+ScreenViewer_ColorTable[38] = '#999999'; // texto estÃ¡tico
 ScreenViewer_ColorTable[39] = '#DDE8DD'; // quadro de status normal
 ScreenViewer_ColorTable[40] = 'yellow'; // quadro de status alarme
 ScreenViewer_ColorTable[41] = 'deepskyblue'; // medida congelada
@@ -133,7 +133,7 @@ ScreenViewer_ColorTable[43] = '#6199c7'; // outras medidas ok
 ScreenViewer_ColorTable[44] = 'red'; // alarm priority 0
 ScreenViewer_ColorTable[45] = 'yellow'; // alarm priority 1
 ScreenViewer_ColorTable[46] = 'orange'; // alarm priority 2
-ScreenViewer_ColorTable[47] = 'fuchsia'; // alarm priority 3 (diagnóstico)
+ScreenViewer_ColorTable[47] = 'fuchsia'; // alarm priority 3 (diagnÃ³stico)
 ScreenViewer_ColorTable[48] = '#CCCCCC'; // state box fill color inactive 
 ScreenViewer_ColorTable[49] = '#CCCCCC'; // state box border color inactive 
 ScreenViewer_ColorTable[50] = '#505050'; // state box active text color   

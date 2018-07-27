@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="UTF-8">
 <meta name="application-name" content="OSHMI-Open Substation HMI">
 <meta name="description" content="Tabular Viewer">
 <meta name="author" content="Ricardo L. Olsen">
@@ -34,27 +34,27 @@
 <script>
 "use strict";
 
-// Este script coloca em uma tabela os dados dos pontos supervisionados filtrados por SE e módulo. 
+// Este script coloca em uma tabela os dados dos pontos supervisionados filtrados por SE e mÃ³dulo. 
 //
 // OSHMI/Open Substation HMI - Copyright 2008-2016 - Ricardo L. Olsen
 
-var L = []; // aqui o servidor colocará lista de eventos 
-var V = []; // aqui o servidor colocará os valores dos pontos
-var F = []; // aqui o servidor colocará os flags dos pontos
-var T = []; // aqui o servidor colocará os tag de tempo de alarme dos pontos
-var Data = '';          // aqui o servidor colocará hora da atualização
-var NUM_VAR = 0;        // aqui o servidor informa o número de variações digitais
-var NUM_VAR_ANT = 0;    // estado anterior da variável NUM_VAR
-var HA_ALARMES = 0;     // aqui o servidor informa que há alarme sonoro ativo
-var HA_ALARMES_ANT = 0; // estado anterior da variável HA_ALARMES
-var Sha1Ana = '';       // aqui o servidor informa o hash dos valores analogicos (para detectar mudanças)
-var Sha1Dig = '';       // aqui o servidor informa o hash dos valores digitais (para detectar mudanças)
-var LISTA_SES = '';     // lista de subestações para compor filtro
+var L = []; // aqui o servidor colocarÃ¡ lista de eventos 
+var V = []; // aqui o servidor colocarÃ¡ os valores dos pontos
+var F = []; // aqui o servidor colocarÃ¡ os flags dos pontos
+var T = []; // aqui o servidor colocarÃ¡ os tag de tempo de alarme dos pontos
+var Data = '';          // aqui o servidor colocarÃ¡ hora da atualizaÃ§Ã£o
+var NUM_VAR = 0;        // aqui o servidor informa o nÃºmero de variaÃ§Ãµes digitais
+var NUM_VAR_ANT = 0;    // estado anterior da variÃ¡vel NUM_VAR
+var HA_ALARMES = 0;     // aqui o servidor informa que hÃ¡ alarme sonoro ativo
+var HA_ALARMES_ANT = 0; // estado anterior da variÃ¡vel HA_ALARMES
+var Sha1Ana = '';       // aqui o servidor informa o hash dos valores analogicos (para detectar mudanÃ§as)
+var Sha1Dig = '';       // aqui o servidor informa o hash dos valores digitais (para detectar mudanÃ§as)
+var LISTA_SES = '';     // lista de subestaÃ§Ãµes para compor filtro
 
-// variáveis para o diálogo de comando
+// variÃ¡veis para o diÃ¡logo de comando
 var NPTO, ID, ESTACAO, MODULO, DESC, ST_ON, ST_OFF, CNPTO, CID, CDESC, CST_ON, CST_OFF;
 var LIMS, LIMI, HISTER, ALRIN, ANOT, VLNOR, ESTALM, UNIDADE, SIMULACAO = 0;
-var ComandoAck = ''; // texto para confirmação do comando 
+var ComandoAck = ''; // texto para confirmaÃ§Ã£o do comando 
 var ComandoEnviado = '';
 
 // callback function a ser chamada pelo servidor
@@ -64,9 +64,11 @@ var WebSAGE =
 {
 g_cbBloqAtu: 'cbBloqAtu',
 g_remoteServer: TabPNTServer,
+g_remotePntServer: PNTServer,
+g_docAnnotationServer: DocAnnotationServer,
 g_timeOutRefresh: 1000 * TabularViewer_RefreshTime,  // tempo de refresh dos dados
-g_timeOutReconhece: 4000, // tempo de refresh após reconhecimento total dos alarmes
-g_timeOutFalha: 30000, // tempo para falha dos dados, caso servidor não responda 
+g_timeOutReconhece: 4000, // tempo de refresh apÃ³s reconhecimento total dos alarmes
+g_timeOutFalha: 30000, // tempo para falha dos dados, caso servidor nÃ£o responda 
 g_toutID: 0,
 g_timerID: 0, 
 g_showValsIntervalID: 1,
@@ -123,7 +125,7 @@ onSuccess: function( data )
   data = null;
 },
 
-// função auxiliar para escrever dados na janela de comando pelo id do objeto
+// funÃ§Ã£o auxiliar para escrever dados na janela de comando pelo id do objeto
 cmdWriteById : function( win, id, txt )
 {    
   win.$( '#' + id ).text( txt );
@@ -149,19 +151,19 @@ janelaInfo : function(nponto)
     if ( typeof(WebSAGE.g_win_cmd.window) == 'object' ) // fecha janela info
       if ( WebSAGE.g_win_cmd.window ) 
          WebSAGE.g_win_cmd.window.close();
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo0' );
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo0' );
 },
 
 // busca dado do ponto tempo real  
 showValsInfo0 : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo1' );
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + '?P=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo1' );
 },
 
 // Abre uma janela popup com dados sobre o ponto  
 showValsInfo1 : function()
 {
-  // abre nova janela, dá um tempo e vai  preencher os dados da nova janela em outra funcao
+  // abre nova janela, dÃ¡ um tempo e vai  preencher os dados da nova janela em outra funcao
   // (para dar tempo de abrir a janela) 
   WebSAGE.g_win_1stdraw = 1;
   WebSAGE.g_win_cmd = window.open('dlginfo.html','tbinfo','dependent=yes,height=550,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');
@@ -169,7 +171,7 @@ showValsInfo1 : function()
     WebSAGE.g_win_cmd.focus();
   WebSAGE.g_wait_win = 0;  // contador para esperar abrir a janela 
 
-  // showValsInfo2 será chamado pela própria nova janela aberta em onload
+  // showValsInfo2 serÃ¡ chamado pela prÃ³pria nova janela aberta em onload
   // WebSAGE.g_timerID=setTimeout(WebSAGE.showValsInfo2, 200);
 }, 
 
@@ -179,7 +181,7 @@ showValsInfo2 : function( mot )
 try 
   {
 
-  // testa se a janela está carregada
+  // testa se a janela estÃ¡ carregada
   if ( NPTO == 0 || NPTO == undefined ||  
        !WebSAGE.g_win_cmd ||
        typeof(WebSAGE.g_win_cmd.window) != 'object' ||
@@ -189,7 +191,7 @@ try
        typeof(WebSAGE.g_win_cmd.window.$) === 'undefined' 
      ) 
      {
-     if ( WebSAGE.g_wait_win < 4 ) // não carregou, vai retentando mais um tempo
+     if ( WebSAGE.g_wait_win < 4 ) // nÃ£o carregou, vai retentando mais um tempo
        { 
        WebSAGE.g_wait_win++;
        WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 200 );
@@ -213,9 +215,9 @@ try
     { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', Msg.QDPInvalido + " (" + Msg.EstadoAtual + ")" ); }
   else 
   if ( V[NPTO]&0x01 != 0 )
-    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); } // não zero é off 
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); } // nÃ£o zero Ã© off 
   else  
-    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); } // zero é on
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); } // zero Ã© on
     
   if ( Q & 0x80 )
     SQ += Msg.QFalhado + ' ';
@@ -251,7 +253,7 @@ try
   
   WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'QUALIF', Msg.Qualific + ': ' + SQ );
 
-  if ( WebSAGE.g_win_1stdraw ) // escreve parâmetros só na primeira vez que abriu a janela
+  if ( WebSAGE.g_win_1stdraw ) // escreve parÃ¢metros sÃ³ na primeira vez que abriu a janela
     {
     WebSAGE.g_win_1stdraw = 0;
   
@@ -261,14 +263,14 @@ try
     //WebSAGE.g_win_cmd.document.getElementById("TABULAR").style.display="none";
     //Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("TABULAR"), "click", WebSAGE.tabular);
   
-    if ( ID.charAt(21)=='M' ) // Manual não apresenta opção de inibir
+    if ( ID.charAt(21)=='M' ) // Manual nÃ£o apresenta opÃ§Ã£o de inibir
       WebSAGE.g_win_cmd.document.getElementById('DIVINIB').style.display='none';       
 
     WebSAGE.g_win_cmd.document.getElementById("CURVAS").style.display = "";
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("CURVAS"), "click", WebSAGE.curvas );
 
     if ( (Q & 0x20) )
-      { // mostra parâmetros de limites só para pontos analógicos
+      { // mostra parÃ¢metros de limites sÃ³ para pontos analÃ³gicos
       WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS").style.display="";
       Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS"), "click", WebSAGE.tendencias);
 
@@ -322,7 +324,7 @@ try
         }
       }
   
-    // torna visível botão de comandar, caso haja comando associado
+    // torna visÃ­vel botÃ£o de comandar, caso haja comando associado
     if ( CNPTO != 0 )
       {
       WebSAGE.g_win_cmd.document.getElementById("COMANDAR").style.display="";
@@ -333,7 +335,7 @@ try
     // get nonblocking annotation
     $.ajax( {
             dataType: "json",
-            url: "annotation.php?N=" + NPTO, 
+            url: WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
             success: 
               function(data) {
                  if ( data[0] && data[0].hasOwnProperty('CONTENT') )
@@ -345,7 +347,7 @@ try
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
     }
 
-  // bloqueio automático de comando por presença de anotação
+  // bloqueio automÃ¡tico de comando por presenÃ§a de anotaÃ§Ã£o
   if ( CNPTO != 0 )
     {
     if ( WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value != "" )
@@ -382,7 +384,7 @@ try
     WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 2000 );
     }
 
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + '?P=' + WebSAGE.g_nponto_sup );
   }
 catch ( e ) {}  
 }, 
@@ -399,7 +401,7 @@ janelaComando : function( nponto )
   WebSAGE.g_nponto_sup = nponto;  
   NPTO = 0; 
   CNPTO = 0;
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
 },
 
 // Mostra dados sobre o comando na respectiva janela 
@@ -418,10 +420,10 @@ showValsCmd1 : function()
 
   WebSAGE.g_win_cmd = NPTO; // mark window to be open for point NPTO
 
-  // abre nova janela, dá um tempo e vai  preencher os dados da nova janela em outra funcao
+  // abre nova janela, dÃ¡ um tempo e vai  preencher os dados da nova janela em outra funcao
   setTimeout("WebSAGE.g_win_cmd=window.open('dlgcomando.html','tbcomando','dependent=yes,height=530,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');", 500);
 
-  // será chamado pela própria janela
+  // serÃ¡ chamado pela prÃ³pria janela
 }, 
 
 // Mostra os dados sobre o ponto de comando em janela popup 
@@ -445,9 +447,9 @@ showValsCmd2 : function()
     { // digital
     if ( V[NPTO] > 0 )
       { 
-      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); // não zero é off 
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); // nÃ£o zero Ã© off 
       // se o estado atual (off) bate com o valor do comando off (3 primeiras letras do texto), 
-      // assume que deve a intenção é comandar ON, portanto sobreia a opção OFF
+      // assume que deve a intenÃ§Ã£o Ã© comandar ON, portanto sobreia a opÃ§Ã£o OFF
       if ( CST_OFF.toUpperCase().substring( 0, 2 ) === ST_OFF.toUpperCase().substring( 0, 2 ) && 
            CST_ON.toUpperCase().substring( 0, 2 ) !== ST_OFF.toUpperCase().substring( 0, 2 )  
          )
@@ -455,9 +457,9 @@ showValsCmd2 : function()
       }
     else  
       {
-      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); // zero é on
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); // zero Ã© on
       // se o estado atual (on) bate com o valor do comando on (3 primeiras letras do texto), 
-      // assume que deve a intenção é comandar OFF, portanto sobreia a opção ON
+      // assume que deve a intenÃ§Ã£o Ã© comandar OFF, portanto sobreia a opÃ§Ã£o ON
       if ( CST_ON.toUpperCase().substring( 0, 2 ) === ST_ON.toUpperCase().substring( 0, 2 ) &&
            CST_OFF.toUpperCase().substring( 0, 2 ) !== ST_ON.toUpperCase().substring( 0, 2 ) 
          )
@@ -466,7 +468,7 @@ showValsCmd2 : function()
     WebSAGE.g_win_cmd.document.getElementById("ESTADO_HID").style.display = "";
     }
   else
-    { // analógico
+    { // analÃ³gico
     WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'VALOR_SUP', V[NPTO] + " " + UNIDADE + " (" + Msg.QValor + ")" );
     WebSAGE.g_win_cmd.document.getElementById("VALOR_HID").style.display = "";
     }    
@@ -515,7 +517,7 @@ setTimeout('WebSAGE.g_win_cmd.close()',500);
 
 executaComando : function(cmd_01)
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
   
   // Command log in browser's localStorage
   if (storageAvailable('localStorage')) 
@@ -533,7 +535,7 @@ executaComando : function(cmd_01)
 
 ackComando : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + '?A=' + CNPTO );
 },
 
 writeParams : function() 
@@ -549,16 +551,16 @@ writeParams : function()
   if (WebSAGE.g_win_cmd.document == undefined)
      return;
 
-  if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotação
+  if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotaÃ§Ã£o
     WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value="";
 
-  WebSAGE.getScript( WebSAGE.g_remoteServer + 
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + 
                '?W=' + NPTO + 
                "&LI=" + WebSAGE.g_win_cmd.document.getElementById("LIMINF").value + 
                "&LS=" + WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value + 
                "&HI=" + WebSAGE.g_win_cmd.document.getElementById("HISTER").value + 
                "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked?1:0) + 
-               "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dão problema no javascript
+               "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dÃ£o problema no javascript
                "&VN=" + 0
              );
 },
@@ -568,7 +570,7 @@ writeAnnotDoc : function()
 {
   $.ajax( {
           type: "POST",
-          url: "annotation.php?W=1&N=" + NPTO,
+          url: WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
           data:  { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
           // success: success,
           // dataType: "text"
@@ -594,7 +596,7 @@ writeValor : function()
   else      
     val = WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").checked?0:1;
   
-  WebSAGE.getScript( WebSAGE.g_remoteServer + 
+  WebSAGE.getScript( WebSAGE.g_remotePntServer + 
                '?X=' + NPTO + 
                "&V=" + val  
              );
@@ -627,16 +629,16 @@ if ( WebSAGE.g_filtroSE != document.getElementById('FiltroSE').value ||
   }
 },
 
-// busca lista de estações no servidor
+// busca lista de estaÃ§Ãµes no servidor
 leListaSEs : function() 
 {
-  // prepara função de callback que será chamada pelo script a ser devolvido pelo servidor
+  // prepara funÃ§Ã£o de callback que serÃ¡ chamada pelo script a ser devolvido pelo servidor
   WebSAGE.g_cbf_MostraSE = function() { setTimeout(WebSAGE.mostraSEs, 10); };
   // chama o servidor, executa o script devolvido
   WebSAGE.getScript( WebSAGE.g_remoteServer + '?S=1' + "&B=WebSAGE.g_cbf_MostraSE" );
 },
 
-// mostra lista de estações
+// mostra lista de estaÃ§Ãµes
 mostraSEs : function() 
 {
 var Lista = LISTA_SES.split("-");
@@ -652,7 +654,7 @@ for (var se in Lista)
  i++;
  }
 
-// ve se recebeu algum modulo (SE+MODULO) para mostrar pela URL, caso positivo já usa para filtrar  
+// ve se recebeu algum modulo (SE+MODULO) para mostrar pela URL, caso positivo jÃ¡ usa para filtrar  
 var se = gup("SUBST");
 var mod = gup("BAY");
 
@@ -666,7 +668,7 @@ if ( se != "" )
 // document.getElementById("SELSE").onChange=WebSAGE.mudaSE; 
 },
 
-// Processa mudança da SE selecionada
+// Processa mudanÃ§a da SE selecionada
 mudaSE : function() 
 { 
 var v = document.getElementById("SELSE").options[document.getElementById("SELSE").selectedIndex].value;
@@ -680,7 +682,7 @@ document.getElementById("SELSE").options[0].selected = 1;
 document.getElementById('SELSE').blur();
 },
 
-// mostra lista de opções de móulos
+// mostra lista de opÃ§Ãµes de mÃ³ulos
 mostraMods : function() 
 {
 var lmods = [];
@@ -725,7 +727,7 @@ for ( cnt = 0; cnt < lmods.length ; cnt++ )
   }
 },
 
-// Filtra pelo módulo  
+// Filtra pelo mÃ³dulo  
 mudaMod : function()
 {
   document.getElementById('FiltroMod').value =
@@ -738,20 +740,20 @@ callServer : function()
 {
      clearTimeout( WebSAGE.g_toutID );
 
-     if ( WebSAGE.g_waitingServer ) // se ainda está esperando pelo servidor
-       { // dá mais um tempo para rechamar-se e cai fora
+     if ( WebSAGE.g_waitingServer ) // se ainda estÃ¡ esperando pelo servidor
+       { // dÃ¡ mais um tempo para rechamar-se e cai fora
          WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh / 2 );
          return;
        }       
 
-    // testa se não está bloqueado
+    // testa se nÃ£o estÃ¡ bloqueado
     if ( document.getElementById(WebSAGE.g_cbBloqAtu).checked == false )
       {
         // antes de chamar o servidor
-        // prepara uma função que falha todos os pontos se der timeout na chamada do servidor
+        // prepara uma funÃ§Ã£o que falha todos os pontos se der timeout na chamada do servidor
         clearTimeout( WebSAGE.g_timeoutFalhaID );
         WebSAGE.g_timeoutFalhaID = setTimeout( WebSAGE.falhaTudo, WebSAGE.g_timeOutFalha );
-        // prepara função de callback que será chamada pelo script a ser devolvido pelo servidor
+        // prepara funÃ§Ã£o de callback que serÃ¡ chamada pelo script a ser devolvido pelo servidor
         cbf_F = function() 
                   { 
                   setTimeout( WebSAGE.showVals, 100 ); 
@@ -827,7 +829,7 @@ showVals: function()
       HA_ALARMES_ANT = HA_ALARMES;
       }
     
-    // quando houver o que mostrar e não for modo de todas anormalidades, mostra controles de filtro anormais e comandáveis
+    // quando houver o que mostrar e nÃ£o for modo de todas anormalidades, mostra controles de filtro anormais e comandÃ¡veis
     if ( tam > 0 )
     if ( !WebSAGE.isAlarmsViewer() )
     if ( document.getElementById("OPC_CMDANORM").style.display === "none" )   
@@ -835,7 +837,7 @@ showVals: function()
         document.getElementById("OPC_CMDANORM").style.display = "inline";    
       }
 
-    clearTimeout( WebSAGE.g_toutID ); // pára de chamar o servidor
+    clearTimeout( WebSAGE.g_toutID ); // pÃ¡ra de chamar o servidor
     
     var chkcmd = document.getElementById("cbMostraCmd").checked;
     var chknor = document.getElementById("cbForaNormal").checked;
@@ -854,7 +856,7 @@ showVals: function()
         }
      }
 
-    // só mostra se vier uma linhas diferente da que já havia
+    // sÃ³ mostra se vier uma linhas diferente da que jÃ¡ havia
     for( i = 0; i < tam; i++ )
       {
       if ( i >= WebSAGE.g_tbl.getRowsNum() )
@@ -872,7 +874,7 @@ showVals: function()
         {
         dbg = 1.1; // bug intermitente do chrome
 
-        if ( L[i] != WebSAGE.g_tbl.getUserData(i) ) // enquanto for igual, mantém
+        if ( L[i] != WebSAGE.g_tbl.getUserData(i) ) // enquanto for igual, mantÃ©m
            {
            WebSAGE.g_tbl.changeRow( i, L[i] );
            if ( WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( i, WebSAGE.g_COL_SUBEST ) ) == -1 )
@@ -1028,13 +1030,13 @@ showVals: function()
     if ( typeof(WebSAGE.g_win_cmd.window.closed) != 'undefined' )
        if ( ! WebSAGE.g_win_cmd.window.closed )
         {
-        WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
+        WebSAGE.getScript( WebSAGE.g_remotePntServer + '?P=' + WebSAGE.g_nponto_sup );
         clearTimeout( WebSAGE.g_timerID );
         WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 100 );
         }
 
     if ( WebSAGE.g_muda_mod == 1 )      
-      setTimeout( WebSAGE.mostraMods, 100 ); // atualiza opções de módulo
+      setTimeout( WebSAGE.mostraMods, 100 ); // atualiza opÃ§Ãµes de mÃ³dulo
     
     $('#ATUALIZACAO').text( Data );
     $('#NUMREGS').text( WebSAGE.g_tbl.getRowsNum() + " Tot - " );
@@ -1055,7 +1057,7 @@ catch (e)
     Ventoinha.pulse("E");    
     }    
 
-  // próximo refresh
+  // prÃ³ximo refresh
   WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh );
 },
   
@@ -1074,7 +1076,7 @@ falhaTudo: function()
 
 doSilenciaBeep : function()
 {
-   WebSAGE.getScript( WebSAGE.g_remoteServer + "?Z=1" );
+   WebSAGE.getScript( WebSAGE.g_remotePntServer + "?Z=1" );
 },      
 
 EstiloLinha: function(id, rec)
@@ -1085,7 +1087,7 @@ try
       id = parseInt(id);
       var pri = parseInt( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).charAt(0) );
 
-      // alinha os analógicos à direita
+      // alinha os analÃ³gicos Ã  direita
       if (  $.isNumeric(WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_EVENTO )) )
           {
             WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.textAlign = "right";
@@ -1113,7 +1115,7 @@ try
             return;
           }
 
-      // testa filtro pelos comandáveis
+      // testa filtro pelos comandÃ¡veis
       var chk = document.getElementById("cbMostraCmd").checked;
       if (  WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUPCMD ) == 0 && chk )
           {
@@ -1138,7 +1140,7 @@ try
             stl = 'color: ' + TabularViewer_AckTxtColor + ';';                        
           }
       else    
-          { // não reconhecido (alarmado)
+          { // nÃ£o reconhecido (alarmado)
               if ( pri === 0 )
                 {
                 stl = 'color: ' + ColorOfPriority[ pri ] + ';';
@@ -1192,7 +1194,7 @@ try
           }
       else
       if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_EVENTO ) == Viewers_AlmTxtHighlight1 )
-          { // coloca fundo nas linhas de operação de proteção
+          { // coloca fundo nas linhas de operaÃ§Ã£o de proteÃ§Ã£o
             // stl = stl + 'background-color: ' + TabularViewer_LineColorDestaq1 + ';';
             WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.borderLeft = TabularViewer_LineColorDestaq1 + " 3px solid";
             WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.borderLeft = TabularViewer_LineColorDestaq1 + " 3px solid";
@@ -1223,7 +1225,7 @@ catch ( e )
 
 doReconheceTudo: function(rec_apaga)
 {
-  // se tem algum não reconhecido, torna reconhecido
+  // se tem algum nÃ£o reconhecido, torna reconhecido
   for (var row=0; row<WebSAGE.g_tbl.getRowsNum(); row++)
     {
     if ( rec_apaga==0 )
@@ -1233,12 +1235,12 @@ doReconheceTudo: function(rec_apaga)
     }
 
     if ( rec_apaga==0 )
-      WebSAGE.getScript( WebSAGE.g_remoteServer +
+      WebSAGE.getScript( WebSAGE.g_remotePntServer +
                   '?R=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
                   'PS=' + WebSAGE.g_pass++ 
                 );
     else              
-      WebSAGE.getScript( WebSAGE.g_remoteServer +
+      WebSAGE.getScript( WebSAGE.g_remotePntServer +
                   '?Q=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
                   'PS=' + WebSAGE.g_pass++ 
                 );
@@ -1279,7 +1281,7 @@ doOnRowSelected: function( evt )
       {
       if ( WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_FLAGS) & 0x100 )
         {
-        WebSAGE.getScript( WebSAGE.g_remoteServer +
+        WebSAGE.getScript( WebSAGE.g_remotePntServer +
                     '?R=' + WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_NPONTO ) + '&' +
                     'D=00/00/0000&H=00:00:00&M=000&A=1&' +
                     'PS=' + WebSAGE.g_pass++ 
@@ -1307,7 +1309,7 @@ mostraTodosAnormais: function()
   WebSAGE.g_timeOutRefresh = WebSAGE.g_timeOutRefresh / 1.5; // shorten refresh time for alarms viewer
   document.getElementById('FiltroSE').value = WebSAGE.g_filt_all_alarms;
   WebSAGE.g_titulo_janela = Msg.NomeVisorAnormais + " - " +  Msg.NomeProduto + " - " + Msg.VersaoProduto;
-  document.title = "."; // necessário devido a um bug do chromium!
+  document.title = "."; // necessÃ¡rio devido a um bug do chromium!
   document.title = WebSAGE.g_titulo_janela;
   
   LoadFavicon( Imgs.FAVICONANORM );
@@ -1325,7 +1327,7 @@ mostraTodosAnormais: function()
 // filter by alarm condition (unacknowledged + persistent)
 mostraAlarmados: function()
 {
-    // pára atualização 
+    // pÃ¡ra atualizaÃ§Ã£o 
     clearTimeout( WebSAGE.g_toutID );
 
     var chknor = document.getElementById("cbForaNormal").checked;
@@ -1351,13 +1353,13 @@ mostraAlarmados: function()
        document.getElementById("cbMostraCmd").checked = false;
        }
 
-   // atualiza após 2s
+   // atualiza apÃ³s 2s
    WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, 2000 );
 },
       
 mostraCmd: function()
 {
-    // pára atualização 
+    // pÃ¡ra atualizaÃ§Ã£o 
     clearTimeout( WebSAGE.g_toutID );
 
     var chk = document.getElementById("cbMostraCmd").checked;
@@ -1378,7 +1380,7 @@ mostraCmd: function()
        document.getElementById("cbForaNormal").checked = false;
        }
    
-   // atualiza após 2s
+   // atualiza apÃ³s 2s
    WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, 2000 );
 },
   
@@ -1399,7 +1401,7 @@ fontSize: function(updn)
     
     window.onbeforeunload = null;
 
-    // recarrega a página
+    // recarrega a pÃ¡gina
     window.location.reload();        
 },
 
@@ -1451,7 +1453,7 @@ tbl_prepare: function()
         while ( WebSAGE.g_tbl.rows[0].cells.length > varr.length )
             WebSAGE.g_tbl.rows[0].deleteCell(WebSAGE.g_tbl.rows[0].cells.length-1);
 
-        // acerta tamanho dos campos se a fonte for maior que a padrão
+        // acerta tamanho dos campos se a fonte for maior que a padrÃ£o
         if (WebSAGE.g_fontsize>16)
             {
             for ( i=0; i < varr.length; i++ )
@@ -1480,7 +1482,11 @@ tbl_prepare: function()
            if ( WebSAGE.g_tbl.larguraCol[i] == 0 )
              WebSAGE.g_tbl.rows[line].cells[i].style.display = 'none';
           else
+             {
              WebSAGE.g_tbl.rows[line].cells[i].width = WebSAGE.g_tbl.larguraCol[i];  
+             WebSAGE.g_tbl.rows[line].cells[i].style.minWidth = WebSAGE.g_tbl.larguraCol[i] + "px";  
+             WebSAGE.g_tbl.rows[line].cells[i].style.textOverflow = "ellipsis";  
+             }
            } 
         WebSAGE.g_tbl.rows[line].userData = vals;
         };
@@ -1588,11 +1594,21 @@ tbl_prepare: function()
         function( col, width ) 
         {
             WebSAGE.g_tbl.larguraCol[col] = width;
-            WebSAGE.g_tblhead.rows[0].cells[col].width = width;
+            try { // can cause error in IE
+              WebSAGE.g_tblhead.rows[0].cells[col].width = width;
+            } catch (e) { 
+              WebSAGE.g_tblhead.rows[0].cells[col].width = width + 1;
+            }			
+            WebSAGE.g_tblhead.rows[0].cells[col].style.minWidth = width + "px";
             WebSAGE.g_tblhead.rows[0].cells[col].style.display = (width==0)?'none':'';
             for (var i=0; i < WebSAGE.g_tbl.rows.length; i++) 
               {
-                WebSAGE.g_tbl.rows[i].cells[col].width = width;
+                try { // can cause error in IE
+                  WebSAGE.g_tbl.rows[i].cells[col].width = width;
+                } catch (e) { 
+                  WebSAGE.g_tbl.rows[i].cells[col].width = width + 1;
+                }			
+                WebSAGE.g_tbl.rows[i].cells[col].style.minWidth = width + "px";
                 WebSAGE.g_tbl.rows[i].cells[col].style.display = (width==0)?'none':'';
               }
         return 0;
@@ -1653,7 +1669,7 @@ init: function()
     WebSAGE.tbl_prepare();
 
     WebSAGE.g_titulo_janela = Msg.NomeVisorTabular + " - " +  Msg.NomeProduto + " - " + Msg.VersaoProduto;
-    document.title = "."; // necessário devido a um bug do chromium!
+    document.title = "."; // necessÃ¡rio devido a um bug do chromium!
     document.title = WebSAGE.g_titulo_janela;
 
     // vai nos objetos com 'id' e coloca como 'title' a mensagem correspondente de Titles, carrega as imagens (de images.js)        
@@ -1770,7 +1786,7 @@ init: function()
     document.getElementById('TBLEVE').tabIndex=1; // permite foco na tabela
     document.getElementById('TBLEVE').focus();      
 
-    // desabilita o botão direito 
+    // desabilita o botÃ£o direito 
     document.oncontextmenu = function() { return false; };
     }
 };

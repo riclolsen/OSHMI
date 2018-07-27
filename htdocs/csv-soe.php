@@ -69,7 +69,7 @@ $pdo->exec ( "PRAGMA cache_size = 5000" );
 $pdo->exec ( "PRAGMA temp_store = MEMORY" );
 $pdo->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
 
-// define para que o PDO lance exceçoes caso ocorra erros
+// define para que o PDO lance exceÃ§oes caso ocorra erros
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 // $pdo->exec("SET SESSION character_set_results = 'UTF8';");
 // $pdo->exec("SET NAMES UTF8;");
@@ -177,9 +177,9 @@ foreach ($stmt as $row)
      function (&$item, $key) { 
        if ($key == "FAILED")
          $item = $item ? true : false; 
-       else
-       if ( is_string($item) ) 
-         $item = mb_convert_encoding($item, 'UTF-8', 'ISO-8859-1' ); 
+       //else
+       //if ( is_string($item) ) 
+       //  $item = mb_convert_encoding($item, 'UTF-8', 'ISO-8859-1' ); 
      });  
   $arr[]=$row;
 

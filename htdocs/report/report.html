@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <link href="vanilla-datatables.css" rel="stylesheet" type="text/css">
+  <script src="vanilla-datatables.js" type="text/javascript"></script>
+  <script src="datatable.exportable.js" type="text/javascript"></script>
+</head>
+<body>
+
+        <div class="container">
+                <table class="table"></table>	
+        </div>
+        <input value="Export CSV!" type="button" onclick="    table.export({  type: 'csv', filename: 'csv-file' }); ">
+    <script>
+
+var table = new DataTable(".table", {
+    exportable: {
+        // options go here
+        type: "csv"
+    },
+	ajax: {
+		url: "json-anot.php", // to create another report, change the database query in this file
+		content: {
+			type: "json",
+			headings: true,
+            searchable: true
+		}
+	}
+});
+
+
+// Remove demo loader
+table.on("datatable.ajax.loaded", function() {
+	// IE9
+	this.wrapper.className = this.wrapper.className.replace(" dataTable-loading", "");
+});
+
+</script>
+</body>
+</html>

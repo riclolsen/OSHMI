@@ -2,11 +2,11 @@
 
 // ----------------------------------------------------------------------------
 // Script para implementar um 'SUGEST AS YOU TYPE' 
-// busca sugest„o para o TAG do ponto na medida em que se digita
-// Monta um select em HTML com as opÁıes encontradas para o par‚metro 'q'
-// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+// busca sugest√£o para o TAG do ponto na medida em que se digita
+// Monta um select em HTML com as op√ß√µes encontradas para o par√¢metro 'q'
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
-header("Content-Type: text/html; charset=ISO-8859-1");
+header("Content-Type: text/html; charset=UTF-8");
 
 try 
   {
@@ -22,7 +22,7 @@ $q = $_GET["q"];
 
 $q = trim($q);
 
-if ( ((int)$q)!=0 ) // se for numero de ponto n„o mostra nada
+if ( ((int)$q)!=0 ) // se for numero de ponto n√£o mostra nada
   die();
   
 $q = str_replace ( '*', '%', $q ); // caractere coringa

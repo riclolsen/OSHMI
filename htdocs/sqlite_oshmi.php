@@ -79,7 +79,7 @@ ini_set('display_errors', 1);
     $statement->execute();
     $results = $statement->fetchAll(PDO::FETCH_ASSOC);
     
-    // converte para UTF-8, necessário para json_encode
+    // converte para UTF-8, necessario para json_encode
     function walkrec(&$item, $key)
       {
       $item =  mb_convert_encoding($item, "UTF-8", "ISO-8859-1"); // HTML-ENTITIES

@@ -2,7 +2,7 @@
 // BDTR_CLASS.CPP
 // Comunicação com o BDTR do Sandro.
 // OSHMI - Open Substation HMI
-//	Copyright 2008-2016 - Ricardo L. Olsen
+//	Copyright 2008-2018 - Ricardo L. Olsen
 //---------------------------------------------------------------------------
 
 #include <stdio.h>

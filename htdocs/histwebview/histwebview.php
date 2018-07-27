@@ -1,11 +1,11 @@
 <?php
-    header("Content-Type: text/html; charset=ISO-8859-1");
+    header("Content-Type: text/html; charset=UTF-8");
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1"/>
+<meta charset="UTF-8"/>
 <meta name="application-name" content="OSHMI-Open Substation HMI"/>
 <meta name="description" content="HistWebView"/>
 <meta name="author" content="Ricardo L.Olsen"/>
@@ -28,12 +28,12 @@
 
 // ----------------------------------------------------------------------------
 // HistWebView- Curves Viewer
-// Consulta aos históricos
+// Consulta aos histÃ³ricos
 // OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 $(document).ready(function() { 
 
-  // desabilita o botão direito 
+  // desabilita o botÃ£o direito 
   document.oncontextmenu = function() {return false;};
 
   document.title = "."; 
@@ -75,7 +75,7 @@ function ObtemPontoSemFechar(objeto)
 }
 
 // Script para implementar um 'SUGEST AS YOU TYPE' 
-// busca sugestão para o TAG do ponto na medida em que se digita
+// busca sugestÃ£o para o TAG do ponto na medida em que se digita
 
 var req = null;
 var inp = null;
@@ -208,7 +208,7 @@ function eraseCookie(name) {
     return $num;
     } 
     
-    // acerta variáveis globais para várias versões do PHP
+    // acerta variÃ¡veis globais para vÃ¡rias versÃµes do PHP
     extract($_REQUEST, EXTR_PREFIX_ALL|EXTR_SKIP, 'p');
     
     $p_ORIGEM = 2;
@@ -366,7 +366,7 @@ Interval:<select ID="INTERVALO" NAME="INTERVALO" TITLE="Sample interval.">
 </DIV>
 <INPUT ID="EXECUTAR" TYPE="SUBMIT" NAME="Submit1" VALUE="EXEC"  STYLE="cursor:hand">
 <select ID='ORIGEM' name="ORIGEM" TITLE="Selecione uma origem para os dados." style="display:none">
-<option id='ORIGEM0' <?php if ($p_ORIGEM==0) print "SELECTED"; ?> VALUE="0">Automático (padrão)</option>
+<option id='ORIGEM0' <?php if ($p_ORIGEM==0) print "SELECTED"; ?> VALUE="0">AutomÃ¡tico (padrÃ£o)</option>
 <option id='ORIGEM1' <?php if ($p_ORIGEM==1) print "SELECTED"; ?> VALUE="1">Arquivos SUP</option>
 <option id='ORIGEM2' <?php if ($p_ORIGEM==2) print "SELECTED"; ?> VALUE="2">MySQL (=Monitora)</option>
 <option id='ORIGEM3' <?php if ($p_ORIGEM==3) print "SELECTED"; ?> VALUE="3">SAGE (PostgreSQL)</option>
@@ -581,9 +581,13 @@ echo '			<h3>Sheet</h3>';
       $consulta->horafinal=$p_HORAFINAL;
       $consulta->define_data($DATA[$i]);
       $consulta->inclui_ponto($NPONTO[$i]);
-      $ret[$i]=$consulta->busca_hist();    // busca no histórico
+      $ret[$i]=$consulta->busca_hist(); // get historical data from PostgreSQL (1st try) or SQLite (2nd try)
 
-      list($ponto[$i], $linhas[$i]) = each($ret[$i]); // pega as linhas (valores)
+	  // pega as linhas (valores)
+      //list($ponto[$i], $linhas[$i]) = each($ret[$i]); 
+  	  $ponto[$i] = key($ret[$i]);
+	  $linhas[$i] = current($ret[$i]);
+
       $ultlini[$i]=count($linhas[$i]);
       if ($ultlini[$i]>$ultimalin)
          $ultimalin=$ultlini[$i];
@@ -606,7 +610,7 @@ echo '			<h3>Sheet</h3>';
       {
           $cli[$i]++;
 
-          if  ($cl >= count($linhas[$i]) ) // evita erro quando não encontrou arquivo ou ponto
+          if  ($cl >= count($linhas[$i]) ) // evita erro quando nÃ£o encontrou arquivo ou ponto
           {
             print "\t\t<td style=\"text-align:right;\"> </td>\t\t<td style=\"text-align:right;\"> </td>\n";
             continue;
@@ -646,7 +650,7 @@ echo '			<h3>Sheet</h3>';
       
       for ($i=0; $i<$NPontos!=0; $i++) // para cada ponto
         {
-        if ($cli[$i] < $ultlini[$i]) // ve se não chegou no fim das linhas deste ponto
+        if ($cli[$i] < $ultlini[$i]) // ve se nÃ£o chegou no fim das linhas deste ponto
           {
           if ($TIPO[$i]=='D')
             $temdig=1;
@@ -684,7 +688,7 @@ echo '			<h3>Sheet</h3>';
         {
           //$cor=($cl%2)*4;
           //$cor=sprintf("#%02x%02x%02x", 255-$cor-10*$i, 255-$cor-5*$i, 255-$cor);
-          print "<td BGCOLOR=$color>$val[$i]</td>";
+          print "<td style='text-align:right' BGCOLOR=$color>$val[$i]</td>";
           $txtparaclipboard.=strtr($val[$i],".",",")."\t";
           $vfmt = sprintf("%0.2f", $val[$i]);
           $txtparaclipboard2.=strtr($vfmt,".",",")."\t";
@@ -711,9 +715,9 @@ echo '			<h3>Sheet</h3>';
               }
 
             $S.=(($qual[$i]&0x80)?"F":""); // falha
-            $S.=(($qual[$i]&0x10)?"S":""); // substituído
+            $S.=(($qual[$i]&0x10)?"S":""); // substituÃ­do
             // $S.=(($qual[$i]&0x02)?"H":""); // acerto de hora
-            // $S.=(($qual[$i]&0x20)&&($qual[$i]&0x01)?"G":""); // analógico, erro grosseiro
+            // $S.=(($qual[$i]&0x20)&&($qual[$i]&0x01)?"G":""); // analÃ³gico, erro grosseiro
             // $S.=(($qual[$i]&0x40)?"V":""); // variacao
             //switch ($qual[$i]&0x0C)
             //  {
@@ -721,7 +725,7 @@ echo '			<h3>Sheet</h3>';
             //  case 0x08: $S.="E"; break; // estimado
             //  case 0x0C: $S.="M"; break; // manual
             //  }
-            // $S.=" ".$qual[$i]; // analógico, erro grosseiro
+            // $S.=" ".$qual[$i]; // analÃ³gico, erro grosseiro
               
           print "<td BGCOLOR=$color>$S&nbsp;</td>";
           $txtparaclipboard.="$S\t";
@@ -894,7 +898,7 @@ if ($tamx > 0)
 }
 ?>
      //  { label: "sin(x sin(x))", data: d }
-// opções para o gráfico
+// opÃ§Ãµes para o grÃ¡fico
 var options = {
     legend: { show: true, container: $("#overviewLegend") },  //backgroundOpacity: 0.5 },
 		crosshair: { mode: "x" },
@@ -933,7 +937,7 @@ $(function () {
     plot=$.plot($("#placeholder"), series, options);
 
 /*
-    // faz o zoom pela seleção
+    // faz o zoom pela seleÃ§Ã£o
     placeholder.bind("plotselected", function (event, ranges) {
         //$("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
 
@@ -999,7 +1003,7 @@ $(function () {
             updateLegendTimeout = setTimeout(updateLegend, 400);
     });    
 
-    // acerta o tamanho dos botões e prepara as funções para tratar o click
+    // acerta o tamanho dos botÃµes e prepara as funÃ§Ãµes para tratar o click
     $("input.xaxisleft").width(50);
     $("input.xaxisleft").click(function () {
         segue_tempo=0;
@@ -1128,7 +1132,7 @@ $(function () {
 		plot = $.plot(placeholder, series, options);
     });
  
-  // vou criar os tabs dinamicamente porque dá problema com o IE, quando carregado antes da renderização do gráfico (não renderiza direito)
+  // vou criar os tabs dinamicamente porque dÃ¡ problema com o IE, quando carregado antes da renderizaÃ§Ã£o do grÃ¡fico (nÃ£o renderiza direito)
   $.getScript("../lib/tabsystem-4.01/behaviour/listener.js",  
        function () 
          { $.getScript("../lib/tabsystem-4.01/behaviour/tabs.js", 

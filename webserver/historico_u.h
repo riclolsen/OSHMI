@@ -28,6 +28,11 @@ __published:	// IDE-managed Components
         TLabel *Label6;
         TLabel *lbErro;
         TButton *btApagaAntigos;
+        TLabel *Label1;
+        TLabel *Label2;
+        TLabel *Label5;
+        TLabel *Label7;
+        TLabel *lbWrites;
         void __fastcall Timer1Timer(TObject *Sender);
         void __fastcall btApagaAntigosClick(TObject *Sender);
 

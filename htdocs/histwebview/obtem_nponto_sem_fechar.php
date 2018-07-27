@@ -7,11 +7,11 @@
 
 <?php
 
-// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
-header("Content-Type: text/html; charset=ISO-8859-1");
+header("Content-Type: text/html; charset=UTF-8");
 
-// acerta variáveis globais para várias versões do PHP
+// acerta variÃ¡veis globais para vÃ¡rias versÃµes do PHP
 extract($_REQUEST, EXTR_PREFIX_ALL|EXTR_REFS|EXTR_SKIP, 'p');
 
 if (!isset($p_Adiciona))
@@ -72,9 +72,9 @@ else
 </SCRIPT>
 </head>
 <body style="font-family:sans-serif;" >
-<strong>Obtém número do ponto</strong>
+<strong>ObtÃ©m nÃºmero do ponto</strong>
 <small>
-<P>Use [CLICK] para escolher vários pontos, preenchendo os campos vazios sem fechar esta janela.
+<P>Use [CLICK] para escolher vÃ¡rios pontos, preenchendo os campos vazios sem fechar esta janela.
 <br>Use [CONTROL]+[CLICK] para preencher o valor de um ponto e fechar esta janela.</P>
 </small>
 <?php
@@ -114,8 +114,8 @@ $query = "SELECT distinct i.estacao as ESTACAO, i.estacao as DESCRICAO from dump
            where i.estalm!=3 and i.estacao!='' order by i.estacao";
 
 print '<FORM METHOD="post">';
-echo 'Estação:&nbsp;&nbsp;<select name=Estacao onChange="this.form.submit()">';
-print "<option selected VALUE=''> Escolha uma estação!</option>";
+echo 'EstaÃ§Ã£o:&nbsp;&nbsp;<select name=Estacao onChange="this.form.submit()">';
+print "<option selected VALUE=''> Escolha uma estaÃ§Ã£o!</option>";
 foreach ( $db->query( $query ) as $line )
   {
         print "<option ";

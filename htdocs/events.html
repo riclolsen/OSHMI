@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="UTF-8">
 <meta name="application-name" content="OSHMI-Open Substation HMI">
 <meta name="description" content="Events Viewer">
 <meta name="author" content="Ricardo L. Olsen">
@@ -37,36 +37,37 @@
 
 // OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
-var L = []; // aqui o servidor colocará a lista de eventos
-var V = []; // aqui o servidor colocará os valores dos pontos
-var F = []; // aqui o servidor colocará os flags dos pontos
-var T = []; // aqui o servidor colocará os tag de tempo de alarme dos pontos
-var Data = '';          // aqui o servidor colocará hora da atualização
-var NUM_VAR = 0;        // aqui o servidor informa o número de variações digitais
-var NUM_VAR_ANT = 0;    // estado anterior da variável NUM_VAR
-var HA_ALARMES = 0;     // aqui o servidor informa que há alarme sonoro ativo
-var HA_ALARMES_ANT = 0; // estado anterior da variável HA_ALARMES
-var Sha1Ana = '';       // aqui o servidor informa o hash dos valores analogicos (para detectar mudanças)
-var Sha1Dig = '';       // aqui o servidor informa o hash dos valores digitais (para detectar mudanças)
-var LISTA_SES = '';     // lista de subestações para compor filtro
+var L = []; // aqui o servidor colocarÃ¡ a lista de eventos
+var V = []; // aqui o servidor colocarÃ¡ os valores dos pontos
+var F = []; // aqui o servidor colocarÃ¡ os flags dos pontos
+var T = []; // aqui o servidor colocarÃ¡ os tag de tempo de alarme dos pontos
+var Data = '';          // aqui o servidor colocarÃ¡ hora da atualizaÃ§Ã£o
+var NUM_VAR = 0;        // aqui o servidor informa o nÃºmero de variaÃ§Ãµes digitais
+var NUM_VAR_ANT = 0;    // estado anterior da variÃ¡vel NUM_VAR
+var HA_ALARMES = 0;     // aqui o servidor informa que hÃ¡ alarme sonoro ativo
+var HA_ALARMES_ANT = 0; // estado anterior da variÃ¡vel HA_ALARMES
+var Sha1Ana = '';       // aqui o servidor informa o hash dos valores analogicos (para detectar mudanÃ§as)
+var Sha1Dig = '';       // aqui o servidor informa o hash dos valores digitais (para detectar mudanÃ§as)
+var LISTA_SES = '';     // lista de subestaÃ§Ãµes para compor filtro
 
-// variáveis para o diálogo de comando
+// variÃ¡veis para o diÃ¡logo de comando
 var NPTO, ID, ESTACAO, MODULO, DESC, ST_ON, ST_OFF, CNPTO, CID, CDESC, CST_ON, CST_OFF;
 var LIMS, LIMI, HISTER, ALRIN, ANOT, VLNOR, ESTALM, UNIDADE, SIMULACAO = 0;
-var ComandoAck = ''; // texto para confirmação do comando 
+var ComandoAck = ''; // texto para confirmaÃ§Ã£o do comando 
 
-var cbf_F; // para receber função de callback
-var WSCons; // estado de escrita na lista de eventos ajustado pelo servidor: 1=início, 2=fim
+var cbf_F; // para receber funÃ§Ã£o de callback
+var WSCons; // estado de escrita na lista de eventos ajustado pelo servidor: 1=inÃ­cio, 2=fim
 
 var WebSAGE =
 {
-g_remoteServer: "pntserver.rjs",
-g_eventServer: "eventserver.php",
-g_nummaxevehist: 5000, // número máximo de eventos buscados do histórico
-g_nummaxevetr: 150, // número máximo de eventos em tempo real
+g_remoteServer: PNTServer,
+g_eventServer: EventServer,
+g_docAnnotationServer: DocAnnotationServer,
+g_nummaxevehist: 5000, // nÃºmero mÃ¡ximo de eventos buscados do histÃ³rico
+g_nummaxevetr: 150, // nÃºmero mÃ¡ximo de eventos em tempo real
 g_timeOutRefresh: 1000 * EventsViewer_RefreshTime, // tempo de refresh dos dados
-g_timeOutReconhece: 4000, // tempo de refresh após reconhecimento total dos alarmes
-g_timeOutFalha: 30000,    // tempo para falha dos dados, caso servidor não responda
+g_timeOutReconhece: 4000, // tempo de refresh apÃ³s reconhecimento total dos alarmes
+g_timeOutFalha: 30000,    // tempo para falha dos dados, caso servidor nÃ£o responda
 g_timeOutServerStatus: 2000, // time to test server for status
 g_toutID: 0,
 g_timerID: 0,
@@ -128,7 +129,7 @@ onSuccess: function( data )
   data = null;
 },
 
-// função auxiliar para escrever dados na janela de comando pelo id do objeto
+// funÃ§Ã£o auxiliar para escrever dados na janela de comando pelo id do objeto
 cmdWriteById : function( win, id, txt )
 {    
   win.$( '#' + id ).text( txt );
@@ -163,7 +164,7 @@ showValsInfo0 : function()
 // Abre uma janela popup com dados sobre o ponto  
 showValsInfo1 : function()
 {
-  // abre nova janela, dá um tempo e vai  preencher os dados da nova janela em outra funcao
+  // abre nova janela, dÃ¡ um tempo e vai  preencher os dados da nova janela em outra funcao
   // (para dar tempo de abrir a janela) 
   WebSAGE.g_win_1stdraw = 1;
   WebSAGE.g_win_cmd = window.open('dlginfo.html','evinfo','dependent=yes,height=550,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no ,modal=yes');
@@ -171,7 +172,7 @@ showValsInfo1 : function()
     WebSAGE.g_win_cmd.focus();
   WebSAGE.g_wait_win = 0;  // contador para esperar abrir a janela 
 
-  // showValsInfo2 será chamado pela própria nova janela aberta em onload
+  // showValsInfo2 serÃ¡ chamado pela prÃ³pria nova janela aberta em onload
 }, 
 
 // Mostra os dados sobre o ponto em janela popup 
@@ -179,7 +180,7 @@ showValsInfo2 : function( mot )
 {
 try 
   {
-  // testa se a janela está carregada
+  // testa se a janela estÃ¡ carregada
   if ( NPTO==0 || NPTO==undefined ||  
        !WebSAGE.g_win_cmd ||
        typeof(WebSAGE.g_win_cmd.window) != 'object' ||
@@ -189,7 +190,7 @@ try
        typeof(WebSAGE.g_win_cmd.window.$) === 'undefined' 
    ) 
      {
-     if (WebSAGE.g_wait_win < 4) // não carregou, vai retentando mais um tempo
+     if (WebSAGE.g_wait_win < 4) // nÃ£o carregou, vai retentando mais um tempo
        { 
        WebSAGE.g_wait_win++;
        WebSAGE.g_timerID = setTimeout(WebSAGE.showValsInfo2, 200);
@@ -213,9 +214,9 @@ try
     { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', Msg.QDPInvalido + " (" + Msg.EstadoAtual + ")" ); }
   else 
   if ( V[NPTO] & 0x01 != 0 )
-    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); } // não zero é off 
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); } // nÃ£o zero Ã© off 
   else  
-    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); } // zero é on
+    { WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); } // zero Ã© on
     
   if ( Q & 0x80 )
     SQ += Msg.QFalhado + ' ';
@@ -251,7 +252,7 @@ try
   
   WebSAGE.cmdWriteById(WebSAGE.g_win_cmd, 'QUALIF', Msg.Qualific+': '+SQ);
             
-  if ( WebSAGE.g_win_1stdraw ) // escreve parâmetros só na primeira vez que abriu a janela
+  if ( WebSAGE.g_win_1stdraw ) // escreve parÃ¢metros sÃ³ na primeira vez que abriu a janela
     {
     WebSAGE.g_win_1stdraw = 0;
     
@@ -263,11 +264,11 @@ try
     Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("TABULAR"), "click", WebSAGE.tabular);
       
     
-    if ( ID.charAt(21) == 'M' ) // Manual não apresenta opção de inibir
+    if ( ID.charAt(21) == 'M' ) // Manual nÃ£o apresenta opÃ§Ã£o de inibir
       WebSAGE.g_win_cmd.document.getElementById('DIVINIB').style.display='none';       
 
     if ( Q & 0x20 )
-      { // mostra parâmetros de limites só para pontos analógicos
+      { // mostra parÃ¢metros de limites sÃ³ para pontos analÃ³gicos
       WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS").style.display="";
       Core.addEventListener(WebSAGE.g_win_cmd.document.getElementById("TENDENCIAS"), "click", WebSAGE.tendencias);
 
@@ -321,7 +322,7 @@ try
         }
       }
   
-    // torna visível botão de comandar, caso haja comando associado
+    // torna visÃ­vel botÃ£o de comandar, caso haja comando associado
     if ( CNPTO != 0 )
       {
       WebSAGE.g_win_cmd.document.getElementById("COMANDAR").style.display = "visible";
@@ -331,7 +332,7 @@ try
     // get nonblocking annotation
     $.ajax( {
             dataType: "json",
-            url: "annotation.php?N=" + NPTO, 
+            url: WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
             success: 
               function(data) {
                  if ( data[0] && data[0].hasOwnProperty('CONTENT') )
@@ -343,7 +344,7 @@ try
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
     }
 
-  // bloqueio automático de comando por presença de anotação
+  // bloqueio automÃ¡tico de comando por presenÃ§a de anotaÃ§Ã£o
   if ( CNPTO != 0 )
     {
     if ( WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value != "" )
@@ -408,10 +409,10 @@ showValsCmd1 : function()
   if ( CNPTO == 0 || CNPTO == undefined )
     return;
     
-  // abre nova janela, dá um tempo e vai  preencher os dados da nova janela em outra funcao
+  // abre nova janela, dÃ¡ um tempo e vai  preencher os dados da nova janela em outra funcao
   setTimeout("WebSAGE.g_win_cmd=window.open('dlgcomando.html','evcomando','dependent=yes,height=530,width=400,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');", 500);
 
-  // será chamado pela própria janela
+  // serÃ¡ chamado pela prÃ³pria janela
 }, 
 
 // Mostra os dados sobre o ponto de comando em janela popup 
@@ -431,9 +432,9 @@ showValsCmd2 : function()
     { // digital
     if ( V[NPTO] > 0 )
       { 
-      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); // não zero é off 
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_OFF + " (" + Msg.EstadoAtual + ")" ); // nÃ£o zero Ã© off 
       // se o estado atual (off) bate com o valor do comando off (3 primeiras letras do texto), 
-      // assume que deve a intenção é comandar ON, portanto sobreia a opção OFF
+      // assume que deve a intenÃ§Ã£o Ã© comandar ON, portanto sobreia a opÃ§Ã£o OFF
       if ( CST_OFF.toUpperCase().substring( 0, 2 ) === ST_OFF.toUpperCase().substring( 0, 2 ) && 
            CST_ON.toUpperCase().substring( 0, 2 ) !== ST_OFF.toUpperCase().substring( 0, 2 )  
          )
@@ -441,9 +442,9 @@ showValsCmd2 : function()
       }
     else  
       {
-      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); // zero é on
+      WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'ESTADO_SUP', ST_ON + " (" + Msg.EstadoAtual + ")" ); // zero Ã© on
       // se o estado atual (on) bate com o valor do comando on (3 primeiras letras do texto), 
-      // assume que deve a intenção é comandar OFF, portanto sobreia a opção ON
+      // assume que deve a intenÃ§Ã£o Ã© comandar OFF, portanto sobreia a opÃ§Ã£o ON
       if ( CST_ON.toUpperCase().substring( 0, 2 ) === ST_ON.toUpperCase().substring( 0, 2 ) &&
            CST_OFF.toUpperCase().substring( 0, 2 ) !== ST_ON.toUpperCase().substring( 0, 2 ) 
          )
@@ -452,7 +453,7 @@ showValsCmd2 : function()
     WebSAGE.g_win_cmd.document.getElementById("ESTADO_HID").style.display = "";
     }
   else
-    { // analógico
+    { // analÃ³gico
     WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'VALOR_SUP', V[NPTO] + " " + UNIDADE + " (" + Msg.QValor + ")" );
     WebSAGE.g_win_cmd.document.getElementById("VALOR_HID").style.display = "";
     }    
@@ -528,7 +529,7 @@ writeParams : function()
   if (WebSAGE.g_win_cmd.document == undefined)
      return;
 
-  if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotação
+  if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotaÃ§Ã£o
     WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value = "";
 
   WebSAGE.getScript( WebSAGE.g_remoteServer + 
@@ -537,7 +538,7 @@ writeParams : function()
                "&LS=" + WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value + 
                "&HI=" + WebSAGE.g_win_cmd.document.getElementById("HISTER").value + 
                "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked ? 1 : 0 ) + 
-               "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dão problema no javascript
+               "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dÃ£o problema no javascript
                "&VN=" + 0
              );  
 },
@@ -547,7 +548,7 @@ writeAnnotDoc : function()
 {
   $.ajax( {
           type: "POST",
-          url: "annotation.php?W=1&N=" + NPTO,
+          url: WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
           data:  { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
           // success: success,
           // dataType: "text"
@@ -612,8 +613,8 @@ callServer : function()
       clearTimeout( WebSAGE.g_toutID );
       clearTimeout( WebSAGE.g_ServerStatusID );
 
-      if ( WebSAGE.g_waitingServer ) // se ainda está esperando pelo servidor
-         { // dá mais um tempo para rechamar-se e cai fora
+      if ( WebSAGE.g_waitingServer ) // se ainda estÃ¡ esperando pelo servidor
+         { // dÃ¡ mais um tempo para rechamar-se e cai fora
          WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh / 2 );
          return;
          }       
@@ -632,19 +633,19 @@ callServer : function()
       if ( document.getElementById("idPanico").checked )
         agregar = 2;
       
-      // testa se não está bloqueado
+      // testa se nÃ£o estÃ¡ bloqueado
       if ( document.getElementById("idCongelar").checked == false )
         {
         Ventoinha.pulse();
 
-        // prepara uma função para o caso de dar timeout na chamada do servidor
+        // prepara uma funÃ§Ã£o para o caso de dar timeout na chamada do servidor
 		clearTimeout( WebSAGE.g_timeOutFalha );
         WebSAGE.g_timeoutFalhaID = setTimeout( WebSAGE.falhaTudo, WebSAGE.g_timeOutFalha );
 
         cbf_F = function() { setTimeout( WebSAGE.showVals, 100 ); WebSAGE.g_waitingServer = 0; };
         WebSAGE.g_waitingServer = 1;
         
-        // verifica quais os filtros marcados pelo operador, se todos estão marcados passa filtro vazio
+        // verifica quais os filtros marcados pelo operador, se todos estÃ£o marcados passa filtro vazio
         var filtro = "";
         WebSAGE.g_filtro_se = "";
         var cntflt = 0;
@@ -685,15 +686,15 @@ callServer : function()
 					 );
         WebSAGE.g_pass++;
         
-        // vou testar o status do webserver para ver se houve alguma mudança 
+        // vou testar o status do webserver para ver se houve alguma mudanÃ§a 
         WebSAGE.g_ServerStatusID = setTimeout( WebSAGE.getServerStatus, WebSAGE.g_timeOutServerStatus );
-        // próximo refresh
+        // prÃ³ximo refresh
         WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh );
         }
 
 },
 
-// pega status do servidor, variável HA_ALARMES
+// pega status do servidor, variÃ¡vel HA_ALARMES
 getServerStatus: function()
 {
   WebSAGE.getScript( WebSAGE.g_remoteServer + '?M=1&B=WebSAGE.cbf_Status' );  
@@ -753,7 +754,7 @@ try
   {
   //console.profile();
   
-    // só mostra se vier uma lista diferente da que já havia
+    // sÃ³ mostra se vier uma lista diferente da que jÃ¡ havia
     var tam = L.length;
     var nr;
     
@@ -775,7 +776,7 @@ try
         {       
         dbg = 1.1; // bug intermitente do chrome
 
-        if ( L[i] == WebSAGE.g_tbl.getUserData(i) ) // enquanto for igual, mantém
+        if ( L[i] == WebSAGE.g_tbl.getUserData(i) ) // enquanto for igual, mantÃ©m
             continue;
   
         WebSAGE.g_tbl.changeRow( i, L[i] );
@@ -792,7 +793,7 @@ try
         WebSAGE.g_tbl.delRow( WebSAGE.g_tbl.getRowsNum() - 1 );
      }
 
-  // se tem eventos não mostrados, no histórico, coloca a hora inicial do último evento para nova consulta
+  // se tem eventos nÃ£o mostrados, no histÃ³rico, coloca a hora inicial do Ãºltimo evento para nova consulta
   if ( document.getElementById("idHistorico").checked )
   if ( WebSAGE.g_tbl.getRowsNum() >= WebSAGE.g_nummaxevehist )
   { 
@@ -855,10 +856,10 @@ evtmsec = evtmsec || 0;
 },
 
 // Notifica quando
-// não está reconhecido
-// abriu o disjuntor do módulo (notifica com a hora da abertura do DJ)
-// agrega proteções (operação) até ligar novamente o módulo
-// quando clica a notificação, reconhece o alarme do ponto
+// nÃ£o estÃ¡ reconhecido
+// abriu o disjuntor do mÃ³dulo (notifica com a hora da abertura do DJ)
+// agrega proteÃ§Ãµes (operaÃ§Ã£o) atÃ© ligar novamente o mÃ³dulo
+// quando clica a notificaÃ§Ã£o, reconhece o alarme do ponto
 processaNotific: function()
 {
 var i, rw, semod, aux, acr, info, estdj;
@@ -880,7 +881,7 @@ var cria = {};
     else
       estdj = 0;
 
-    // se encontrou um disj ligou, resseta notificação
+    // se encontrou um disj ligou, resseta notificaÃ§Ã£o
     if ( estdj && rw[WebSAGE.g_COL_FLAGS] == 2 )
        {
        delete WebSAGE.g_infomod[semod];
@@ -891,7 +892,7 @@ var cria = {};
        delete cria[semod];
        }
 
-    // se não encontrou qualificado alarmado L, vai para o próximo
+    // se nÃ£o encontrou qualificado alarmado L, vai para o prÃ³ximo
     if ( rw[WebSAGE.g_COL_QUALIF].indexOf( "L" ) == -1 )
        continue;
    
@@ -920,11 +921,11 @@ var cria = {};
           }
 
         if ( info !== WebSAGE.g_infomod[semod] )  
-          { //  vai atualizar ou criar nova notificação
+          { //  vai atualizar ou criar nova notificaÃ§Ã£o
           cria[semod] = [ semod, info,  semod ];
           WebSAGE.g_infomod[ semod ] = info;
           if ( estdj )
-            { // a estampa de tempo será a da abertura do DJ
+            { // a estampa de tempo serÃ¡ a da abertura do DJ
             WebSAGE.g_infomodtm[ semod ] = /* rw[ WebSAGE.g_COL_DATA ] + " " + */ rw[ WebSAGE.g_COL_HORA ]; 
             WebSAGE.g_infomodnpt[ semod ] = rw[ WebSAGE.g_COL_NPONTO ];
             WebSAGE.g_infomodid[ semod ] = rw[ WebSAGE.g_COL_ID ];
@@ -936,7 +937,7 @@ var cria = {};
 
 for ( var c in cria )
   {
-  // se tem ao menos o estado do disjuntor e uma operação de proteção, mostra notificação
+  // se tem ao menos o estado do disjuntor e uma operaÃ§Ã£o de proteÃ§Ã£o, mostra notificaÃ§Ã£o
   if (  // cria[c][1].indexOf( Viewers_IDTxtHighlight2 ) != -1 &&
        cria[c][1].indexOf( Viewers_AlmTxtHighlight1 ) != -1 &&
        cria[c][1].indexOf( Viewers_DescrTxtHighlight2 ) != -1 )
@@ -951,7 +952,7 @@ for ( var c in cria )
                                renotify: false
                                } ); 
 
-    // quando clicada a notificação, fecha processa o click, fecha também por timeout
+    // quando clicada a notificaÃ§Ã£o, fecha processa o click, fecha tambÃ©m por timeout
     // nf.onclick = function() { nf.close(); WebSAGE.ackAlarm( 0, 1, WebSAGE.g_infomodnpt[ cria[c][0] ] ); };
     nf.onclick = function() { 
         nf.close(); 
@@ -963,7 +964,7 @@ for ( var c in cria )
             ); 
         };
     
-    setTimeout( function() { nf.close(); }, 10 * 60 * 1000 ); // timeout de 10 minutos para a notificação
+    setTimeout( function() { nf.close(); }, 10 * 60 * 1000 ); // timeout de 10 minutos para a notificaÃ§Ã£o
     }
   }  
 },
@@ -1020,7 +1021,7 @@ doOnRowSelected: function( evt )
         var Qualif = WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_QUALIF );
         var PosL = Qualif.indexOf("L");
 
-        // se já está reconhecido, vai eliminar
+        // se jÃ¡ estÃ¡ reconhecido, vai eliminar
         if ( PosL == -1 )
         {
         WebSAGE.ackAlarm( 1, 
@@ -1034,7 +1035,7 @@ doOnRowSelected: function( evt )
         WebSAGE.EstiloLinha( row, 2 );
         }
         else
-        { // não está reconhecida, vou reconhecer
+        { // nÃ£o estÃ¡ reconhecida, vou reconhecer
         WebSAGE.ackAlarm( 0, 
                           agregar, 
                           WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_NPONTO ),
@@ -1060,99 +1061,89 @@ EstiloLinha: function(id, rec)
 {
 try 
   {
-      var stl = '';
-      id = parseInt(id);
-      var pri = parseInt( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).charAt(0) );      
-      
-      if ( rec == 2 )
-          {
-          stl='color: ' + EventsViewer_ElimTxtColor + ';';
-          if ( pri === 0 )
-                {
-                stl += 'font-weight: bold;';
-                }
-          }
-      else      
-      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("L") == -1 || rec )
-          { // reconhecido
-            stl = 'color: ' + EventsViewer_AckTxtColor + ';';
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.backgroundColor = ColorOfPriority[ pri ];
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.borderRadius = "10px";
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.color = "black";
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.textAlign = "center";
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.opacity = ".3";
-            if ( pri === 0 )
-                {
-                stl += 'font-weight: bold;';
-                }
-          }
-      else    
-          { // não reconhecido (alarmado)
-          if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("F") != -1 )
-            { // falhado
-              stl = 'color: ' + EventsViewer_FailTxtColor + ';';
-            }
-          else  
-            {
-              if ( pri === 0 )
-                {
-                stl = 'color: ' + ColorOfPriority[ pri ] + ';';
-                stl += 'font-weight: bold;';
-                }
-              else  
-                {
-                stl = 'color: ' + EventsViewer_AlmTxtColor + ';';
-                }                
-            }
+  var stl = '';
+  id = parseInt(id);
+  var pri = parseInt( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).charAt(0) );      
 
-          // let the qualifiers columns be in the color of priority
-          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.backgroundColor = ColorOfPriority[ pri ];
-          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.borderRadius = "10px";
-          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.color = "black";
-          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.textAlign = "center";
-          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.opacity = "1";
-          }
-/*
-      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_ID ).indexOf(Viewers_IDTxtHighlight2) != -1 && 
-           WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_DESCR ).indexOf(Viewers_DescrTxtHighlight2) != -1 &&
-           WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("K") == -1
-         )
-          { // coloca fundo nas linhas de disjuntor
-            stl = stl + 'background-color: ' + EventsViewer_LineColorHighight2 + ';';
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.borderLeft = EventsViewer_LineColorHighight2;
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.borderLeft = EventsViewer_LineColorHighight2;
-          }
-      else
-      if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_EVENTO ) == Viewers_AlmTxtHighlight1 )
-          { // coloca fundo nas linhas de operação de proteção
-            // stl = stl + 'background-color: ' + EventsViewer_LineColorHighight1 + ';';
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.borderLeft = EventsViewer_LineColorHighight1 + " 4px solid";
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.borderLeft = EventsViewer_LineColorHighight1 + " 4px solid";
-          }
-      //else
-      //if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("N") != -1 )
-      //    { // coloca fundo nas linhas de eventos anormais
-      //      stl = stl + 'background-color: #0000BB';
-      //    }
-      else
-          {
-            stl = stl + 'background-color: ' + EventsViewer_LineColor + ';';
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.borderLeft = "";
-            WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.borderLeft = "";
-          }
-*/        
-      // represent time by a horizontal bar   
-      WebSAGE.g_tbl.setRowTextStyle( id, stl );
-      WebSAGE.g_tbl.rows[id+1].style.float = "left";
-      WebSAGE.g_tbl.rows[id+1].style.clear = "left";
-      WebSAGE.g_tbl.rows[id+1].style.background = "url(images/dot.png) no-repeat bottom left";
-      WebSAGE.g_tbl.rows[id+1].style.backgroundSize = WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_TIMEDIF ) / 3.6 + "px 50px";
-      
-      // differentiate the substation name
-      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_SUBEST].style.paddingLeft = 
-        ( WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUBEST ) ) * 5 ) % 30 + "px"
-      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_SUBEST].style.color = 
-        ColorOfSubstation[ WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUBEST ) ) % ColorOfSubstation.length ];
+  if ( rec == 2 )
+    { // eliminado
+    stl='color: ' + EventsViewer_ElimTxtColor + ';';
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.color = 'inherit';
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.color = 'inherit';
+    }
+  else      
+  if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("L") == -1 || rec )
+    { // reconhecido
+    stl = 'color: ' + EventsViewer_AckTxtColor + ';';
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.backgroundColor = ColorOfPriority[ pri ];
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.borderRadius = "10px";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.color = "black";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.textAlign = "center";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.opacity = ".4";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.color = 'inherit';
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.color = 'inherit';
+    }
+  else    
+    { // nÃ£o reconhecido (alarmado)
+    if ( pri === 0 )
+      {
+      stl = '';
+      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.color = ColorOfPriority[ pri ];
+      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.color = ColorOfPriority[ pri ];
+      }
+    else  
+      {
+      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.color = 'inherit';
+      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.color = 'inherit';
+      stl = 'color: ' + EventsViewer_AlmTxtColor + ';';
+      }                
+
+    // let the qualifiers columns be in the color of priority
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.backgroundColor = ColorOfPriority[ pri ];
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.borderRadius = "10px";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.color = "black";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.textAlign = "center";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.opacity = "1";
+    }
+
+  if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("F") != -1 )
+    { // falhado
+    stl = 'color: ' + EventsViewer_FailTxtColor + ';';
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.color = 'inherit';
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.color = 'inherit';
+    }
+    
+  if ( pri === 0 )
+    {
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.fontWeight = "bold";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.fontWeight = "bold";
+    }
+  else 
+    {
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.fontWeight = "inherit";
+    WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.fontWeight = "inherit";
+    }			
+
+  // represent time dif between events by a prortional top border, 1px per minute up to 1h
+  var timeant = 0;
+  try {
+  timeant = WebSAGE.g_tbl.cellsx( id-1, WebSAGE.g_COL_TIMEDIF );
+  } catch(e) {};
+  var px = (WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_TIMEDIF ) - timeant ) / 60;
+  if ( px > 60 ) px = 60;
+  if ( px < 1 )  px = 0;
+  stl = stl + "border-top:" + px + "px solid " + EventsViewer_GridColor + ";";
+  WebSAGE.g_tbl.setRowTextStyle( id, stl );
+  WebSAGE.g_tbl.rows[id+1].style.float = "left";
+  WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DATA].style.fontSize = "smaller";
+  WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_MSEC].style.fontSize = "smaller";
+  WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.fontSize = "smaller";
+  
+  // differentiate the substation name
+  WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_SUBEST].style.paddingLeft = 
+    ( WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUBEST ) ) * 5 ) % 30 + "px"
+  WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_SUBEST].style.color = 
+    ColorOfSubstation[ WebSAGE.g_subst_list.indexOf( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_SUBEST ) ) % ColorOfSubstation.length ];
   }
 catch ( e )  
   { 
@@ -1169,7 +1160,7 @@ doReconheceTudo: function( rec_apaga )
   {
   var row;
   
-  // se tem algum não reconhecido, torna reconhecido
+  // se tem algum nÃ£o reconhecido, torna reconhecido
   for ( row = 0; row < WebSAGE.g_tbl.getRowsNum(); row++ )
     {
     if ( rec_apaga == 0 )
@@ -1202,7 +1193,7 @@ if ( !document.getElementById("idCongelar").checked )
   WebSAGE.g_tbl.clearAll();
 
 if ( WebSAGE.g_modo == 4 && !document.getElementById("idHistorico").checked )
-  { // sai do modo histórico
+  { // sai do modo histÃ³rico
   if ( EventsViewer_AllowFilter )
      $('#imgFilter').css('display', "" );
   document.getElementById("HISTCTRLS").style.display = "none";
@@ -1242,13 +1233,13 @@ if ( document.getElementById("idCongelar").checked )
   }
 
 if ( document.getElementById("idHistorico").checked ) 
-  { // modo histórico
+  { // modo histÃ³rico
   // acerta posicionamento
   document.getElementById("TOOLBAR_ID").style.height = '80px';
   document.getElementById("divhead").style.top = '80px'
   document.getElementById("gridbox").style.top = '99px';
   
-  clearTimeout( WebSAGE.g_toutID ); // pára de atualizar
+  clearTimeout( WebSAGE.g_toutID ); // pÃ¡ra de atualizar
   clearTimeout( WebSAGE.g_ServerStatusID );
   document.getElementById("HISTCTRLS").style.display = "";
   document.getElementById("imgReconheceTudo").style.display = "none";
@@ -1281,7 +1272,7 @@ else
   }  
 
 WebSAGE.g_titulo_janela = Msg.NomeVisorEventos + " - " + titulmod + Msg.NomeProduto + " - " + Msg.VersaoProduto + postitul;
-document.title = "."; // necessário devido a um bug do chromium!
+document.title = "."; // necessÃ¡rio devido a um bug do chromium!
 document.title = WebSAGE.g_titulo_janela;
 
 setOpacity( document.getElementById("imgNormal"), 30 );  
@@ -1317,7 +1308,7 @@ fontSize: function(updn)
     
     window.onbeforeunload = null;
     
-    // recarrega a página
+    // recarrega a pÃ¡gina
     window.location.reload();        
 },
 
@@ -1369,7 +1360,7 @@ tbl_prepare: function()
         while ( WebSAGE.g_tbl.rows[0].cells.length > varr.length )
             WebSAGE.g_tbl.rows[0].deleteCell(WebSAGE.g_tbl.rows[0].cells.length - 1);
 
-        // acerta tamanho dos campos se a fonte for maior que a padrão
+        // acerta tamanho dos campos se a fonte for maior que a padrÃ£o
         if ( WebSAGE.g_fontsize > 16 )
             {
             for ( i = 0; i < varr.length; i++ )
@@ -1391,8 +1382,8 @@ tbl_prepare: function()
            WebSAGE.g_tbl.rows[line].insertCell(i);
            WebSAGE.g_tbl.rows[line].cells[i].innerHTML = varr[i];
            WebSAGE.g_tbl.rows[line].cells[i].style.boxSizing = "border-box";
-           WebSAGE.g_tbl.rows[line].cells[i].style.borderBottom = '1px solid ' + EventsViewer_GridColor;
-           WebSAGE.g_tbl.rows[line].cells[i].style.padding = "1px 0px";
+           // WebSAGE.g_tbl.rows[line].cells[i].style.borderBottom = '1px solid ' + EventsViewer_GridColor;
+           WebSAGE.g_tbl.rows[line].cells[i].style.padding = "1px 0px 1px 0px";
            if ( WebSAGE.g_tbl.larguraCol[i] == 0 )
              WebSAGE.g_tbl.rows[line].cells[i].style.display = 'none';
           else
@@ -1416,7 +1407,7 @@ tbl_prepare: function()
            {
            var cell = WebSAGE.g_tbl.rows[line].insertCell( -1 );
            var col = WebSAGE.g_tbl.rows[line].cells.length - 1;
-           cell.style.borderBottom = '1px solid ' + TabularViewer_GridColor;
+           cell.style.borderBottom = '1px solid ' + EventsViewer_GridColor;
            if ( WebSAGE.g_tbl.larguraCol[col] == 0 )
              cell.style.display = 'none';
            else
@@ -1501,12 +1492,20 @@ tbl_prepare: function()
         function( col, width ) 
         {
             WebSAGE.g_tbl.larguraCol[col] = width;
-            WebSAGE.g_tblhead.rows[0].cells[col].width = width;
+            try { // can cause error in IE
+                  WebSAGE.g_tblhead.rows[0].cells[col].width = width;
+            } catch (e) { 
+            WebSAGE.g_tblhead.rows[0].cells[col].width = width + 1;
+            }			
             WebSAGE.g_tblhead.rows[0].cells[col].style.minWidth = width + "px";
             WebSAGE.g_tblhead.rows[0].cells[col].style.display = (width == 0) ? 'none' : '';
             for (var i=0; i < WebSAGE.g_tbl.rows.length; i++) 
               {
-                WebSAGE.g_tbl.rows[i].cells[col].width = width;
+                try { // can cause error in IE
+                        WebSAGE.g_tbl.rows[i].cells[col].width = width;
+                } catch (e) { 
+                        WebSAGE.g_tbl.rows[i].cells[col].width = width + 1;
+                }			
                 WebSAGE.g_tbl.rows[i].cells[col].style.minWidth = width + "px";
                 WebSAGE.g_tbl.rows[i].cells[col].style.display = (width == 0) ? 'none' : '';
               }
@@ -1564,7 +1563,7 @@ gpsTimeInit: function( cfg )
       {
       case 0:
         WebSAGE.g_gpstime = 1;
-        // se a configuração é fixa em modo de hora do GPS, nem mostra ícone
+        // se a configuraÃ§Ã£o Ã© fixa em modo de hora do GPS, nem mostra Ã­cone
         $('#imgGpsOn').css('display', "none");
         $('#imgGpsOff').css('display', "none");
         // $('#imgGpsOn').css('opacity', "0.5");
@@ -1611,21 +1610,22 @@ gpsTimeOnOff: function()
           var date = new Date();
                date.setTime( date.getTime() + (3000 * 24 * 60 * 60 * 1000) );
           document.cookie = 'gpstime=' + WebSAGE.g_gpstime + '; expires=' + date.toGMTString();          
-          
+
+ 		  WebSAGE.g_tbl.setColWidth( WebSAGE.g_COL_MSEC, WebSAGE.g_gpstime * 40 );            
           WebSAGE.ModoClick();
       }
 },
 
-// busca lista de estações no servidor
+// busca lista de estaÃ§Ãµes no servidor
 leListaSEs : function() 
 {
-  // prepara função de callback que será chamada pelo script a ser devolvido pelo servidor
+  // prepara funÃ§Ã£o de callback que serÃ¡ chamada pelo script a ser devolvido pelo servidor
   WebSAGE.g_cbf_MostraSE = function() { setTimeout(WebSAGE.mostraSEs, 10); };
   // chama o servidor, executa o script devolvido
   WebSAGE.getScript( WebSAGE.g_remoteServer + '?S=1' + "&B=WebSAGE.g_cbf_MostraSE" );
 },
 
-// mostra lista de estações
+// mostra lista de estaÃ§Ãµes
 mostraSEs : function() 
 {
 var Lista = LISTA_SES.split("-");
@@ -1644,7 +1644,7 @@ for (var se in Lista)
 htxt = htxt + '</form>';
 
 document.getElementById("DIVFILT").innerHTML = htxt;
-// aumenta para caber todos as opções até um limite
+// aumenta para caber todos as opÃ§Ãµes atÃ© um limite
 if ( i > 30 )
   {
     i = 30;
@@ -1652,20 +1652,20 @@ if ( i > 30 )
 document.getElementById("DIVFILT").style.height = ( 20 * i ) + "px";
 },
 
-// recarrega a página 1x por dia para contornar leak de memória
+// recarrega a pÃ¡gina 1x por dia para contornar leak de memÃ³ria
 reload: function( whattodo )
 {
   if ( whattodo === "init" )
     {
-    var dt =  new Date ( (new Date()).getTime() + 1000 * 60 * 60 * 24 ); // próximo dia
+    var dt =  new Date ( (new Date()).getTime() + 1000 * 60 * 60 * 24 ); // prÃ³ximo dia
     dt.setHours( 4 ); // fixa 4 horas
-    dt.setMinutes( Math.random() * 60 ); // minuto aleatório
-    var dif = dt - (new Date()); // quanto falta para chegar às 4:xx h do dia seguinte
-    setTimeout( WebSAGE.reload, dif ); // vai chamar às 4 h
+    dt.setMinutes( Math.random() * 60 ); // minuto aleatÃ³rio
+    var dif = dt - (new Date()); // quanto falta para chegar Ã s 4:xx h do dia seguinte
+    setTimeout( WebSAGE.reload, dif ); // vai chamar Ã s 4 h
     return;
     }
 
-  // só recarrego se a janela de info/comando estiver fechada e for modo tempo real (não congelado ou histórico)
+  // sÃ³ recarrego se a janela de info/comando estiver fechada e for modo tempo real (nÃ£o congelado ou histÃ³rico)
   if ( NPTO == 0 && WebSAGE.g_modo < 3 )
     {  
     window.location.href = window.location.origin + window.location.pathname + "?MODO=" + WebSAGE.g_modo;
@@ -1715,7 +1715,7 @@ init: function()
     if ( WebSAGE.g_fontsize >= 30 )
       document.getElementById("imgFontSizeUp").style.display = "none";
 
-    // acerta a posição do box de filtros para ficar ao lado do ícone do funil
+    // acerta a posiÃ§Ã£o do box de filtros para ficar ao lado do Ã­cone do funil
     $('#DIVFILT').css( 'left', document.getElementById('imgFilter').getBoundingClientRect().right + 5 );
 
     var gridstyle = "outline:none;cursor:pointer;font-weight:normal;border:0px;white;padding:0px;margin-left:5px;";
@@ -1724,6 +1724,7 @@ init: function()
     gridstyle = gridstyle + 'font-family:' + EventsViewer_Font + ';'; 
     WebSAGE.g_tbl.setStyle(';', 'height:auto;font-size:' + WebSAGE.g_fontsize + 'px;' + gridstyle,';',';');
     WebSAGE.g_tbl.setInitWidths("80,80,40,0,0,70,400,170,0,55,0");
+
     WebSAGE.g_tbl.setHeader(Msg.EveNomesColunas);
 
     $('#gridbox').css('background-color', EventsViewer_TableColor);
@@ -1741,15 +1742,14 @@ init: function()
     $('#TBLHEAD').css('color', 'black');
     $('#TBLHEAD').css('font-family', EventsViewer_Font);
     
-    if ( location.host == "127.0.0.1" || location.host == "localhost" ) // se está acessando máquina local
-       $('#ANORM_ID').bind('click', function() { WebSAGE.getScript( WebSAGE.g_remoteServer + "?x=6" ); } ); // na máquina local o webserver abre nova janela do navegador
-    else // na máquina remota abre uma janela nova tipo popup
+    if ( location.host == "127.0.0.1" || location.host == "localhost" ) // se estÃ¡ acessando mÃ¡quina local
+       $('#ANORM_ID').bind('click', function() { WebSAGE.getScript( WebSAGE.g_remoteServer + "?x=6" ); } ); // na mÃ¡quina local o webserver abre nova janela do navegador
+    else // na mÃ¡quina remota abre uma janela nova tipo popup
        $('#ANORM_ID').bind('click', function() { window.open('tabular.html?SELMODULO=TODOS_ANORMAIS','Anormais','dependent=no,height=700,width=900,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no'); } );
        
-    if ( EventsViewer_TimeGPSorLocal == 1 )
-      WebSAGE.g_tbl.setColWidth( 2, 0 );  
+    WebSAGE.g_tbl.setColWidth( WebSAGE.g_COL_MSEC, WebSAGE.g_gpstime * 40 );            
       
-    // começa a atualizar     
+    // comeÃ§a a atualizar     
     WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, 2000 );
   
     WebSAGE.dataAtual();
@@ -1834,7 +1834,7 @@ init: function()
     setOpacity(document.getElementById("imgHistorico"), 30);
     
     WebSAGE.g_titulo_janela = Msg.NomeVisorEventos + " - " + Msg.NomeProduto + " - " + Msg.VersaoProduto + " - " + Msg.ModoNormal ;
-    document.title = "."; // necessário devido a um bug do chromium!
+    document.title = "."; // necessÃ¡rio devido a um bug do chromium!
     document.title = WebSAGE.g_titulo_janela;
 
     // testa se realmente deseja sair
@@ -1851,14 +1851,14 @@ init: function()
     document.getElementById('TBLEVE').tabIndex = 1; // permite foco na tabela
     document.getElementById('TBLEVE').focus();      
        
-    // desabilita o botão direito 
+    // desabilita o botÃ£o direito 
     document.oncontextmenu = function() { return false; };    
     
     setTimeout( WebSAGE.leListaSEs, 500 );
   } // init
 }; // WebSAGE
 
-Core.start(WebSAGE);  // vai chamar metodo init() somente quando terminar de carregar a página
+Core.start(WebSAGE);  // vai chamar metodo init() somente quando terminar de carregar a pÃ¡gina
 
 //set the opacity of an element to a specified value
 function setOpacity(obj, o) {

@@ -55,6 +55,7 @@ unsigned TIMER_ESPERA_VISOR = 2000;
 String REMOTE_HOST;
 int REMOTE_PORT = 51909;
 String LISTA_TELAS_FILE = "..\\svg\\screen_list.js";
+String LISTA_TELAS_FILE_NONUTF8 = "..\\svg\\screen_list-nonutf8.js";
 String LISTA_TELAS_WEB = "svg/screen_list.js";
 
 String StrReplace ( String S, String Find, String Repl )
@@ -742,8 +743,14 @@ if ( REMOTE_HOST == "127.0.0.1" )
 else
   fmSair->lbServer->Caption = REMOTE_HOST;
 
+// convert screen_list UTF8 encoded to native windows encoding
+WinExec("..\\bin\\convert-screenlist-from-utf8.bat", SW_HIDE);
+Sleep(500);
+
 FILE * fp;
-fp = fopen( LISTA_TELAS_FILE.c_str(), "rt" );
+fp = fopen( LISTA_TELAS_FILE_NONUTF8.c_str(), "rt" );
+if (fp == NULL)
+  fp = fopen( LISTA_TELAS_FILE.c_str(), "rt" );
 
 if (fp)
   {
@@ -990,6 +997,8 @@ if ( TRANSPARENCIA )
  RedrawWindow(Handle, NULL, NULL, RDW_UPDATENOW);
  }
 
+SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+ 
 Timer5->Interval = 10000;
 Timer5->Enabled = false;
 Timer10->Enabled = true; // shrink toolbar
@@ -1089,6 +1098,7 @@ static int encontrada = 0;
       if ( encontrada == 1 )
         encontrada = 0;
       }
+
 
     JANELA_AENCONTRAR = "Virtual Memory";
     EnumWindows( (int (__stdcall *)()) enumwndprc, 0);
@@ -1565,4 +1575,11 @@ if ( GetAsyncKeyState(VK_F12) && GetAsyncKeyState(VK_MENU) )
    }
 }
 
+
+void __fastcall TfmShell::FormActivate(TObject *Sender)
+{
+SetFocus();
+SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+}
+//---------------------------------------------------------------------------
 

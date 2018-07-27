@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2016 - Ricardo L. Olsen
+	Copyright 2008-2018 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -702,7 +702,13 @@ if (fp)
     char * endquoteptr = strchr(descricao, '\"');
     if ( endquoteptr != NULL ) // tira o último "
        *endquoteptr = 0;
-    S = Trim(descricao);
+
+    // convert commas to points in state and description fields   
+    char * commapos;
+    while ( (commapos = strchr(descricao, ',')) != NULL )
+       *commapos = '.';
+    while ( (commapos = strchr(alarme, ',')) != NULL )
+       *commapos = '.';
 
     if ( tipo == 'D' || origem == CODORIGEM_COMANDO )
       {
@@ -744,22 +750,35 @@ if (fp)
 
       // ajusta banda morta de acordo com tipo ou unidades
       Pontos[nponto].BandaMortaHist = 2.0;
-      if ( strcmp( Pontos[nponto].Unidade , "kV" ) == 0 )
-        Pontos[nponto].BandaMortaHist = 0.4;
+      if ( strcmp( Pontos[nponto].Unidade , "kV" ) == 0 ||
+           strcmp( Pontos[nponto].Unidade , "Hz" ) == 0 ||
+           tpeq == CODTPEQ_KV ||
+           tpeq == CODTPEQ_HZ
+         )
+        Pontos[nponto].BandaMortaHist = 0.2;
       else
       if ( strcmp( Pontos[nponto].Unidade , "MW" ) == 0 ||
            strcmp( Pontos[nponto].Unidade , "Mvar" ) == 0 ||
-           strcmp( Pontos[nponto].Unidade , "MVA" ) == 0
+           strcmp( Pontos[nponto].Unidade , "MVA" ) == 0 ||
+           tpeq == CODTPEQ_MW ||
+           tpeq == CODTPEQ_MVAR ||
+           tpeq == CODTPEQ_MVA
          )
         Pontos[nponto].BandaMortaHist = 2.5;
       else
-      if ( strcmp( Pontos[nponto].Unidade , "oC" ) == 0 )
+      if ( strcmp( Pontos[nponto].Unidade , "oC" ) == 0 ||
+           tpeq == CODTPEQ_TEMP
+         )
         Pontos[nponto].BandaMortaHist = 4.0;
       else  
-      if ( strcmp( Pontos[nponto].Unidade , "A" ) == 0 )
+      if ( strcmp( Pontos[nponto].Unidade , "A" ) == 0 ||
+           tpeq == CODTPEQ_AMP
+         )
         Pontos[nponto].BandaMortaHist = 4.0;
       else
-      if ( tpeq == 16 || strcmp( Pontos[nponto].Unidade , "Pos" ) == 0 ) // Tap
+      if ( strcmp( Pontos[nponto].Unidade , "Pos" ) == 0 ||
+           tpeq == 16 
+         ) // Tap
          Pontos[nponto].BandaMortaHist = 0.0;
 
       // ajusta pelo fator configurado   
@@ -1017,10 +1036,10 @@ ListaSEs.insert("HMIX");
 EscrevePonto(NPONTO_OSHMI_OPER, 0, 0x02, 1);
 Pontos[NPONTO_OSHMI_OPER].TipoAD = 'D';
 Pontos[NPONTO_OSHMI_OPER].Endereco = NPONTO_OSHMI_OPER;
-strcpy(Pontos[NPONTO_OSHMI_OPER].Estacao,"IHMIXHMX");
+strcpy(Pontos[NPONTO_OSHMI_OPER].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_OSHMI_OPER].Tag,"HMIX-WEBSERVER_ST");
-strcpy(Pontos[NPONTO_OSHMI_OPER].EstadoOff,"FORA_DE_OPERAÇÃO");
-strcpy(Pontos[NPONTO_OSHMI_OPER].EstadoOn,"EM_OPERAÇÃO");
+strcpy(Pontos[NPONTO_OSHMI_OPER].EstadoOff,"NOT_OPERATIONAL");
+strcpy(Pontos[NPONTO_OSHMI_OPER].EstadoOn,"OPERATIONAL");
 strcpy(Pontos[NPONTO_OSHMI_OPER].Descricao,"Webserver Status");
 
 EscrevePonto(NPONTO_OSHMI_MODO, 1, 0x01, 1);
@@ -1780,6 +1799,7 @@ if ( Valor < 1.0 )
   AjusteValorBaixo = 4.0;
 
 float bm_temporizada = BandaMortaHist * 60000.0 / (float)( 1 + GetTickCount() - TickHist );
+
 if ( bm_temporizada > BandaMortaHist )
   bm_temporizada = BandaMortaHist;
 

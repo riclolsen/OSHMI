@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2016 - Ricardo L. Olsen
+	Copyright 2008-2018 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

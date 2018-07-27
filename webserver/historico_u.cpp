@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2016 - Ricardo L. Olsen
+	Copyright 2008-2018 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -49,19 +49,24 @@ ListaValHist.push_back( hvl );
 
 void TfmHist::ProcessaFila()
 {
-static int tickant=0;
+static int tickant = GetTickCount();
+static int cntFileWrites=0;
 int cnt = 0;
 DWORD tickini = GetTickCount();
-const int LIM_INSERT = 200; // o limite teórico de insert composto é de 500, vou usar menos
+const int LIM_INSERT = 250; // o limite teórico de insert composto é de 500, vou usar menos
 
-static cntcall = 0;
+static unsigned int cntcall = 0;
 Label6->Caption = ++cntcall;
+Label3->Caption = ListaValHist.size();
+Label4->Caption = tickini - tickant;
 
-  // espera juntar LIM_INSERT ou passar ao menos 3s para gravar menos
+  // espera juntar LIM_INSERT ou passar ao menos 1.5s para gravar menos
   if ( ( ListaValHist.size() >= (2 * LIM_INSERT) ) ||
-       ( ListaValHist.size() > 0 && ( (tickini - tickant) > 3000 ) )
+       ( ListaValHist.size() > 0 && ( (tickini - tickant) > 1500 ) )
      )
     {
+    cntFileWrites++;
+    tickant = tickini;
     FILE * fp;
     String fname;
     fname = fname.sprintf( "..\\db\\hist_%u.sql", GetTickCount() );
@@ -158,17 +163,11 @@ Label6->Caption = ++cntcall;
         {
         fputs( PGSQL.c_str(), fppg );
         fclose( fppg );
-        }       
+        }
       }
     }
 
-if ( cnt != 0 )
-  {
-    Label3->Caption = ListaValHist.size();
-    Label4->Caption = GetTickCount() - tickini;
-  }
-  
-tickant = tickini;
+    lbWrites->Caption = cntFileWrites;
 }
 
 void __fastcall TfmHist::Timer1Timer(TObject *Sender)

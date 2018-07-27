@@ -10,13 +10,13 @@ cd \oshmi\db
 IF EXIST forfiles.exe (
 
 FOR /L %%i IN (0,0,0) DO ( 
-FORFILES -mpg_hist_*.sql   -c"CMD /c ..\PostgreSQL\bigsql\pg10\bin\psql.exe -h 127.0.0.1 -d oshmi -U postgres -w < @FILE && del @FILE & ECHO @FILE" & PING -n 3 127.0.0.1 > nul 
+FORFILES -mpg_hist_*.sql   -c"CMD /c ..\PostgreSQL\bigsql\pg10\bin\psql.exe -h 127.0.0.1 -d oshmi -U postgres -w < @FILE && del @FILE & ECHO @FILE" & PING -n 2 127.0.0.1 > nul 
 )
 
 ) ELSE (
 
 FOR /L %%i IN (0,0,0) DO ( 
-FORFILES -m pg_hist_*.sql   -c "CMD /c ..\PostgreSQL\bigsql\pg10\bin\psql.exe -h 127.0.0.1 -d oshmi -U postgres -w  < @FILE && del @FILE & ECHO @FILE" & PING -n 3 127.0.0.1 > nul 
+FORFILES -m pg_hist_*.sql   -c "CMD /c ..\PostgreSQL\bigsql\pg10\bin\psql.exe -h 127.0.0.1 -d oshmi -U postgres -w  < @FILE && del @FILE & ECHO @FILE" & PING -n 2 127.0.0.1 > nul 
 )
 
 )

@@ -29,7 +29,7 @@ $url = $arrurl[0];
 
 // Parameters
 // FILTER = Tag or point key filter, can be a comma separated list or can be used * in tag to filter
-// INITDATE = set a initial date for historical data (if not set will be returned real time data), format: 2010-03-11T06:40:04
+// INITDATE = set a initial date for historical data (if not set will be returned real time data), format: 2010-03-18T06:40:04
 // ENDDATE = set a and date for historical data (if not set will be returned all data from INITDATE up to now)
 // SAMPLEINTERVAL = interval of data sampling
 
@@ -116,7 +116,7 @@ $pdo->exec ( "PRAGMA temp_store = MEMORY" );
 $pdo->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
 
 
-// define para que o PDO lance exceçoes caso ocorra erros
+// define para que o PDO lance exceÃ§oes caso ocorra erros
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 // $pdo->exec("SET SESSION character_set_results = 'UTF8';");
 // $pdo->exec("SET NAMES UTF8;");
@@ -135,16 +135,22 @@ else
 $filter2 = '("'.$filter2.'")';
 
 if ( $realtime )
+  {
   $stmt = $pdo->prepare(
            "SELECT 
               d.ID as TAG, 
               d.NPONTO as POINT_KEY, 
-              h.VALOR as VALUE, 
+              CASE d.TIPO WHEN 'D' THEN 
+			      1 - h.VALOR
+			    ELSE
+                  h.VALOR 
+				END
+				as VALUE, 
               CASE d.TIPO WHEN 'D' THEN 
                 CASE h.VALOR WHEN 0 THEN 
                 d.ESTON ELSE d.ESTOFF END 
               WHEN 'A' THEN 
-                d.UNIDADE END as STATUS, 
+                h.VALOR || ' ' || d.UNIDADE END as STATUS, 
               h.FLAGS>127 as FAILED, 
               max(h.DATA) as TIMESTAMP 
             from 
@@ -158,18 +164,30 @@ if ( $realtime )
               h.DATA <= :enddate
               group by d.nponto
            ");
+	$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$stmt->execute(array('filter' => $filter,
+						 'initdate' => $initdate,
+						 'enddate' => $enddate                   
+						));
+    }
 else
 if ( $intervalo == 0 )
-  $stmt = $pdo->prepare(
+    {
+    $stmt = $pdo->prepare(
            "SELECT 
               d.ID as TAG, 
               d.NPONTO as POINT_KEY, 
-              h.VALOR as VALUE, 
+              CASE d.TIPO WHEN 'D' THEN 
+			      1 - h.VALOR
+			    ELSE
+                  h.VALOR 
+				END
+				as VALUE, 
               CASE d.TIPO WHEN 'D' THEN 
                 CASE h.VALOR WHEN 0 THEN 
                 d.ESTON ELSE d.ESTOFF END 
               WHEN 'A' THEN 
-                d.UNIDADE END as STATUS, 
+                h.VALOR || ' ' || d.UNIDADE END as STATUS, 
               h.FLAGS>127 as FAILED, 
               h.DATA as TIMESTAMP 
             from 
@@ -182,19 +200,31 @@ if ( $intervalo == 0 )
               h.DATA >= :initdate and 
               h.DATA <= :enddate
           ");
+	$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$stmt->execute(array('filter' => $filter,
+						 'initdate' => $initdate,
+						 'enddate' => $enddate                   
+						));
+	}
 else
-  $stmt = $pdo->prepare(
+   {
+   $stmt = $pdo->prepare(
            "SELECT 
               d.ID as TAG, 
               d.NPONTO as POINT_KEY, 
-              avg(h.VALOR) as VALUE, 
+              CASE d.TIPO WHEN 'D' THEN 
+			      1 - avg(h.VALOR) 
+			    ELSE
+                  avg(h.VALOR) 
+				END
+				as VALUE, 
               CASE d.TIPO WHEN 'D' THEN 
                 CASE h.VALOR WHEN 0 THEN 
                 d.ESTON ELSE d.ESTOFF END 
               WHEN 'A' THEN 
-                d.UNIDADE END as STATUS, 
-              h.FLAGS>127 as FAILED, 
-              (cast(h.DATA as int)/(60*$intervalo))*(60*$intervalo) as TIMESTAMP 
+                avg(h.VALOR) || ' ' || d.UNIDADE END as STATUS, 
+              max(h.FLAGS>127) as FAILED, 
+              (cast(h.DATA as int)/(60*:intervalo))*(60*:intervalo) as TIMESTAMP 
             from 
               hist h 
             join 
@@ -202,19 +232,20 @@ else
               on d.nponto=h.nponto and
                  d.nponto in (select nponto from dumpdb where id like :filter or id in $filter2 or nponto in $filter2 )
             where 
-              h.DATA >= :initdate and 
+              (cast(h.DATA as int)/(60*:intervalo))*(60*:intervalo) >= cast(:initdate as int) and 
               h.DATA <= :enddate
             GROUP BY 
               d.nponto, 
-              (cast(h.DATA as int)/(60*$intervalo))*(60*$intervalo)
+              (cast(h.DATA as int)/(60*:intervalo))*(60*:intervalo)
            ");
-
-$stmt->setFetchMode(PDO::FETCH_ASSOC);
-  
-$stmt->execute(array('filter' => $filter,
-                     'initdate' => $initdate,
-                     'enddate' => $enddate,                     
-                    ));
+	$stmt->setFetchMode(PDO::FETCH_ASSOC);
+	$stmt->execute(array('filter' => $filter,
+						 'initdate' => $initdate,
+						 'enddate' => $enddate,
+						 'intervalo' => $intervalo                  
+						));
+    }
+ 
   
 foreach ($stmt as $row)  
   {
@@ -230,7 +261,8 @@ foreach ($stmt as $row)
   echo '  <content type="application/xml">'."\n";
   echo "    <m:properties>\n";
 
-  $status = mb_convert_encoding($row['STATUS'], 'UTF-8', 'ISO-8859-1' ); 
+  // $status = mb_convert_encoding($row['STATUS'], 'UTF-8', 'ISO-8859-1' ); 
+  $status = $row['STATUS'];
 
   echo "      <d:TAG m:type=\"Edm.String\">{$row['TAG']}</d:TAG>\n";
   echo "      <d:POINT_KEY m:type=\"Edm.Int64\">{$row['POINT_KEY']}</d:POINT_KEY>\n";
@@ -250,7 +282,7 @@ echo '</feed>';
 }
 catch( PDOException $Exception ) 
 {
-    echo $Exception.Message;
+    // var_dump( $Exception );
     die();   
 }
 

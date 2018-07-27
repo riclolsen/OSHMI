@@ -1,6 +1,6 @@
 <?PHP
 
-// OSHMI/Open Substation HMI - Copyright 2008-2017 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 // Read and write annotations to a database (notes.sl3)
 
@@ -36,7 +36,6 @@ if ( isset( $p_W ) )
 if ( $write && isset( $p_CONTENT ) )
   {
   $p_CONTENT = trim($p_CONTENT);
-  //$p_CONTENT = str_replace("'", '"', $p_CONTENT);
 
   // Forward request to redendant HMI if exists
   $otherhmiip="";
@@ -69,13 +68,21 @@ try {
     if ( $write )
       {
       $now_tm = time();
-      $qry = "update notes set ERASED = 1, TSERASE = $now_tm where POINTNUM = $pointnum and ERASED = 0";
-      $pdo->exec ( $qry );
+      $qry = "update notes set ERASED = 1, TSERASE = :now_tm where POINTNUM = :pointnum and ERASED = 0";
+      $stmt = $pdo->prepare( $qry );
+      $stmt->execute(array( 'pointnum' => $pointnum,
+		                    'now_tm' => $now_tm
+                          ));
       if ( $p_CONTENT != "" )
         {
         $rmt_ip =  $_SERVER['REMOTE_ADDR'];  
-        $qry = "insert into notes (ERASED, OPENED, POINTNUM, CONTENT, TSCREATE, TSERASE, USER) values (0,0,$pointnum,'$p_CONTENT',$now_tm,0,'$rmt_ip')";
-        $pdo->exec ( $qry );
+        $qry = "insert into notes (ERASED, OPENED, POINTNUM, CONTENT, TSCREATE, TSERASE, USER) values (0, 0, :pointnum, :content, :now_tm, 0, :rmt_ip)";
+		$stmt = $pdo->prepare( $qry );
+        $stmt->execute(array( 'pointnum' => $pointnum,
+		                      'content' => $p_CONTENT,
+							  'now_tm' => $now_tm,
+							  'rmt_ip' => $rmt_ip
+                          ));
         }
       }
     else

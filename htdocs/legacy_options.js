@@ -1,4 +1,4 @@
-// Par‚metros configur·veis legados
+// Par√¢metros configur√°veis legados
 
 // Visor de Telas ---------------------------------------------------------------------------------
 

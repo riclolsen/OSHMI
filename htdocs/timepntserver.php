@@ -2,9 +2,9 @@
 
 // OSHMI/Open Substation HMI - Copyright 2008-2016 - Ricardo L. Olsen
 
-// Par‚metros:
+// Par√¢metros:
 //
-// Valores de foto ou sÈrie histÛrica:
+// Valores de foto ou s√©rie hist√≥rica:
 // &P=LISTAPONTOS &H=HORA &D=DATA INICIAL [&E=DATA FINAL] [&I=INTERVALO EM min] &T=$DATEFMT &U=UNIXTIME &F=FUNCAO B=CALLBACK
 //
 // HORA : hora no formato hh:mm:ss
@@ -13,14 +13,14 @@
 // ou
 // UNIXTIME: unix time 
 //
-// FUNCAO : 'F'=Foto histÛrica, 'S'=SÈrie histÛrica desde a hora especificada atÈ a hora corrente
-// CALLBACK : nome da funÁ„o de callback
+// FUNCAO : 'F'=Foto hist√≥rica, 'S'=S√©rie hist√≥rica desde a hora especificada at√© a hora corrente
+// CALLBACK : nome da fun√ß√£o de callback
 //
 
 // Show no errors
 // error_reporting(0);
 
-header("Content-type: text/javascript; charset=ISO-8859-1");
+header("Content-type: text/javascript; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"timepntserver.js\"");
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");

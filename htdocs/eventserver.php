@@ -2,32 +2,32 @@
 
 // OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
 
-// Parâmetros:
+// ParÃ¢metros:
 //
 // Eventos em tempo real:
 // &E=MAXEVENTOS &A=AGREGAR &G=HORAGPS &F=FILTRO &B=CALLBACK
-// MAXEVENTOS : número máximo de alarmes
-// AGREGAR : 1=agrega eventos do mesmo ponto, 0=não agrega
+// MAXEVENTOS : nÃºmero mÃ¡ximo de alarmes
+// AGREGAR : 1=agrega eventos do mesmo ponto, 0=nÃ£o agrega
 // HORAGPS : 1=trabalha com a hora do campo (GPS) para os eventos, 0=hora local
-// FILTRO : Filtro por subestação (lista separada por vírgula) 
-// CALLBACK : nome da função de callback
+// FILTRO : Filtro por subestaÃ§Ã£o (lista separada por vÃ­rgula) 
+// CALLBACK : nome da funÃ§Ã£o de callback
 //
 // OU
 //
-// Eventos históricos:
+// Eventos histÃ³ricos:
 // &V=MAXEVENTOS &H=HORAINI &D=DATAINI &G=HORAGPS &F=FILTRO &T=DATEFMT &B=CALLBACK 
-// MAXEVENTOS : número máximo de alarmes
+// MAXEVENTOS : nÃºmero mÃ¡ximo de alarmes
 // HORAINI : Hora inicial dos eventos
 // DATAINI : Data inicial dos eventos
 // HORAGPS : 1=trabalha com a hora do campo (GPS) para os eventos, 0=hora local
-// FILTRO : Filtro por ESTAÇÃO ou ID ou DESCRIÇÃO  
+// FILTRO : Filtro por ESTAÃ‡ÃƒO ou ID ou DESCRIÃ‡ÃƒO  
 // DATEFMT : deprecated parameter, not needed anymore
-// CALLBACK : nome da função de callback
+// CALLBACK : nome da funÃ§Ã£o de callback
 
 // Show no errors
 error_reporting(0);
 
-header("Content-type: text/javascript; charset=ISO-8859-1");
+header("Content-type: text/javascript; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"eventserver.js\"");
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");
@@ -39,7 +39,7 @@ $i18n = parse_ini_file( '../i18n/messages_i18n.ini', true );
 
 extract($_REQUEST, EXTR_PREFIX_ALL|EXTR_SKIP, 'p');
 
-// consulta deve ser modo Tempo Real "E" ou Histórico "V":
+// consulta deve ser modo Tempo Real "E" ou HistÃ³rico "V":
 if ( ! isset( $p_E ) && ! isset( $p_V ) )
   return;
 
@@ -57,7 +57,7 @@ if ( isset( $p_V ) )
 if ( isset( $p_H ) ) $HORAINI =  $p_H; else $HORAINI = "00:00:00";
 if ( isset( $p_D ) ) $DATAINI =  $p_D; else $DATAINI = "";
 
-if ( isset( $p_A ) ) $AGREGAR =  intval($p_A); else $AGREGAR = 0; // 0:não agrega eventos, 1:agrega, 2:modo pânico
+if ( isset( $p_A ) ) $AGREGAR =  intval($p_A); else $AGREGAR = 0; // 0:nÃ£o agrega eventos, 1:agrega, 2:modo pÃ¢nico
 if ( isset( $p_G ) ) $HORAGPS =  intval($p_G); else $HORAGPS = 1;
 if ( isset( $p_F ) ) $FILTRO = $p_F; else $FILTRO = "";
 if ( isset( $p_B ) ) $CALLBACK = $p_B; else $CALLBACK = "";
@@ -111,17 +111,17 @@ else
 
 $TIPO_ANALOGICO = 1;
 $TIPO_DIGITAL = 0;
-$QUAL_CASADEC = 0x03; // casa decimal no ponto analógico
-$QUAL_TIPO = 0x20; // flag para o tipo do ponto Analógico/Digital
+$QUAL_CASADEC = 0x03; // casa decimal no ponto analÃ³gico
+$QUAL_TIPO = 0x20; // flag para o tipo do ponto AnalÃ³gico/Digital
 $QUAL_FALHATAG = 0x40; // flag para falha em tag de tempo de eventos
 $QUAL_FALHA = 0x80; // flag para a invalidade do ponto
 $QUAL_ORIGEM = 0x0C;
 $QUAL_ESTADO = 0x01;
 $QUAL_ESTADO_DUPLO = 0x03;
 $QUAL_SUBST = 0x10;
-$QUAL_EVENTOANALOGICO = 0x10; // flag de registro de evento analógico com valor no cmapo UTR
+$QUAL_EVENTOANALOGICO = 0x10; // flag de registro de evento analÃ³gico com valor no cmapo UTR
 $ORG_SUPERVISIONADO = 0x00; // origem normal: supervisionado
-$ORG_CALCULADO = 0x04; // ponto com origem em cálculo
+$ORG_CALCULADO = 0x04; // ponto com origem em cÃ¡lculo
 $ORG_CARGAINIC = 0x08; // Ponto nunca atualizado
 $ORG_MANUAL = 0x0C; // ponto de origem manual
 $ORG_MASCARA = 0x0C; // mascara de origem 
@@ -274,7 +274,7 @@ try {
          if ( $flags & $QUAL_FALHATAG )
            $Qlf = $Qlf . "T";
     
-         // não mostra o qualificador substituído para eventos analógicos
+         // nÃ£o mostra o qualificador substituÃ­do para eventos analÃ³gicos
          if ( ( $flags & $QUAL_TIPO ) == $TIPO_DIGITAL )
          if ( $flags & $QUAL_SUBST )
            $Qlf = $Qlf . "S";
@@ -285,7 +285,7 @@ try {
          if ( ( $flags & $ORG_MASCARA ) == $ORG_MANUAL )
            $Qlf = $Qlf . "M";
          else
-         if ( ( $flags & $ORG_MASCARA ) == $ORG_CARGAINIC ) // esta situação não deve ocorrer para eventos
+         if ( ( $flags & $ORG_MASCARA ) == $ORG_CARGAINIC ) // esta situaÃ§Ã£o nÃ£o deve ocorrer para eventos
            $Qlf = $Qlf . "X";
     
          if ( $row['RECON'] == 0 )
@@ -295,7 +295,7 @@ try {
              
         // $dt = getdate( $row['DATAH'] );
         
-        // para mostrar o número de repetições de eventos sobre o mesmo ponto
+        // para mostrar o nÃºmero de repetiÃ§Ãµes de eventos sobre o mesmo ponto
         $conteve = intval( $row['CNT'] );
         $strnumeve = "";
         if ( $AGREGAR > 0 && $conteve > 1 )

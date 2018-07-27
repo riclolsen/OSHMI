@@ -2,11 +2,15 @@
 
 //----------------------------------------------------------------------------
 
-// Classe para acesso ao HistÛrico de Supervis„o, SQL e SUP
+// Classe para acesso ao Hist√≥rico de Supervis√£o, SQL e SUP
 // Ver exemplo de uso ao final
-// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
-header("Content-Type: text/html; charset=ISO-8859-1");
+header("Content-Type: text/html; charset=UTF-8");
+
+//ini_set('display_errors', 1);
+//ini_set('display_startup_errors', 1);
+//error_reporting(E_ALL);
 
 require_once '../timezone.php';
 
@@ -49,7 +53,7 @@ return FALSE;
 class THistorico
 {
  var $CaminhoSup="/hstsup/niv01/";
- var $lista_pontos; // lista com n˙mero dos pontos
+ var $lista_pontos; // lista com n√∫mero dos pontos
  var $lista_id;     // lista com id dos pontos
  var $lista_tipo;   // lista com o tipo dos pontos
  var $horainicial;
@@ -80,7 +84,7 @@ class THistorico
  $this->origem=0; // origem qualquer
  
  
- // acerta caminho de inclus„o, para funcionar pele linha de comando e WEB    
+ // acerta caminho de inclus√£o, para funcionar pele linha de comando e WEB    
  $this->CaminhoSup = "./"; 
  }
 
@@ -123,7 +127,7 @@ WHERE
        
      if ( $found ==0 )  
        {
-       array_splice($this->lista_pontos,$i,1);  // n„o encontrado: remove ponto da lista
+       array_splice($this->lista_pontos,$i,1);  // n√£o encontrado: remove ponto da lista
        }
    }
  }
@@ -271,7 +275,7 @@ WHERE
              }
            }
          else
-           $falha=128|0x20; // o minuto n„o foi gravado, mantÈm o valor do anterior com falha
+           $falha=128|0x20; // o minuto n√£o foi gravado, mant√©m o valor do anterior com falha
          }
       else
          { // digital
@@ -283,7 +287,7 @@ WHERE
            $valor=(GetByte($OL_Hand)&(0x01<<$posdig%8))?1:0;
            }
          else
-           $falha=128; // o minuto n„o foi gravado, mantÈm o valor do anterior com falha
+           $falha=128; // o minuto n√£o foi gravado, mant√©m o valor do anterior com falha
 
          }
 
@@ -398,7 +402,7 @@ function busca_sql($lst_ptos=array(), $data="")
       $DATAINI = str_replace ("/", "-", $DATAINI);
     $FILTDH = strtotime($DATAINI." "."00:00:00");    
     
-    // pego a ˙ltima gravaÁ„o antes da data inicial como valor inicial do dia solicitado
+    // pego a √∫ltima grava√ß√£o antes da data inicial como valor inicial do dia solicitado
 //    $query = "SELECT data as DATA, valor as VALOR, flags as FLAGS, 1 as LIXO from hist where nponto=$pto and data>=$FILTDH and data<= ($FILTDH + 60*60*24) ".
 //             "union SELECT $FILTDH as DATA, valor as VALOR, flags as FLAGS, max(data) as LIXO from hist where nponto=$pto and data<$FILTDH order by data ";
     $query = "SELECT data as DATA, valor as VALOR, flags as FLAGS from hist where nponto=$pto and data>=$FILTDH and data<= ($FILTDH + 60*60*24) ".
@@ -431,7 +435,7 @@ function busca_sql($lst_ptos=array(), $data="")
           if ($tipo=='A')
             $flags&=0xFE;  
           
-          // apaga o bit Q, ser· usado para Integridade/Variacao
+          // apaga o bit Q, ser√° usado para Integridade/Variacao
           $flags&=0xBF;
                     
           array_push($colunas,$flags);
@@ -440,7 +444,7 @@ function busca_sql($lst_ptos=array(), $data="")
             {
             if ($flags>=128)
               $cont_falhas++;
-//          else // sÛ considera valores ok para m·ximo e mÌnimo
+//          else // s√≥ considera valores ok para m√°ximo e m√≠nimo
               {
               if ($valor>$max)
                 {
@@ -454,7 +458,7 @@ function busca_sql($lst_ptos=array(), $data="")
                 }
               }
 
-            if ($hora[6]=='0' && $hora[7]=='0') // sÛ o minuto redondo para c·lculo da hora
+            if ($hora[6]=='0' && $hora[7]=='0') // s√≥ o minuto redondo para c√°lculo da hora
               {
               $med+=$valor;
               $cnt_med++;
@@ -490,7 +494,7 @@ function busca_sql($lst_ptos=array(), $data="")
       //else  
       //  array_push($colunas,0);
       array_push($colunas,0);
-      // array_push($colunas,"MÈdia");
+      // array_push($colunas,"M√©dia");
       array_push($colunas,"-");
       
       array_unshift($linhas, $colunas);
@@ -515,7 +519,183 @@ function busca_sql($lst_ptos=array(), $data="")
 
 //----------------------------------------------------------------------------
 
- // busca genÈrica no histÛrico: pega do SUP ou do SQL, o que for melhor
+// busca direcionada ao OSHMI POSTGRESQL
+
+function busca_pgsql($lst_ptos=array(), $data="")
+  {
+  if (count($lst_ptos))
+    $this->lista_pontos=$lst_ptos;
+
+  $this->ajusta_chaves();
+
+  try 
+    {
+      $db = new PDO( 'pgsql:host=127.0.0.1;port=5432;dbname=oshmi;user=grafana;password=oshmi;sslmode=disable;' );
+	  if ($data!="")
+		$this->define_data($data);
+
+	  $retorno=array();
+
+	  $cnt=0;
+	  foreach ( $this->lista_pontos as $pto )
+		{
+		$tipo=$this->lista_tipo[$cnt];
+		$cnt++;
+
+		if ($this->intervalo==0 || $tipo=='D')
+		  $filtra_hora="";
+		else
+		  $filtra_hora="and hora like '%%:%%:00'";
+		$DATAINI = sprintf("%02d/%02d/%04d", $this->dia, $this->mes, $this->ano);
+		$DATEFMT = "DD/MM/YYYY";
+		if ( $DATEFMT == "DD/MM/YYYY" )
+		  $DATAINI = str_replace ("/", "-", $DATAINI);
+		$FILTDH = strtotime($DATAINI." "."00:00:00");    
+		
+		// pego a √∫ltima grava√ß√£o antes da data inicial como valor inicial do dia solicitado
+		$query =  "
+		          SELECT 
+				     UNIX_TIMESTAMP as data,
+					 VALUE as valor,
+					 FLAGS as flags
+				  FROM 
+				     historical_data
+				  WHERE 
+				    POINT_KEY=$pto and 
+				    UNIX_TIMESTAMP>=$FILTDH and 
+					UNIX_TIMESTAMP<=($FILTDH + 60*60*24)
+				     
+				  UNION
+                  SELECT				  
+				     $FILTDH as data,
+					 VALUE as valor,
+					 FLAGS as flags
+				  FROM 
+				     historical_data
+				  WHERE 
+				    POINT_KEY=$pto and 
+					UNIX_TIMESTAMP=(select UNIX_TIMESTAMP from historical_data where POINT_KEY=$pto and UNIX_TIMESTAMP<$FILTDH order by UNIX_TIMESTAMP desc limit 1 )
+				  order by data
+		          ";
+
+		$i=0;
+		if ($this->stats)
+		  {
+		  $hmin="";
+		  $hmax="";
+		  $min=9999999;
+		  $max=-9999999;
+		  $med=0;
+		  $cnt_med=0;
+		  $cont_falhas=0;
+		  }
+      
+        }
+
+    $linhas = array();  
+    foreach ( $db->query( $query ) as $row )
+      {
+          $i++;
+
+          $colunas=array();
+          $dt = getdate( $row['data'] );
+          $hora = sprintf( "%02d:%02d:%02d", $dt["hours"], $dt["minutes"], $dt["seconds"] );
+          array_push($colunas,$hora);
+          array_push($colunas,$valor=$row["valor"]);
+          $flags=(int)$row["flags"];
+          if ($tipo=='A')
+            $flags&=0xFE;  
+          
+          // apaga o bit Q, ser√° usado para Integridade/Variacao
+          $flags&=0xBF;
+                    
+          array_push($colunas,$flags);
+
+          if ($this->stats)
+            {
+            if ($flags>=128)
+              $cont_falhas++;
+//          else // s√≥ considera valores ok para m√°ximo e m√≠nimo
+              {
+              if ($valor>$max)
+                {
+                $max=$valor;
+                $hmax=$hora;
+                }
+              if ($valor<$min)
+                {
+                $min=$valor;
+                $hmin=$hora;
+                }
+              }
+
+            if ($hora[6]=='0' && $hora[7]=='0') // s√≥ o minuto redondo para c√°lculo da hora
+              {
+              $med+=$valor;
+              $cnt_med++;
+              }
+            }
+
+          if ( $this->valores )
+            array_push($linhas, $colunas);
+      }
+
+    if ($this->stats && $i!=0)
+      {
+      $colunas=array();
+      array_push($colunas,"--:--:--");
+      // array_push($colunas,intval(10000*($i-$cont_falhas)/$i)/100);
+      array_push($colunas,0);
+      // array_push($colunas,"Availability (%)");
+      array_push($colunas,"-");
+      array_unshift($linhas, $colunas);
+
+      $colunas=array();
+      array_push($colunas,"--:--:--");
+      // array_push($colunas,intval(100*$med/60)/100);
+      array_push($colunas,0);
+      //array_push($colunas,"Integration (hour)");
+      array_push($colunas,"-");
+      array_unshift($linhas, $colunas);
+
+      $colunas=array();
+      array_push($colunas,"--:--:--");
+      //if ( $cnt_med > 0 )
+      //  array_push($colunas,intval(100*$med/$cnt_med)/100);
+      //else  
+      //  array_push($colunas,0);
+      array_push($colunas,0);
+      // array_push($colunas,"M√©dia");
+      array_push($colunas,"-");
+      
+      array_unshift($linhas, $colunas);
+
+      $colunas=array();
+      array_push($colunas,$hmin);
+      array_push($colunas,$min);
+      array_push($colunas,"Min");
+      array_unshift($linhas, $colunas);
+
+      $colunas=array();
+      array_push($colunas,$hmax);
+      array_push($colunas,$max);
+      array_push($colunas,"Max");
+      array_unshift($linhas, $colunas);
+      }
+    $retorno[$pto]=$linhas;
+    }
+  catch( PDOException $e )
+    {
+	// echo "Erro: ".$e->getMessage();
+	// print_r($dbsde->errorInfo());
+	}
+
+  return $retorno;
+  }
+
+//----------------------------------------------------------------------------
+
+ // busca gen√©rica no hist√≥rico: pega do SUP ou do SQL, o que for melhor
  function busca_hist($lst_ptos=array(), $data="")
   {
   $retorno=array();
@@ -523,7 +703,7 @@ function busca_sql($lst_ptos=array(), $data="")
   if (count($lst_ptos))
     $this->lista_pontos=$lst_ptos;
 
-  if ( $this->intervalo == 0 ) // o intervalo È zero (tudo): SQL
+  if ( $this->intervalo == 0 ) // o intervalo √© zero (tudo): SQL
     {
     foreach ( $this->lista_pontos as $pto )
       {
@@ -533,32 +713,42 @@ function busca_sql($lst_ptos=array(), $data="")
       switch ($this->origem)
         {
           case 0: // qualquer origem
-            $ret=$this->busca_sql($lst, $data);
+            default:  
+            $ret=$this->busca_pgsql($lst, $data);
             break;
           case 1: // arquivos SUP
             $ret=$this->busca_sup($lst, $data);
             break;
-          case 2: // histÛrico mysql
+          case 2: // hist√≥rico OSHMI sqlite
             $ret=$this->busca_sql($lst, $data);
             break;
-          case 3: // histÛrico SAGE
+          case 3: // hist√≥rico SAGE
             $ret=$this->busca_sage_sql($lst, $data, 0);
             break;
-          case 4: // histÛrico SAGE: Valores Estimados
+          case 4: // hist√≥rico SAGE: Valores Estimados
             $ret=$this->busca_sage_sql($lst, $data, 1);
+            break;
+          case 5: // hist√≥rico OHSMI POSTGRESQL
+            $ret=$this->busca_pgsql($lst, $data, 1);
             break;
         }
       
-      list($ponto, $linhas)=each($ret);
-      if ( count($linhas)<=5 && $this->origem==0 ) // se n„o achou no SQL, busca no SUP
+      // list($ponto, $linhas)=each($ret);
+	  $ponto = key($ret);
+	  $linhas = current($ret);
+      if ( count($linhas)<=5 && $this->origem==0 ) // se n√£o achou no SQL, busca no SUP
         {
-        $ret=$this->busca_sup($lst, $data);
-        list($ponto, $linhas)=each($ret);
+        $ret=$this->busca_sql($lst, $data);
+        // list($ponto, $linhas)=each($ret);
+	    $ponto = key($ret);
+        $linhas = current($ret);
         
-        if ( count($linhas)<=5 ) // se n„o achou no SUP, busca no SAGE
+        if ( count($linhas)<=5 ) // se n√£o achou no SUP, busca no SAGE
             {
             $ret=$this->busca_sage_sql($lst, $data);
-            list($ponto, $linhas)=each($ret);
+            // list($ponto, $linhas)=each($ret);
+            $ponto = key($ret);
+	        $linhas = current($ret);
             }
         }
       $retorno[$ponto]=$linhas;
@@ -572,33 +762,42 @@ function busca_sql($lst_ptos=array(), $data="")
       array_push($lst, $pto);
       switch ($this->origem)
         {
+          case 0: // qualquer origem
+          default:  
+            $ret=$this->busca_pgsql($lst, $data);
+            break;
           case 1: // arquivos SUP
             $ret=$this->busca_sup($lst, $data);
             break;
-          case 2: // histÛrico mysql
+          case 2: // hist√≥rico OSHMI sqlite
             $ret=$this->busca_sql($lst, $data);
             break;
-          case 3: // histÛrico SAGE
+          case 3: // hist√≥rico SAGE
             $ret=$this->busca_sage_sql($lst, $data);
             break;
-          case 4: // histÛrico SAGE: Valores Estimados
+          case 4: // hist√≥rico SAGE: Valores Estimados
             $ret=$this->busca_sage_sql($lst, $data, 1);
             break;
-          case 0: // qualquer origem
-          default:  
-            $ret=$this->busca_sup($lst, $data);
+          case 5: // hist√≥rico OHSMI POSTGRESQL
+            $ret=$this->busca_pgsql($lst, $data, 1);
             break;
         }
-      list($ponto, $linhas)=each($ret);
-      
-      if ( count($linhas)<=5 && $this->origem==0 ) // se n„o achou no SUP, busca no SQL
+      // list($ponto, $linhas)=each($ret);
+  	  $ponto = key($ret);
+	  $linhas = current($ret);
+
+      if ( count($linhas)<=5 && $this->origem==0 ) // se n√£o achou no SUP, busca no SQL
         {
         $ret=$this->busca_sql($lst, $data);
-        list($ponto, $linhas)=each($ret);
-        if ( count($linhas)<=5 ) // se n„o achou no MySQL, busca no SAGE
+        // list($ponto, $linhas)=each($ret);
+        $ponto = key($ret);
+	    $linhas = current($ret);
+        if ( count($linhas)<=5 ) // se n√£o achou no MySQL, busca no SAGE
             {
             $ret=$this->busca_sage_sql($lst, $data);
-            list($ponto, $linhas)=each($ret);
+            //list($ponto, $linhas)=each($ret);
+			$ponto = key($ret);
+            $linhas = current($ret);
             }
         }
       $retorno[$ponto]=$linhas;
@@ -612,9 +811,9 @@ function busca_sql($lst_ptos=array(), $data="")
 
 /* Busca de foto no arquivo SUP
 * 
-*  Par‚metros: data e hora, sem a data busca na data atual e sem a hora devolve o ˙ltimo minuto gravado
+*  Par√¢metros: data e hora, sem a data busca na data atual e sem a hora devolve o √∫ltimo minuto gravado
 * 
-*  Retorno da funÁ„o busca_foto_sup
+*  Retorno da fun√ß√£o busca_foto_sup
 *  
 *                            colunas
 * 
@@ -625,7 +824,7 @@ function busca_sql($lst_ptos=array(), $data="")
 */
  function busca_foto_sup(&$data, &$hora)
   {
-  if ($data!="") // se foi recebida uma data, usa esta. Sen„o usa data atual.
+  if ($data!="") // se foi recebida uma data, usa esta. Sen√£o usa data atual.
     {
 	$this->define_data($data);
 	}
@@ -673,7 +872,7 @@ function busca_sql($lst_ptos=array(), $data="")
   $TCT = 1464 + 2*$NumPtosDig + 3*$NumPtosAna; // tamanho cab total
 
   if ($hora=="")
-  { // se n„o foi fornecida a hora, pega do ˙ltimo minuto gravado
+  { // se n√£o foi fornecida a hora, pega do √∫ltimo minuto gravado
     $min=$UltiMinuto;
     $hora=sprintf("%02d:%02d:00", $min/60, $min%60);
 	}
@@ -725,7 +924,7 @@ function busca_sql($lst_ptos=array(), $data="")
     $pos = $posfoto + $TFD + 17*intval($i/8);
     fseek($OL_Hand, $pos);
     $falha=(GetByte($OL_Hand)&(0x01<<$i%8))?128:0;
-    $falha|=0x20; // sinaliza ponto analÛgico
+    $falha|=0x20; // sinaliza ponto anal√≥gico
     fseek($OL_Hand, 2*($i%8), SEEK_CUR);
     $valor=GetInt($OL_Hand);
 
@@ -760,7 +959,7 @@ function busca_foto(&$data, &$hora)
   require_once("peardb_login.php") ;
   $db=&DBLogin("SQL_BANCOTR_CONSULTA");
   if (DB::isError($db)) 
-     die("Erro de conex„o ao banco Bancotr Consulta em ".$data. " com erro :".$db->getMessage());
+     die("Erro de conex√£o ao banco Bancotr Consulta em ".$data. " com erro :".$db->getMessage());
 
   if ($data!="")
     $this->define_data($data);
@@ -782,7 +981,7 @@ function busca_foto(&$data, &$hora)
           $colunas=array();
           array_push($colunas,$valor=$line[1]);
           $flags=(int)$line[2];
-          // apaga o bit Q, ser· usado para Integridade/Variacao
+          // apaga o bit Q, ser√° usado para Integridade/Variacao
           $flags&=0xBF;
           array_push($colunas,$flags);
           $rt[$line[0]]=$colunas;
@@ -795,7 +994,7 @@ function busca_foto(&$data, &$hora)
 //----------------------------------------------------------------------------
 
 /*
-*  Retorno da funÁ„o busca_foto_sup
+*  Retorno da fun√ß√£o busca_foto_sup
 *  
 *                            colunas
 * 
@@ -807,7 +1006,7 @@ function busca_foto(&$data, &$hora)
 * 
 *  Retorno das funcoes de busca: busca_hist, busca_sup, busca_sql
 * 
-*  array com chave ponto e valores que s„o array de linhas
+*  array com chave ponto e valores que s√£o array de linhas
 *  linha=array : hora, valor, flags
 * 
 * 
@@ -878,7 +1077,7 @@ function busca_foto(&$data, &$hora)
     }
 
   $err_rep = ini_get ('error_reporting');
-  ini_set ('error_reporting', $err_rep & ~E_WARNING); // n„o reporta warnings
+  ini_set ('error_reporting', $err_rep & ~E_WARNING); // n√£o reporta warnings
   if ( ( $OL_Hand = fopen( $OL_Arquivo, "rb" ) )
        == FALSE )
     {
@@ -1028,7 +1227,7 @@ function busca_foto(&$data, &$hora)
              if ($this->stats)
                {
                if ($i>$ini_ponta && $i<$fim_ponta)
-                 { // hor·rio de ponta
+                 { // hor√°rio de ponta
                    if ($vint>$ptmax)
                      {
                      $ptmax=$vint;
@@ -1077,7 +1276,7 @@ function busca_foto(&$data, &$hora)
       $colunas=array();
       array_push($colunas,"--:--:--");
       array_push($colunas,intval(100*$this->intervalo*$med/$i)/100);
-      array_push($colunas,"MÈdia");
+      array_push($colunas,"M√©dia");
       array_unshift($linhas, $colunas);
 
       if ($max==-1e30)
@@ -1088,7 +1287,7 @@ function busca_foto(&$data, &$hora)
       $colunas=array();
       array_push($colunas,$hmax);
       array_push($colunas,$max);
-      array_push($colunas,"M·ximo Fora Ponta");
+      array_push($colunas,"M√°ximo Fora Ponta");
       array_unshift($linhas, $colunas);
 
       if ($ptmax==-1e30)
@@ -1099,7 +1298,7 @@ function busca_foto(&$data, &$hora)
       $colunas=array();
       array_push($colunas,$pthmax);
       array_push($colunas,$ptmax);
-      array_push($colunas,"M·ximo Ponta");
+      array_push($colunas,"M√°ximo Ponta");
       array_unshift($linhas, $colunas);
       }
 
@@ -1111,13 +1310,13 @@ function busca_foto(&$data, &$hora)
   return $retorno;
   }
 
- // busca direcionada ao POSTGRESQL HIST”RICO SAGE
+ // busca direcionada ao POSTGRESQL HIST√ìRICO SAGE
  function busca_sage_sql($lst_ptos=array(), $data="", $Estimados=0)
   {
   require_once("peardb_login.php") ;
   $db=&DBLogin("SQL_BH_SAGE");
   if (DB::isError($db)) 
-     die("Erro de conex„o ao banco Sage!");
+     die("Erro de conex√£o ao banco Sage!");
      
   if (count($lst_ptos))
     $this->lista_pontos=$lst_ptos;
@@ -1221,7 +1420,7 @@ function busca_foto(&$data, &$hora)
           array_push($colunas,$valor);
 
           // traduz flags do SAGE para formato A
-          // ver STI_dcatbh.html gerado pelo histÛrico do SAGE
+          // ver STI_dcatbh.html gerado pelo hist√≥rico do SAGE
           $flags_sage=(int)$line[2];
           $flagest=(int)$line[3];
           $flags=0;
@@ -1231,10 +1430,10 @@ function busca_foto(&$data, &$hora)
           // falha
           if ($flags_sage & 4 || $flags_sage & 8 || $flags_sage & 64 || $flags_sage & 4096)
             $flags|=0x80;
-          // substituÌdo  
+          // substitu√≠do  
           if ($flags_sage & 16 || $flags_sage & 32 )
             $flags|=0x10;
-          // manual (n„o supervisionado)
+          // manual (n√£o supervisionado)
           if ($flags_sage & 256)
             { $flags|=0x0C; }
           if ($tipo=='A')  
@@ -1243,13 +1442,13 @@ function busca_foto(&$data, &$hora)
             if ($flags_sage & 524288)
               { $flags|=0x08; $flags&=0xFB; }
 
-            if ($flags_sage & 1 || $flagest==1) // erro grosseiro detectado na estimaÁ„o
+            if ($flags_sage & 1 || $flagest==1) // erro grosseiro detectado na estima√ß√£o
               $flags|=0x01; 
                           
             if ($Estimados)
               {
               // FLAGS do ESTIMADOR
-              //Nome  	Valor  	 DescriÁ„o
+              //Nome  	Valor  	 Descri√ß√£o
               //K_EE_FLG_NORM 	0 	Flag -> Medida estimada normalmente
               //K_EE_FLG_ERREE 	1 	Flag -> Erro grosseiro de estimacao do estado
               //K_EE_FLG_NAOEST 2 	Flag -> Medida nao faz parte do escopo do estimador de estado
@@ -1258,7 +1457,7 @@ function busca_foto(&$data, &$hora)
               //K_EE_FLG_REST 	5 	Flag -> Medida e` um resultado de calculo com restricao
               //K_EE_FLG_ANORM 	6 	Flag -> Estimacao de Estado Anormal              
               $flags=0x08;
-              if ($flags_sage == 1) // erro grosseiro detectado na estimaÁ„o
+              if ($flags_sage == 1) // erro grosseiro detectado na estima√ß√£o
                  $flags|=0x01;
               if ($flags_sage>1) // falha a medida estimada
                  $flags|=0x80;
@@ -1267,7 +1466,7 @@ function busca_foto(&$data, &$hora)
             if ($variacao)
               $flags|=0x40;          
               
-            $flags|=0x20; // analÛgico          
+            $flags|=0x20; // anal√≥gico          
             }  
           else
             { // digital
@@ -1283,7 +1482,7 @@ function busca_foto(&$data, &$hora)
             {
             if ($flags>=128)
               $cont_falhas++;
-//          else // sÛ considera valores ok para m·ximo e mÌnimo
+//          else // s√≥ considera valores ok para m√°ximo e m√≠nimo
               {
               if ($valor>$max)
                 {
@@ -1297,7 +1496,7 @@ function busca_foto(&$data, &$hora)
                 }
               }
 
-            if ($hora[6]=='0' && $hora[7]=='0') // sÛ o minuto redondo para c·lculo da hora
+            if ($hora[6]=='0' && $hora[7]=='0') // s√≥ o minuto redondo para c√°lculo da hora
               {
               $med+=$valor;
               $cnt_med++;
@@ -1325,19 +1524,19 @@ function busca_foto(&$data, &$hora)
       $colunas=array();
       array_push($colunas,"--:--:--");
       array_push($colunas,intval(100*$med/$cnt_med)/100);
-      array_push($colunas,"MÈdia");
+      array_push($colunas,"M√©dia");
       array_unshift($linhas, $colunas);
 
       $colunas=array();
       array_push($colunas,$hmin);
       array_push($colunas,$min);
-      array_push($colunas,"MÌnimo");
+      array_push($colunas,"M√≠nimo");
       array_unshift($linhas, $colunas);
 
       $colunas=array();
       array_push($colunas,$hmax);
       array_push($colunas,$max);
-      array_push($colunas,"M·ximo");
+      array_push($colunas,"M√°ximo");
       array_unshift($linhas, $colunas);
       }
     $retorno[$pto]=$linhas;
@@ -1349,13 +1548,13 @@ function busca_foto(&$data, &$hora)
   }
 //----------------------------------------------------------------------------
 
- // busca de foto direcionada ao POSTGRESQL HIST”RICO SAGE
+ // busca de foto direcionada ao POSTGRESQL HIST√ìRICO SAGE
  function busca_foto_sage_sql($lst_ptos=array(), $data="", $Estimados=0)
   {
   require_once("peardb_login.php") ;
   $db=&DBLogin("SQL_BH_SAGE");
   if (DB::isError($db)) 
-     die("Erro de conex„o ao banco Sage!");
+     die("Erro de conex√£o ao banco Sage!");
      
   if (count($lst_ptos))
     $this->lista_pontos=$lst_ptos;
@@ -1383,7 +1582,7 @@ function busca_foto(&$data, &$hora)
     }
   $lstpto=$lstpto."-1";
 
-    // cuidado que a segunda coluna ao unir vira tudo tipo float, portanto para o tipo digital deve ser usado sÛ a coluna de flags 
+    // cuidado que a segunda coluna ao unir vira tudo tipo float, portanto para o tipo digital deve ser usado s√≥ a coluna de flags 
     $query = 
     " 
       select 
@@ -1437,7 +1636,7 @@ function busca_foto(&$data, &$hora)
           
           $valor=$line[1];
           // traduz flags do SAGE para formato A
-          // ver STI_dcatbh.html gerado pelo histÛrico do SAGE
+          // ver STI_dcatbh.html gerado pelo hist√≥rico do SAGE
           $flags_sage=(int)$line[2];
           $flagest=(int)$line[3];
 
@@ -1451,10 +1650,10 @@ function busca_foto(&$data, &$hora)
           // falha
           if ($flags_sage & 4 || $flags_sage & 8 || $flags_sage & 64 || $flags_sage & 4096)
             $flags|=0x80;
-          // substituÌdo  
+          // substitu√≠do  
           if ($flags_sage & 16 || $flags_sage & 32 )
             $flags|=0x10;
-          // manual (n„o supervisionado)
+          // manual (n√£o supervisionado)
           if ($flags_sage & 256)
             { $flags|=0x0C; }
           if ($tipo=='A')  
@@ -1463,13 +1662,13 @@ function busca_foto(&$data, &$hora)
             if ($flags_sage & 524288)
               { $flags|=0x08; $flags&=0xFB; }
 
-            if ($flags_sage & 1 || $flagest==1) // erro grosseiro detectado na estimaÁ„o
+            if ($flags_sage & 1 || $flagest==1) // erro grosseiro detectado na estima√ß√£o
               $flags|=0x01; 
                           
             if ($Estimados)
               {
               // FLAGS do ESTIMADOR
-              //Nome  	Valor  	 DescriÁ„o
+              //Nome  	Valor  	 Descri√ß√£o
               //K_EE_FLG_NORM 	0 	Flag -> Medida estimada normalmente
               //K_EE_FLG_ERREE 	1 	Flag -> Erro grosseiro de estimacao do estado
               //K_EE_FLG_NAOEST 2 	Flag -> Medida nao faz parte do escopo do estimador de estado
@@ -1478,7 +1677,7 @@ function busca_foto(&$data, &$hora)
               //K_EE_FLG_REST 	5 	Flag -> Medida e` um resultado de calculo com restricao
               //K_EE_FLG_ANORM 	6 	Flag -> Estimacao de Estado Anormal              
               $flags=0x08;
-              if ($flags_sage == 1) // erro grosseiro detectado na estimaÁ„o
+              if ($flags_sage == 1) // erro grosseiro detectado na estima√ß√£o
                  $flags|=0x01;
               if ($flags_sage>1) // falha a medida estimada
                  $flags|=0x80;
@@ -1487,7 +1686,7 @@ function busca_foto(&$data, &$hora)
             if ($variacao)
               $flags|=0x40;          
               
-            $flags|=0x20; // analÛgico          
+            $flags|=0x20; // anal√≥gico          
             }  
           else
             { // digital

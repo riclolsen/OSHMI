@@ -116,9 +116,11 @@ using namespace std;
 #define CODTPEQ_AMP   3
 #define CODTPEQ_MW    6
 #define CODTPEQ_MVAR  7
+#define CODTPEQ_MVA   8
 #define CODTPEQ_HZ    9
 #define CODTPEQ_VDC  14
 #define CODTPEQ_TAP  16
+#define CODTPEQ_TEMP 19
 #define CODTPEQ_DJ   27
 #define CODTPEQ_SC   28
 

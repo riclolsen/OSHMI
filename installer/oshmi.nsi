@@ -94,10 +94,13 @@ ShowInstDetails show
 
 Section "" ; empty string makes it hidden, so would starting with -
 
-; Fecha processos que vao ser sobrescritos
-  nsExec::Exec 'taskkill /F /IM nginx.exe'
-  nsExec::Exec 'taskkill /F /IM cmd.exe'
-  nsExec::Exec 'taskkill /F /IM php-cgi.exe'
+; Closes all OSHMI processes
+  nsExec::Exec 'net stop OSHMI_rtwebsrv'
+  nsExec::Exec 'net stop OSHMI_iec104'
+  nsExec::Exec 'net stop OSHMI_iccp'
+  nsExec::Exec 'net stop OSHMI_dnp3'
+  nsExec::Exec 'net stop OSHMI_modbus'
+  nsExec::Exec 'c:\oshmi\bin\stop_all.bat'
   nsExec::Exec 'taskkill /F /IM mon_proc.exe'
   nsExec::Exec 'taskkill /F /IM procexp.exe'
   nsExec::Exec 'taskkill /F /IM iccp_client.exe'
@@ -106,13 +109,14 @@ Section "" ; empty string makes it hidden, so would starting with -
   nsExec::Exec 'taskkill /F /IM modbus.exe'
   nsExec::Exec 'taskkill /F /IM hmishell.exe'
   nsExec::Exec 'taskkill /F /IM webserver.exe'
-  nsExec::Exec 'taskkill /F /IM chrome.exe'
   nsExec::Exec 'taskkill /F /IM sqlite3.exe'
-  nsExec::Exec 'net stop OSHMI_rtwebsrv'
-  nsExec::Exec 'net stop OSHMI_iec104'
-  nsExec::Exec 'net stop OSHMI_iccp'
-  nsExec::Exec 'net stop OSHMI_dnp3'
-  nsExec::Exec 'net stop OSHMI_modbus'
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\bin\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\browser\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\nginx_php\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\inkscape\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\PostgreSQL\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\grafana\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\db\\%'" CALL TERMINATE`
 
   SetOverwrite on
 
@@ -205,6 +209,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\installer\release_notes.txt"
   File /a "..\installer\gpl.txt"
   File /a "..\icons\favicon.ico"
+  File /a "..\index.html"
 
   SetOutPath $INSTDIR\bin
   File /a "..\bin\*.exe"
@@ -256,6 +261,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\db\terminate_pg_hist.bat"
   File /a "..\db\terminate_pg_soe.bat"
   File /a "..\db\terminate_pg_dumpdb.bat"
+  File /a "..\db\terminate_monit_hist_files.bat"
 
   SetOutPath $INSTDIR\i18n
   File /a "..\i18n\*.*"
@@ -285,6 +291,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\htdocs\eventserver.php"
   File /a "..\htdocs\eventsync.php"
   File /a "..\htdocs\annotation.php"
+  File /a "..\htdocs\annotation_readonly.php"
   File /a "..\htdocs\config_viewers_default.js"
   File /a "..\htdocs\rss.php"
   File /a "..\htdocs\proxy.php"
@@ -303,6 +310,15 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\htdocs\tableau_wdc.js"
   File /a "..\htdocs\dialogstyle.css"
   File /a "..\htdocs\symbol_webreflection.js"
+  File /a "..\htdocs\sqlite_pntserver.php"
+  File /a "..\htdocs\sqlite_tabserver.php"
+  File /a "..\htdocs\pgsql_json.php"
+  File /a "..\htdocs\pgsql_odata.php"
+  File /a "..\htdocs\pgsql_eventserver.php"
+  File /a "..\htdocs\pgsql_pntserver.php"
+  File /a "..\htdocs\pgsql_tabserver.php"
+  File /a "..\htdocs\pgsql_timepntserver.php"
+  File /a "..\htdocs\pntserver_gateway.js"
 ; File /a "..\htdocs\"
     
   SetOutPath $INSTDIR\htdocs\histwebview
@@ -361,6 +377,14 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a /r "..\PostgreSQL\install.txt"  
   File /a /r "..\PostgreSQL\postgresql_start.bat"  
   
+  ; backup old (possibly incompatible) files to allow for the new ones to be overwritten
+  Rename "$INSTDIR\conf\nginx_http.conf" "$INSTDIR\conf\nginx_http.pre_${VERSION}.conf.bak"
+  Rename "$INSTDIR\conf\nginx_https.conf" "$INSTDIR\conf\nginx_https.pre_${VERSION}.conf.bak"
+  Rename "$INSTDIR\conf\oshmi_config_manager.xlsm" "$INSTDIR\conf\oshmi_config_manager.pre_${VERSION}.xlsm.bak"
+  SetOutPath $INSTDIR\conf
+  File /a "..\conf_templates\oshmi_config_manager.xlsm"
+  File /a "..\conf_templates\nginx_http.conf"  
+  File /a "..\conf_templates\nginx_https.conf"  
   
   SetOverwrite off
 
@@ -370,13 +394,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\etc
   File /a "..\etc\*.bat"
 
-  ; rename old (possibly incompatible) files to allow for the new ones to be written
-  Rename  $INSTDIR\conf\nginx_http.conf  $INSTDIR\conf\nginx_http.pre_${VERSION}.conf.bak
-  Rename  $INSTDIR\conf\nginx_https.conf  $INSTDIR\conf\nginx_https.pre_${VERSION}.conf.bak
-  Rename  $INSTDIR\conf\oshmi_config_manager.xlsm  $INSTDIR\conf\oshmi_config_manager.pre_${VERSION}.xlsm.bak
-
   SetOutPath $INSTDIR\conf
-  File /a "..\conf_templates\oshmi_config_manager.xlsm"
   File /a "..\conf_templates\config_viewers.js"
   File /a "..\conf_templates\point_list.txt"
   File /a "..\conf_templates\point_calc.txt"
@@ -387,8 +405,6 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\conf_templates\hmishell.ini"
   File /a "..\conf_templates\mon_proc.ini"
   File /a "..\conf_templates\nginx_access_control.conf"  
-  File /a "..\conf_templates\nginx_http.conf"  
-  File /a "..\conf_templates\nginx_https.conf"  
 
   SetOutPath "$INSTDIR\db"
   File /a "..\db\db_cold\*.sl3"
@@ -416,22 +432,17 @@ Section "" ; empty string makes it hidden, so would starting with -
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2015.exe" /q'
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2017.exe" /q'
 
-; Visualizador de PDF
-;  nsExec::Exec '$INSTDIR\extprogs\SumatraPDF-3.1.1-install.exe /s /opt plugin'
-;  CopyFiles "$INSTDIR\conf_templates\sumatrapdfrestrict.ini" "$PROGRAMFILES\SumatraPDF\"
-
 ;  MessageBox MB_YESNO "Wish to substitute Windows Shell by the HMIShell? \nWARNING: ANSWERING YES WILL BLOCK THE MACHINE FOR THE OPERATOR" IDNO InstFim 
 ; LabelShell:
 ; registry key to change Windows shell
 ;  WriteRegStr HKCU "Software\Microsoft\Windows NT\CurrentVersion\Winlogon" "Shell" "c:\\oshmi\\bin\\hmishell.exe"
 ; registry key to disable task manager
 ;  WriteRegDword HKCU "Software\Microsoft\Windows\CurrentVersion\Policies\System" "DisableTaskMgr" 0x01
-; sumatra pdf in restrict mode
 ; InstFim:
 
 ; Escreve chaves para definir atalhos do chrome no hmi.ini
 
-; Evita reescrever atalhos já configurados manualmente para https
+; Evita reescrever atalhos ja configurados manualmente para https
   ReadINIStr $0 "$INSTDIR\conf\hmi.ini"  "RUN" "SCREEN_VIEWER"
   StrCpy $0 $0 5
   StrCmp $0 "https" viewer_shortcuts_end
@@ -547,6 +558,10 @@ Section "" ; empty string makes it hidden, so would starting with -
   Pop $0 ; return error(1)/success(0)
   SimpleFC::AddPort 51909 "OSHMI NGINX" 256 0 2 "" 1
   Pop $0 ; return error(1)/success(0)
+  SimpleFC::AddPort 80 "OSHMI NGINX" 256 0 2 "" 1
+  Pop $0 ; return error(1)/success(0)
+  SimpleFC::AddPort 443 "OSHMI NGINX" 256 0 2 "" 1
+  Pop $0 ; return error(1)/success(0)
   SimpleFC::AddPort 9000 "OSHMI PHP-CGI" 256 0 2 "" 1
   Pop $0 ; return error(1)/success(0)
   SimpleFC::AddPort 8098 "OSHMI ICCP" 256 0 2 "" 1
@@ -614,7 +629,20 @@ Section "Uninstall"
 ; Fecha processos
 
   ; SetOutPath $INSTDIR\bin
+  nsExec::Exec 'net stop OSHMI_rtwebsrv'
+  nsExec::Exec 'net stop OSHMI_iec104'
+  nsExec::Exec 'net stop OSHMI_iccp'
+  nsExec::Exec 'net stop OSHMI_dnp3'
+  nsExec::Exec 'net stop OSHMI_modbus'
   nsExec::Exec 'c:\oshmi\bin\stop_all.bat'
+  nsExec::Exec 'c:\oshmi\nginx_php\stop_nginx_php.bat'
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\bin\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\browser\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\nginx_php\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\inkscape\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\PostgreSQL\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\grafana\\%'" CALL TERMINATE`
+  nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\db\\%'" CALL TERMINATE`
 
 ; Remove an application from the firewall exception list
   SimpleFC::RemoveApplication "$INSTDIR\webserver.exe"

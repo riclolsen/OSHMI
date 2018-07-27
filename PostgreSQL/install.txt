@@ -14,6 +14,7 @@
 # without proxy
 @powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://s3.amazonaws.com/pgcentral/install.ps1'))"
 
+# Execute CMD or POWERSHELL with admin rights!
 
 cd bigsql
 pgc install pg10
@@ -30,19 +31,26 @@ pgc start
 pgc stop
 cd ..\timescaledb
 setup
+
+# from here no more necessity of admin rights!
+
+# ADD 
+  shared_preload_libraries = 'timescaledb'
+# TO C:\oshmi\PostgreSQL\bigsql\data\pg10\postgresql.conf (line 146)
+
 cd ..
 pgc start
 pgc status
 
 REM change Windows codepage to match PostgreSQL database
-SET PGCLIENTENCODING=latin1
-CHCP 1252
+SET PGCLIENTENCODING=utf-8
+CHCP 65001
 
 # connect
 psql -h 127.0.0.1 -U postgres -W
 
 -- create oshmi database 
-create database oshmi template=template0 encoding=latin1;
+create database oshmi template=template0 encoding=utf8;
 -- Connect to the database
 \c oshmi
 -- Extend the database with TimescaleDB
@@ -68,6 +76,15 @@ CREATE TABLE soe (
 CREATE INDEX ind_dhms on soe ( DATA, HORA, MSEC );
 CREATE INDEX ind_ts on soe ( TS );
 CREATE INDEX ind_recon on soe ( RECON );
+comment on table  soe        is 'Sequence of Events raw table';
+comment on column soe.NPONTO is 'Integer Point Key';
+comment on column soe.DATA   is 'Unix timestamp of the sample (field time)';
+comment on column soe.HORA   is 'Not used';
+comment on column soe.MSEC   is 'Mili second';
+comment on column soe.UTR    is 'RTU link address';
+comment on column soe.ESTADO is 'State flags (bitmask): 0x02=ON 0x01=OFF, 0x80=invalid value, 0x40=invalid time';
+comment on column soe.RECON  is 'Acknowlegement, 0=Not acknowledged, 1=acknowledged, 2=eliminated from list';
+comment on column soe.TS     is 'Unix timestamp of sample (HMI acquisition time)';
 
 -- timescaledb hypertable, partitioned by day
 SELECT create_hypertable('soe', 'data', chunk_time_interval=>86400);
@@ -81,6 +98,11 @@ CREATE TABLE hist (
    PRIMARY KEY (NPONTO, DATA)
    );
 -- CREATE INDEX ind_data on hist ( DATA );
+comment on table  hist        is 'Historical data raw table';
+comment on column hist.NPONTO is 'Integer Point Key';
+comment on column hist.VALOR  is 'Value';
+comment on column hist.FLAGS  is 'State flags (bitmask): 0x02=ON 0x01=OFF (for digital points), 0x80=invalid value, 0x20=analog';
+comment on column hist.DATA   is 'Unix timestamp of the sample (HMI acquisition time)';
 
 -- timescaledb hypertable, partitioned by day
 SELECT create_hypertable('hist', 'data', chunk_time_interval=>86400);
@@ -131,6 +153,43 @@ CREATE INDEX ind_estacao on dumpdb ( ESTACAO );
 CREATE INDEX ind_tipo on dumpdb ( TIPO );
 CREATE INDEX ind_supcmd on dumpdb ( SUPCMD );
 CREATE INDEX ind_prior on dumpdb ( PRIOR );
+comment on table  dumpdb             is 'Point database dump';
+comment on column dumpdb.NPONTO      is 'Integer Point Key (unique)';
+comment on column dumpdb.ID          is 'Point Tag (unique)';
+comment on column dumpdb.DESCRICAO   is 'Point Description (Secondary grouping ~ Information description)';
+comment on column dumpdb.VALOR       is 'Point Value';
+comment on column dumpdb.FLAGS       is 'State flags (bitmask): 0x02=ON 0x01=OFF (for digital points), 0x80=invalid value, 0x20=analog';
+comment on column dumpdb.LIMS        is 'Hi (superior) Limit';
+comment on column dumpdb.LIMI        is 'Lo (inferior) Limit';
+comment on column dumpdb.HISTER      is 'Hysteresis';
+comment on column dumpdb.DATA        is 'Unix timestamp of last alarm or state change';
+comment on column dumpdb.HORA        is 'Not used';
+comment on column dumpdb.TS          is 'Unix timestamp of tuple update';
+comment on column dumpdb.ALRIN       is 'Inhibited (disabled) alarm (1=inhibited, 0=not inhibited)';
+comment on column dumpdb.HISTOR      is 'Not used';
+comment on column dumpdb.BMORTA      is 'Not used';
+comment on column dumpdb.PERIODO     is 'Not used';
+comment on column dumpdb.TIPO        is 'Type: D=Digital; A=Analog';
+comment on column dumpdb.UNIDADE     is 'Unit of measurement for analog points';
+comment on column dumpdb.ESTON       is 'Message for the ON State';
+comment on column dumpdb.ESTOFF      is 'Message for the OFF State';
+comment on column dumpdb.SUPCMD      is 'Point Key of supervision related to current command point; 0 for supervised';
+comment on column dumpdb.TIMEOUT     is 'Not used';
+comment on column dumpdb.ANOTACAO    is 'Blocking annotation text';
+comment on column dumpdb.ESTACAO     is 'Primary grouping of points (usually substation or plant name)';
+comment on column dumpdb.ESTALM      is 'State that poduces alarms for digital points: 0=OFF, 1=ON, 2=BOTH, 3=OFF_to_ON (a.k.a. protection events)';
+comment on column dumpdb.PRIOR       is 'Alarm priority (0=higher, 9=lowest)';
+comment on column dumpdb.MODULO      is 'Secondary Grouping of points (usually bay or equipment name)';
+comment on column dumpdb.DESCR_CURTA is 'Optional (manually entered) - Short description of point information';
+comment on column dumpdb.DESCR_LONGA is 'Optional (manually entered) - Long description of point information';
+comment on column dumpdb.NOME_LOCAL  is 'Optional (manually entered) - Geographic location name';
+comment on column dumpdb.LATITUDE    is 'Optional (manually entered) - Latitude';
+comment on column dumpdb.LONGITUDE   is 'Optional (manually entered) - Longitude';
+comment on column dumpdb.ORIGEM      is 'Not used';
+comment on column dumpdb.LIMSS       is 'Optional (manually entered) - HiHi limit';
+comment on column dumpdb.LIMII       is 'Optional (manually entered) - LoLo limit';
+comment on column dumpdb.LIMSSS      is 'Optional (manually entered) - HiHiHi limit';
+comment on column dumpdb.LIMIII      is 'Optional (manually entered) - LoLoLo limit';
 
 -- to be filled by trigger on hist
 -- DROP TABLE val_tr;
@@ -143,6 +202,14 @@ CREATE TABLE val_tr (
   DATA_ALT BIGINT NOT NULL default 0, -- changed value timestamp
   PRIMARY KEY (NPONTO)
 );
+comment on table  val_tr             is 'Realtime values';
+comment on column val_tr.NPONTO      is 'Integer Point Key';
+comment on column val_tr.VALOR       is 'Point Value';
+comment on column val_tr.FLAGS       is 'State flags (bitmask): 0x02=ON 0x01=OFF (for digital points), 0x80=invalid value, 0x20=analog';
+comment on column val_tr.DATA        is 'Unix timestamp (acquisition time)';
+comment on column val_tr.TS          is 'Unix timestamp (tuple update time)';
+comment on column val_tr.DATA_ALT    is 'Not used';
+
 
 -- trigger to update val_tr from hist
 DROP TRIGGER afterHist ON hist;
@@ -164,6 +231,7 @@ BEGIN
 END;
 $afterHist$ LANGUAGE plpgsql;
 
+
 -- trigger when hist written, update val_tr
 CREATE TRIGGER afterHist
 AFTER INSERT OR UPDATE OR DELETE ON hist
@@ -178,21 +246,29 @@ DROP FUNCTION dumpdb_proc;
 CREATE OR REPLACE FUNCTION dumpdb_proc()
 RETURNS trigger AS $afterDumpdb$
 BEGIN
-  IF (TG_OP = 'INSERT') THEN
+    IF (TG_OP = 'DELETE') THEN
+          DELETE FROM val_tr WHERE NPONTO = OLD.NPONTO;
+    ELSIF (TG_OP = 'INSERT') THEN
           NEW.MODULO = left( NEW.DESCRICAO, position ('~' in NEW.DESCRICAO )-1);
+    	  INSERT INTO val_tr SELECT NEW.NPONTO, NEW.VALOR, NEW.FLAGS, NEW.DATA, extract(epoch from now()), 0 
+	        ON CONFLICT (NPONTO) DO UPDATE SET VALOR=NEW.VALOR, FLAGS=NEW.FLAGS, DATA=NEW.DATA, TS=extract(epoch from now()), DATA_ALT=0 WHERE val_tr.nponto=NEW.nponto and val_tr.data<NEW.DATA;
 	ELSIF (TG_OP = 'UPDATE') THEN
           NEW.MODULO = left( NEW.DESCRICAO, position ('~' in NEW.DESCRICAO )-1);
+     	  INSERT INTO val_tr SELECT NEW.NPONTO, NEW.VALOR, NEW.FLAGS, NEW.DATA, extract(epoch from now()), 0 
+	        ON CONFLICT (NPONTO) DO UPDATE SET VALOR=NEW.VALOR, FLAGS=NEW.FLAGS, DATA=NEW.DATA, TS=extract(epoch from now()), DATA_ALT=0 WHERE val_tr.nponto=NEW.nponto and val_tr.data<NEW.DATA;
 	END IF;
 	RETURN NEW;	
 END;
 $afterDumpdb$ LANGUAGE plpgsql;
 
--- trigger when dumpdb written, update dumpdb.modulo
+-- trigger when dumpdb written, update dumpdb.modulo and val_tr
 DROP TRIGGER afterDumpdb ON dumpdb;
 CREATE TRIGGER afterDumpdb
 BEFORE INSERT OR UPDATE ON dumpdb
 FOR EACH ROW
 EXECUTE PROCEDURE dumpdb_proc();
+
+
 
 -- HELPFUL VIEWS
 
@@ -201,10 +277,10 @@ CREATE VIEW catalog
 AS 
 SELECT 
        d.ID AS TAG, 
+       d.NPONTO AS POINT_KEY,
        d.ESTACAO || ' ' || d.DESCRICAO AS DESCRIPTION, 
        d.TIPO AS TYPE_ANADIG,
        d.UNIDADE AS UNIT,
-       d.NPONTO AS POINT_KEY,
        d.ESTACAO AS GROUP_MAIN, 
        d.MODULO AS GROUP_SECONDARY,
        CASE WHEN d.DESCR_CURTA='' THEN d.DESCRICAO ELSE d.DESCR_CURTA END as DESCR_SHORT,
@@ -222,29 +298,59 @@ SELECT
        d.LIMIII AS LOLOLO_LIM,
        d.LIMSSS AS HIHIHI_LIM,
        d.ESTALM AS ALARM_ST,
-       d.TS AS UPDATE_TIMESTAMP
+       d.TS AS UPDATE_TIMESTAMP,
+	   d.PRIOR AS PRIORITY,
+	   CASE WHEN SUPCMD!=0 THEN 1 ELSE 0 END AS IS_CMD,
+	   d.SUPCMD as SUPCMD
 
 FROM DUMPDB d
 ORDER BY d.ID
 ;
+comment on view   catalog                  is 'Catalog of points';
+comment on column catalog.TAG              is 'Point Tag (unique)'; 
+comment on column catalog.POINT_KEY        is 'Integer Point Key (unique)';
+comment on column catalog.DESCRIPTION      is 'Full description oi point';
+comment on column catalog.TYPE_ANADIG      is 'Type: D=Digital; A=Analog';
+comment on column catalog.UNIT             is 'Unit of measurement for analog points';
+comment on column catalog.GROUP_MAIN       is 'Main group name (usually substation or plant name)';
+comment on column catalog.GROUP_SECONDARY  is 'Secondary group name (usually bay or equipment name)';
+comment on column catalog.DESCR_SHORT      is 'Short description of point information';
+comment on column catalog.DESCR_LONG       is 'Long description of point information';
+comment on column catalog.LOCATION         is 'Geographic location name';
+comment on column catalog.LATITUDE         is 'Latitude';
+comment on column catalog.LONGITUDE        is 'Longitude';
+comment on column catalog.STATE_OFF        is 'Message for state OFF';
+comment on column catalog.STATE_ON         is 'Message for state ON';
+comment on column catalog.COMMENTS         is 'Blocking annotation text';
+comment on column catalog.LO_LIM           is 'Lower limit';
+comment on column catalog.HI_LIM           is 'High Limit';
+comment on column catalog.LOLO_LIM         is 'LoLo limit';
+comment on column catalog.HIHI_LIM         is 'HiHi Limit';
+comment on column catalog.LOLOLO_LIM       is 'LoLoLo limit';
+comment on column catalog.HIHIHI_LIM       is 'HiHiHi Limit';
+comment on column catalog.ALARM_ST         is 'State that poduces alarms for digital points: 0=OFF, 1=ON, 2=BOTH, 3=OFF_to_ON (a.k.a. protection events)';
+comment on column catalog.UPDATE_TIMESTAMP is 'Unix timestamp of tuple update';
+comment on column catalog.PRIORITY         is 'Alarm priority (0=higher, 9=lowest)';
+comment on column catalog.IS_CMD           is 'Point is a command (1=yes, 0=no)';
+comment on column catalog.SUPCMD           is 'Point Key of supervision related to current command point; 0 for supervised';
+
 
 DROP VIEW realtime_data;
 CREATE VIEW realtime_data
 AS 
 SELECT 
+       d.ID AS TAG, 
+       v.NPONTO AS POINT_KEY,
        CASE WHEN d.TIPO='D' THEN ( CASE WHEN v.FLAGS&1=1 THEN 0 ELSE 1 END ) ELSE v.VALOR END AS VALUE,
        CASE WHEN d.TIPO='D' THEN ( CASE WHEN v.FLAGS&1=1 THEN d.ESTOFF ELSE d.ESTON END ) ELSE v.VALOR || ' ' || d.UNIDADE END AS STATUS,
        CASE WHEN (v.FLAGS & 128) > 0 THEN 1 ELSE 0 END AS FAILED, 
        v.FLAGS,
        to_timestamp(v.DATA) AS LOCAL_TIME,
        v.DATA AS UNIX_TIMESTAMP,
-       timezone('UTC', to_timestamp(v.DATA)) as GMT_TIME,
-	   
-       d.ID AS TAG, 
+       timezone('UTC', to_timestamp(v.DATA)) as GMT_TIME,	   
        d.ESTACAO || ' ' || d.DESCRICAO AS DESCRIPTION, 
        d.TIPO AS TYPE_ANADIG,
        d.UNIDADE AS UNIT,
-       v.NPONTO AS POINT_KEY,
        d.ESTACAO AS GROUP_MAIN, 
        d.MODULO AS GROUP_SECONDARY,
        CASE WHEN d.DESCR_CURTA='' THEN d.DESCRICAO ELSE d.DESCR_CURTA END AS DESCR_SHORT,
@@ -261,17 +367,57 @@ SELECT
        d.LIMSS AS HIHI_LIM,
        d.LIMIII AS LOLOLO_LIM,
        d.LIMSSS AS HIHIHI_LIM,
-       d.ESTALM AS ALARM_ST
+       d.ESTALM AS ALARM_ST,
+	   d.PRIOR AS PRIORITY,
+	   CASE WHEN SUPCMD!=0 THEN 1 ELSE 0 END AS IS_CMD,
+	   d.SUPCMD as SUPCMD
 
 FROM val_tr v 
 JOIN dumpdb d ON v.NPONTO = d.NPONTO AND d.ID != ''
 ORDER BY d.ID
 ;
+comment on view   realtime_data                  is 'Realtime value of points';
+comment on column realtime_data.TAG              is 'Point Tag (unique)'; 
+comment on column realtime_data.POINT_KEY        is 'Integer Point Key (unique)';
+comment on column realtime_data.VALUE            is 'Current numerical value of point';
+comment on column realtime_data.STATUS           is 'Current textual status';
+comment on column realtime_data.FAILED           is 'Value Failure (1=failed, 0=ok)';
+comment on column realtime_data.FLAGS            is 'State flags (bitmask): 0x02=ON 0x01=OFF (for digital points), 0x80=invalid value, 0x20=analog';
+comment on column realtime_data.LOCAL_TIME       is 'Textual local date/time of last update';
+comment on column realtime_data.UNIX_TIMESTAMP   is 'Unix timestamp of last update';
+comment on column realtime_data.GMT_TIME         is 'Textual GMT date/time of last update';
+comment on column realtime_data.DESCRIPTION      is 'Full description oi point';
+comment on column realtime_data.TYPE_ANADIG      is 'Type: D=Digital; A=Analog';
+comment on column realtime_data.UNIT             is 'Unit of measurement for analog points';
+comment on column realtime_data.GROUP_MAIN       is 'Main group name (usually substation or plant name)';
+comment on column realtime_data.GROUP_SECONDARY  is 'Secondary group name (usually bay or equipment name)';
+comment on column realtime_data.DESCR_SHORT      is 'Short description of point information';
+comment on column realtime_data.DESCR_LONG       is 'Long description of point information';
+comment on column realtime_data.LOCATION         is 'Geographic location name';
+comment on column realtime_data.LATITUDE         is 'Latitude';
+comment on column realtime_data.LONGITUDE        is 'Longitude';
+comment on column realtime_data.STATE_OFF        is 'Message for state OFF';
+comment on column realtime_data.STATE_ON         is 'Message for state ON';
+comment on column realtime_data.COMMENTS         is 'Blocking annotation text';
+comment on column realtime_data.LO_LIM           is 'Lower limit';
+comment on column realtime_data.HI_LIM           is 'High Limit';
+comment on column realtime_data.LOLO_LIM         is 'LoLo limit';
+comment on column realtime_data.HIHI_LIM         is 'HiHi Limit';
+comment on column realtime_data.LOLOLO_LIM       is 'LoLoLo limit';
+comment on column realtime_data.HIHIHI_LIM       is 'HiHiHi Limit';
+comment on column realtime_data.ALARM_ST         is 'State that poduces alarms for digital points: 0=OFF, 1=ON, 2=BOTH, 3=OFF_to_ON (a.k.a. protection events)';
+comment on column realtime_data.PRIORITY         is 'Alarm priority (0=higher, 9=lowest)';
+comment on column realtime_data.IS_CMD           is 'Point is a command (1=yes, 0=no)';
+comment on column realtime_data.SUPCMD           is 'Point Key of supervision related to current command point; 0 for supervised';
+
+
 
 DROP VIEW historical_data;
 CREATE VIEW historical_data
 AS 
 SELECT  
+       d.ID AS TAG, 
+       v.NPONTO AS POINT_KEY,
        CASE WHEN d.TIPO='D' THEN ( CASE WHEN v.FLAGS&1=1 THEN 0 ELSE 1 END ) ELSE v.VALOR END AS VALUE,
        CASE WHEN d.TIPO='D' THEN ( CASE WHEN v.FLAGS&1=1 THEN d.ESTOFF ELSE d.ESTON END ) ELSE v.VALOR || ' ' || d.UNIDADE END AS STATUS,
        CASE WHEN (v.FLAGS & 128) > 0 THEN 1 ELSE 0 END AS FAILED, 
@@ -279,12 +425,9 @@ SELECT
        to_timestamp(v.DATA) AS LOCAL_TIME,
        v.DATA AS UNIX_TIMESTAMP,
        timezone('UTC', to_timestamp(v.DATA)) as GMT_TIME,
-
-       d.ID AS TAG, 
        d.ESTACAO || ' ' || d.DESCRICAO AS DESCRIPTION, 
        d.TIPO AS TYPE_ANADIG,
        d.UNIDADE AS UNIT,
-       v.NPONTO AS POINT_KEY,
        d.ESTACAO AS GROUP_MAIN, 
        d.MODULO AS GROUP_SECONDARY,
        CASE WHEN d.DESCR_CURTA='' THEN d.DESCRICAO ELSE d.DESCR_CURTA END AS DESCR_SHORT,
@@ -301,12 +444,167 @@ SELECT
        d.LIMSS AS HIHI_LIM,
        d.LIMIII AS LOLOLO_LIM,
        d.LIMSSS AS HIHIHI_LIM,
-       d.ESTALM AS ALARM_ST
+       d.ESTALM AS ALARM_ST,
+	   d.PRIOR AS PRIORITY,
+	   CASE WHEN SUPCMD!=0 THEN 1 ELSE 0 END AS IS_CMD,
+	   d.SUPCMD as SUPCMD
 
 FROM hist v 
 JOIN dumpdb d on v.NPONTO = d.NPONTO and d.ID != ''
 ORDER BY d.ID, UNIX_TIMESTAMP DESC
 -- limit 10000 -- in case of low performance!
 ;
+comment on view   historical_data                  is 'Historical value of points';
+comment on column historical_data.TAG              is 'Point Tag (unique)'; 
+comment on column historical_data.POINT_KEY        is 'Integer Point Key (unique)';
+comment on column historical_data.VALUE            is 'Numerical value of point';
+comment on column historical_data.STATUS           is 'Textual status';
+comment on column historical_data.FAILED           is 'Value Failure (1=failed, 0=ok)';
+comment on column historical_data.FLAGS            is 'State flags (bitmask): 0x02=ON 0x01=OFF (for digital points), 0x80=invalid value, 0x20=analog';
+comment on column historical_data.LOCAL_TIME       is 'Textual local date/time';
+comment on column historical_data.UNIX_TIMESTAMP   is 'Unix timestamp';
+comment on column historical_data.GMT_TIME         is 'Textual GMT date/time';
+comment on column historical_data.DESCRIPTION      is 'Full description oi point';
+comment on column historical_data.TYPE_ANADIG      is 'Type: D=Digital; A=Analog';
+comment on column historical_data.UNIT             is 'Unit of measurement for analog points';
+comment on column historical_data.GROUP_MAIN       is 'Main group name (usually substation or plant name)';
+comment on column historical_data.GROUP_SECONDARY  is 'Secondary group name (usually bay or equipment name)';
+comment on column historical_data.DESCR_SHORT      is 'Short description of point information';
+comment on column historical_data.DESCR_LONG       is 'Long description of point information';
+comment on column historical_data.LOCATION         is 'Geographic location name';
+comment on column historical_data.LATITUDE         is 'Latitude';
+comment on column historical_data.LONGITUDE        is 'Longitude';
+comment on column historical_data.STATE_OFF        is 'Message for state OFF';
+comment on column historical_data.STATE_ON         is 'Message for state ON';
+comment on column historical_data.COMMENTS         is 'Blocking annotation text';
+comment on column historical_data.LO_LIM           is 'Lower limit';
+comment on column historical_data.HI_LIM           is 'High Limit';
+comment on column historical_data.LOLO_LIM         is 'LoLo limit';
+comment on column historical_data.HIHI_LIM         is 'HiHi Limit';
+comment on column historical_data.LOLOLO_LIM       is 'LoLoLo limit';
+comment on column historical_data.HIHIHI_LIM       is 'HiHiHi Limit';
+comment on column historical_data.ALARM_ST         is 'State that poduces alarms for digital points: 0=OFF, 1=ON, 2=BOTH, 3=OFF_to_ON (a.k.a. protection events)';
+comment on column historical_data.PRIORITY         is 'Alarm priority (0=higher, 9=lowest)';
+comment on column historical_data.IS_CMD           is 'Point is a command (1=yes, 0=no)';
+comment on column historical_data.SUPCMD           is 'Point Key of supervision related to current command point; 0 for supervised';
+
+
+DROP VIEW seq_events;
+CREATE VIEW seq_events
+AS 
+SELECT  
+       d.ID AS TAG, 
+       v.NPONTO AS POINT_KEY,
+       v.DATA AS UNIX_TIMESTAMP,
+       to_timestamp(v.DATA) AS LOCAL_TIME,
+       timezone('UTC', to_timestamp(v.DATA)) as GMT_TIME,
+       v.TS as ACQ_UNIX_TIMESTAMP,
+       to_timestamp(v.TS) AS ACQ_LOCAL_TIME,
+       timezone('UTC', to_timestamp(v.TS)) as ACQ_GMT_TIME,
+       v.ESTADO as FLAGS,
+       CASE WHEN d.TIPO='D' THEN 
+	     CASE WHEN (v.ESTADO&3=0 or v.ESTADO&3=3) 
+		   THEN '!UNKNOWN!' 
+		   ELSE 
+		     CASE WHEN v.ESTADO&1=1 
+			    THEN d.ESTOFF 
+				ELSE d.ESTON 
+			 END
+		 END  
+		 ELSE (v.UTR/power(10,v.ESTADO&3))::text 
+	   END AS STATUS,	   
+       CASE WHEN (v.ESTADO & 128) > 0 THEN 1 ELSE 0 END AS FAILED, 
+       CASE WHEN (v.ESTADO & 64) > 0 THEN 1 ELSE 0 END AS TIME_FAILED, 
+       v.MSEC as MSEC,
+	   v.UTR as RTU_ADDR,
+       v.RECON as ACKNOWLEDGE,
+       d.ESTACAO || ' ' || d.DESCRICAO AS DESCRIPTION, 
+       d.TIPO AS TYPE_ANADIG,
+       d.UNIDADE AS UNIT,
+       d.ESTACAO AS GROUP_MAIN, 
+       d.MODULO AS GROUP_SECONDARY,
+       CASE WHEN d.DESCR_CURTA='' THEN d.DESCRICAO ELSE d.DESCR_CURTA END AS DESCR_SHORT,
+       CASE WHEN d.DESCR_LONGA='' THEN d.ESTACAO || ' ' || d.DESCRICAO ELSE d.DESCR_LONGA END AS DESCR_LONG,
+       d.NOME_LOCAL AS LOCATION,
+       d.LATITUDE AS LATITUDE,
+       d.LONGITUDE AS LONGITUDE,
+       d.ESTOFF AS STATE_OFF,
+       d.ESTON AS STATE_ON,
+       d.ANOTACAO AS COMMENTS,
+       d.ESTALM AS ALARM_ST,
+	   d.PRIOR AS PRIORITY,
+	   CASE WHEN SUPCMD!=0 THEN 1 ELSE 0 END AS IS_CMD,
+	   d.SUPCMD as SUPCMD
+
+FROM soe v 
+JOIN dumpdb d on v.NPONTO = d.NPONTO and d.ID != ''
+ORDER BY 1 DESC
+-- limit 10000 -- in case of low performance!
+;
+comment on view   seq_events                    is 'Sequence of events';
+comment on column seq_events.TAG                is 'Point Tag (unique)'; 
+comment on column seq_events.POINT_KEY          is 'Integer Point Key (unique)';
+comment on column seq_events.UNIX_TIMESTAMP     is 'Unix timestamp of last update (field time)';
+comment on column seq_events.LOCAL_TIME         is 'Textual local date/time of last update (field time)';
+comment on column seq_events.GMT_TIME           is 'Textual GMT date/time of last update (field time)';
+comment on column seq_events.ACQ_UNIX_TIMESTAMP is 'Unix timestamp of last update (HMI acquisition time)';
+comment on column seq_events.ACQ_LOCAL_TIME     is 'Textual local date/time (HMI acquisition time)';
+comment on column seq_events.ACQ_GMT_TIME       is 'Textual GMT date/time (HMI acquisition time)';
+comment on column seq_events.FLAGS              is 'State flags (bitmask): 0x02=ON 0x01=OFF (for digital points), 0x80=invalid value, 0x20=analog';
+comment on column seq_events.STATUS             is 'Textual status';
+comment on column seq_events.FAILED             is 'Value failure (1=failed, 0=ok)';
+comment on column seq_events.TIME_FAILED        is 'Time tag failure (1=time failed, 0=time ok)';
+comment on column seq_events.MSEC               is 'Mili second (of field time)';
+comment on column seq_events.RTU                is 'RTU Address (for digital points), not used for analog points';
+comment on column seq_events.ACKNOWLEDGE        is 'Acknowlegement, 0=Not acknowledged, 1=acknowledged, 2=eliminated from list';
+comment on column seq_events.DESCRIPTION        is 'Full description oi point';
+comment on column seq_events.TYPE_ANADIG        is 'Type: D=Digital; A=Analog';
+comment on column seq_events.UNIT               is 'Unit of measurement for analog points';
+comment on column seq_events.GROUP_MAIN         is 'Main group name (usually substation or plant name)';
+comment on column seq_events.GROUP_SECONDARY    is 'Secondary group name (usually bay or equipment name)';
+comment on column seq_events.DESCR_SHORT        is 'Short description of point information';
+comment on column seq_events.DESCR_LONG         is 'Long description of point information';
+comment on column seq_events.LOCATION           is 'Geographic location name';
+comment on column seq_events.LATITUDE           is 'Latitude';
+comment on column seq_events.LONGITUDE          is 'Longitude';
+comment on column seq_events.STATE_OFF          is 'Message for state OFF';
+comment on column seq_events.STATE_ON           is 'Message for state ON';
+comment on column seq_events.COMMENTS           is 'Blocking annotation text';
+comment on column seq_events.ALARM_ST           is 'State that poduces alarms for digital points: 0=OFF, 1=ON, 2=BOTH, 3=OFF_to_ON (a.k.a. protection events)';
+comment on column seq_events.PRIORITY           is 'Alarm priority (0=higher, 9=lowest)';
+comment on column seq_events.IS_CMD             is 'Point is a command (1=yes, 0=no)';
+comment on column seq_events.SUPCMD             is 'Point Key of supervision related to current command point; 0 for supervised';
+
+-- Create a function that always returns the first non-NULL item
+CREATE OR REPLACE FUNCTION public.first_agg ( anyelement, anyelement )
+RETURNS anyelement LANGUAGE SQL IMMUTABLE STRICT AS $$
+        SELECT $1;
+$$;
+ 
+-- And then wrap an aggregate around it
+CREATE AGGREGATE public.FIRST (
+        sfunc    = public.first_agg,
+        basetype = anyelement,
+        stype    = anyelement
+);
+ 
+-- Create a function that always returns the last non-NULL item
+CREATE OR REPLACE FUNCTION public.last_agg ( anyelement, anyelement )
+RETURNS anyelement LANGUAGE SQL IMMUTABLE STRICT AS $$
+        SELECT $2;
+$$;
+ 
+-- And then wrap an aggregate around it
+CREATE AGGREGATE public.LAST (
+        sfunc    = public.last_agg,
+        basetype = anyelement,
+        stype    = anyelement
+);
+
+-- create a grafana user
+drop owned grafana;
+create user grafana with password 'oshmi';
+grant select on realtime_data, historical_data, seq_events, catalog to grafana;
+
 
 

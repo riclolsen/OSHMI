@@ -2,19 +2,19 @@
 // OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
 header('content-type:text/plain');
 
-@$filtro = $_GET['F']; // parâmetro F : filtro do tabular
+@$filtro = $_GET['F']; // parÃ¢metro F : filtro do tabular
 
-@$lstSE = $_GET['S']; // parâmetro S : filtro de subestação
+@$lstSE = $_GET['S']; // parÃ¢metro S : filtro de subestaÃ§Ã£o
 
-@$callbackfn = $_GET['B']; // parâmetro B : nome da função de callback
+@$callbackfn = $_GET['B']; // parÃ¢metro B : nome da funÃ§Ã£o de callback
 
-@$pntinfo = $_GET['I']; // parâmetro P : ponto, tag ou lista de pontos
+@$pntinfo = $_GET['I']; // parÃ¢metro P : ponto, tag ou lista de pontos
 
 require_once("../comum/lesupsql.php"); 
 require_once("../comum/peardb_login.php") ;
 $db=&DBLogin("SQL_BANCOTR_CONSULTA");
 if (DB::isError($db)) 
-   die("Erro de conexão ao banco!");
+   die("Erro de conexÃ£o ao banco!");
 
 // Vai pegar dados de tempo real
 
@@ -127,7 +127,7 @@ if ( $filtro != "" )
 if ( $callbackfn != '' )
  print("$callbackfn();\n");
 
-$db->disconnect();   // libera conexão ao banco
+$db->disconnect();   // libera conexÃ£o ao banco
 ?>
 
 

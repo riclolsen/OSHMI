@@ -3,9 +3,9 @@
 
 header('content-type:text/plain');
 
-@$callbackfn = $_GET['B']; // parâmetro B : nome da função de callback
+@$callbackfn = $_GET['B']; // parÃ¢metro B : nome da funÃ§Ã£o de callback
 
-@$mstatus = $_GET['M']; // parâmetro M : requisição de status
+@$mstatus = $_GET['M']; // parÃ¢metro M : requisiÃ§Ã£o de status
 if ( $mstatus == 1 ) 
   {
   print("HA_ALARMES=0;\n");
@@ -26,9 +26,9 @@ $unidade=array();
 $lista_datas=array();
 $lstdt=array();
 
-@$pntinfo = $_GET['I']; // parâmetro P : ponto, tag ou lista de pontos
+@$pntinfo = $_GET['I']; // parÃ¢metro P : ponto, tag ou lista de pontos
 
-$par = $_GET['P']; // parâmetro P : ponto, tag ou lista de pontos
+$par = $_GET['P']; // parÃ¢metro P : ponto, tag ou lista de pontos
 $lista_pnt=explode(',',$par);
 
 if ($pntinfo!="")
@@ -47,7 +47,7 @@ require_once("../comum/lesupsql.php");
 require_once("../comum/peardb_login.php") ;
 $db=&DBLogin("SQL_BANCOTR_CONSULTA");
 if (DB::isError($db)) 
-   die("Erro de conexão ao banco!");
+   die("Erro de conexÃ£o ao banco!");
 
 // Vai pegar dados de tempo real
 
@@ -143,7 +143,7 @@ printf("Sha1Dig='%s';\n", date("d/m/Y H:i:s"));
 if ( $callbackfn != '' )
  print("$callbackfn();\n");
 
-$db->disconnect();   // libera conexão ao banco
+$db->disconnect();   // libera conexÃ£o ao banco
 ?>
 
 

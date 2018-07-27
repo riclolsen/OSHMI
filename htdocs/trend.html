@@ -5,7 +5,7 @@
   <meta name="application-name" content="OSHMI-Open Substation HMI">
   <meta name="description" content="Trend Viewer">
   <meta name="author" content="Ricardo L.Olsen">
-  <title>Visor de Tendências</title>
+  <title>Trend Viewer</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />    
   <script src="lib/jquery-1.5.1.js"></script>
   <script src="lib/flot-0.7/jquery.flot.js"></script>
@@ -19,6 +19,7 @@
   <script src="../conf/config_viewers.js"></script>
   <script src="../i18n/messages_i18n.js"></script>
   <script src="images.js"></script>
+  <script src="pntserver.js"></script>
 </head>
 <body style="font-family:sans-serif; margin:0; overflow:hidden;" bgcolor="#F0F0F0">
     
@@ -69,7 +70,6 @@
 </tr>
 </table>    
     
-<script src="pntserver.js"></script>    
 <script id="source">
 "use strict";
 
@@ -168,9 +168,9 @@ var idc, dt;
         dt = new Date();
         series[0].data.push( [ hvalues[idc].unxtime - dt.getTimezoneOffset() * 60 * 1000, hvalues[idc].valor ] );
         plot = $.plot( $("#placeholder"), series, options );
-        $.getScript( PNTServer + '?P=' + NPONTO + '&B=pushdata' );
         }
     }
+    $.getScript( PNTServer + '?P=' + NPONTO + "&B=pushdata" );
 }
 
 // recebe valores do ponto através do webserver
@@ -453,7 +453,7 @@ shortcut.add( ".",
 
     // busca dados históricos para inserir
     utm = (new Date()).getTime() - 2 * 60 * 60 * 1000;
-    $.getScript( "timepntserver.php" + '?P=' + NPONTO + "&U=" + utm/1000 + "&F=S" + "&B=histdata" );
+    $.getScript( TimePNTServer + '?P=' + NPONTO + "&U=" + utm/1000 + "&F=S" + "&B=histdata" );
 
     // initiate a recurring data update
     $("input.dataUpdate").click(function (){

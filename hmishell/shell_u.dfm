@@ -1,6 +1,6 @@
 object fmShell: TfmShell
-  Left = 32
-  Top = 959
+  Left = 286
+  Top = 967
   AutoSize = True
   BorderIcons = []
   BorderStyle = bsNone
@@ -20,6 +20,7 @@ object fmShell: TfmShell
   KeyPreview = True
   OldCreateOrder = False
   Scaled = False
+  OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown

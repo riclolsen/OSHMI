@@ -12,7 +12,7 @@ Dim objRequest
 Dim URL
 
 'The URL link.
-URL = "http://127.0.0.1:51908/pntserver.rjs?Y=1"
+URL = "http://127.0.0.1:51908/shellapi.rjs?Y=1"
 
 Set objRequest = CreateObject("Microsoft.XMLHTTP")
 
