@@ -2,8 +2,7 @@
 // OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 header('content-type: application/x-javascript; charset=UTF-8');
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
+header("Cache-Control: no-store, must-revalidate");
 
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
@@ -11,17 +10,17 @@ header("Pragma: no-cache");
 
 require_once 'timezone.php';
 
-@$filtro = $_GET['G']; // parâmetro G : filtro do tabular por subestação
+@$filtro = $_GET['G']; // parametro G : filtro do tabular por subestacao
 
-@$filmod = $_GET['M']; // parâmetro F : filtro do tabular por módulo
+@$filmod = $_GET['M']; // parametro F : filtro do tabular por modulo
 
-@$lstSE = $_GET['S']; // parâmetro S : filtro de subestação
+@$lstSE = $_GET['S']; // parametro S : filtro de subestacao
 
-@$filtalms = $_GET['A']; // parâmetro A : filtro de alarmados
+@$filtalms = $_GET['A']; // parametro A : filtro de alarmados
 
-@$callbackfn = $_GET['B']; // parâmetro B : nome da função de callback
+@$callbackfn = $_GET['B']; // parametro B : nome da funcao de callback
 
-@$pntinfo = $_GET['I']; // parâmetro P : ponto, tag ou lista de pontos
+@$pntinfo = $_GET['I']; // parametro P : ponto, tag ou lista de pontos
 
 $order = ' ID ';
 if ($filtro == 'TODOS_ANORMAIS')

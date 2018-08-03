@@ -1,6 +1,6 @@
 <?PHP
 
-// OSHMI/Open Substation HMI - Copyright 2008-2016 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 // Parâmetros:
 //
@@ -22,8 +22,7 @@
 
 header("Content-type: text/javascript; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"timepntserver.js\"");
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
+header("Cache-Control: no-store, must-revalidate");
     
 require_once 'timezone.php';
 // @date_default_timezone_set( date_default_timezone_get() );
@@ -72,6 +71,7 @@ try
     $dbhist->exec ( "PRAGMA locking_mode = NORMAL" );
     $dbhist->exec ( "PRAGMA cache_size = 5000" );
     $dbhist->exec ( "PRAGMA temp_store = MEMORY" );
+    $dbhist->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
     //$dbhist->exec ( "PRAGMA mmap_size=268435456" );
 
     if ( $FUNCAO == "S" )
@@ -87,26 +87,61 @@ try
     $sql = "";
     $uni = "";
     $cntsql = 0;
-    for( ; $cntpnt < count($ARRPNTS); $cntpnt++ )
+    for( ; $cntpnt < count($ARRPNTS) ; $cntpnt++ )
       {
       $pnt = $ARRPNTS[$cntpnt];
+
       if ( $FUNCAO == "S" )
         {
         if ( $INTERVALO != 0 )
-          $sql = $sql . $uni . "SELECT NPONTO, avg(VALOR) as VALOR, max(FLAGS) as FLAGS, (cast(data as int)/(60*$INTERVALO))*(60*$INTERVALO) as DATA from hist where nponto = $pnt and data > $FILTDH and data < " . $DATAFIM . " GROUP BY (cast(data as int)/(60*$INTERVALO))*(60*$INTERVALO)";
+          $sql = $sql . $uni . "SELECT 
+                                    NPONTO, 
+                                    avg(VALOR) as VALOR, 
+                                    max(FLAGS) as FLAGS, 
+                                    (cast(data as int)/(60*$INTERVALO))*(60*$INTERVALO) as DATA 
+                                FROM 
+                                    hist 
+                                WHERE 
+                                    (nponto = '$pnt' or 
+                                     nponto in (select nponto from dumpdb where id='$pnt')) and 
+                                    data > $FILTDH and data <  $DATAFIM 
+                                GROUP BY 
+                                    (cast(data as int)/(60*$INTERVALO))*(60*$INTERVALO) ";
         else
-          $sql = $sql . $uni . "SELECT NPONTO, VALOR, FLAGS, DATA as DATA from hist where nponto = $pnt and data > $FILTDH and data < " . $DATAFIM ;
+          $sql = $sql . $uni . "SELECT 
+                                    NPONTO, 
+                                    VALOR, 
+                                    FLAGS, 
+                                    DATA as DATA 
+                                FROM hist 
+                                WHERE 
+                                    (nponto = '$pnt' or 
+                                     nponto in (select nponto from dumpdb where id='$pnt')) and 
+                                    data > $FILTDH and 
+                                    data < $DATAFIM ";
         }
       else
         {
-        $sql = $sql . $uni . "SELECT NPONTO, VALOR, FLAGS, DATA as DATA from hist where nponto = $pnt and data = (select data from hist where nponto=$pnt and data<=$FILTDH  order by data desc limit 1) ";
+        $sql = $sql . $uni . "SELECT 
+                                    NPONTO, 
+                                    VALOR, 
+                                    FLAGS, 
+                                    DATA as DATA 
+                              FROM
+                                    hist 
+                              WHERE
+                                    (nponto = '$pnt' or 
+                                     nponto in (select nponto from dumpdb where id='$pnt')) and 
+                                    data = (select data from hist where nponto=$pnt and data<=$FILTDH  
+                              ORDER BY
+                                    data desc limit 1) ";
         }
-      $uni = "UNION ";
+      $uni = " UNION ";
       $cntsql++;
       if ( $cntsql > 50 )
        break;
       }
-    // echo $sql;  
+    //  echo $sql;  
     if ( $sql != "" )
     foreach ( $dbhist->query( $sql ) as $row )
       {
@@ -128,7 +163,7 @@ try
 
       if ( $FUNCAO == "S" )
         {
-        printf( "hvalues.push( { 'nponto':$nponto,'valor':$valor,'flags':$flags,'unxtime':$unxtime } );\n" );
+        printf( "hvalues.push( { 'nponto':'$pnt','valor':$valor,'flags':$flags,'unxtime':$unxtime } );\n" );
         }
       else
         {

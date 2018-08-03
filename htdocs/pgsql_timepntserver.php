@@ -22,8 +22,7 @@
 //error_reporting(E_ALL);
 
 header('content-type: application/x-javascript; charset=UTF-8');
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
+header("Cache-Control: no-store, must-revalidate");
     
 require_once 'timezone.php';
 
@@ -87,57 +86,64 @@ try
         {
         if ( $INTERVALO != 0 )
           $sql = $sql . $uni . "SELECT 
-	                              POINT_KEY as nponto,
-								  avg(VALUE) as valor,
-								  max(flags) as flags,                            								  
-	                              (UNIX_TIMESTAMP/(60*$INTERVALO))*(60*$INTERVALO) as data,
-								  max(HI_LIM) as lims,
-								  min(LO_LIM) as limi
-	                            FROM 
-								  historical_data
-								WHERE 
-								  POINT_KEY=$pnt and UNIX_TIMESTAMP > $FILTDH and UNIX_TIMESTAMP < $DATAFIM 
-	                            GROUP BY POINT_KEY,(UNIX_TIMESTAMP/(60*$INTERVALO))*(60*$INTERVALO) 
+                                  POINT_KEY as nponto,
+                                  avg(VALUE) as valor,
+                                  max(flags) as flags,                            								  
+                                  (UNIX_TIMESTAMP/(60*$INTERVALO))*(60*$INTERVALO) as data,
+                                  max(HI_LIM) as lims,
+                                  min(LO_LIM) as limi
+                                FROM 
+                                  historical_data
+                                WHERE 
+                                  (POINT_KEY::text = '$pnt' or 
+                                     POINT_KEY in (SELECT POINT_KEY from catalog where TAG='$pnt')) and
+								  UNIX_TIMESTAMP > $FILTDH and UNIX_TIMESTAMP < $DATAFIM 
+                                GROUP BY POINT_KEY,(UNIX_TIMESTAMP/(60*$INTERVALO))*(60*$INTERVALO) 
                                 ORDER BY 4								
-	                            ";
+                                ";
         else
           $sql = $sql . $uni . "SELECT 
-	                              POINT_KEY as nponto, 
-								  VALUE as valor, 
-								  FLAGS as flags, 
-								  UNIX_TIMESTAMP as data,
-								  HI_LIM as lims,
-								  LO_LIM as limi
-								from 
-								  historical_data 
-								where 
-								  POINT_KEY = $pnt and UNIX_TIMESTAMP > $FILTDH and UNIX_TIMESTAMP < $DATAFIM 
+                                  POINT_KEY as nponto, 
+                                  VALUE as valor, 
+                                  FLAGS as flags, 
+                                  UNIX_TIMESTAMP as data,
+                                  HI_LIM as lims,
+                                  LO_LIM as limi
+                                FROM 
+                                  historical_data 
+                                WHERE 
+                                  (POINT_KEY::text = '$pnt' or 
+                                     POINT_KEY in (SELECT POINT_KEY from catalog where TAG='$pnt')) and
+								  UNIX_TIMESTAMP > $FILTDH and UNIX_TIMESTAMP < $DATAFIM 
                                 ORDER BY 4								
 								";
         }
       else
         {
         $sql = $sql . $uni . "select nponto, valor, flags, data, lims, limi from (
-		                        SELECT 
-		                        POINT_KEY as nponto, 
-								CASE WHEN TYPE_ANADIG = 'A' THEN VALUE ELSE 1-VALUE END as valor, 
-								FLAGS as flags, 
-								UNIX_TIMESTAMP as data,
- 						        HI_LIM as lims,
-								LO_LIM as limi
-						      from 
-							    historical_data 
-							  where 
-							    POINT_KEY = $pnt and
-								UNIX_TIMESTAMP < $FILTDH and ( (TYPE_ANADIG = 'A' and UNIX_TIMESTAMP > $FILTDH - 24*60*60) or (TYPE_ANADIG = 'D' and UNIX_TIMESTAMP > $FILTDH - 24*60*60) ) order by UNIX_TIMESTAMP desc limit 1 
-						      ) as SEL
-							  ";
+                                SELECT 
+                                  POINT_KEY as nponto, 
+                                  CASE WHEN TYPE_ANADIG = 'A' THEN VALUE ELSE 1-VALUE END as valor, 
+                                  FLAGS as flags, 
+                                  UNIX_TIMESTAMP as data,
+                                      HI_LIM as lims,
+                                  LO_LIM as limi
+                                FROM 
+                                  historical_data 
+                                WHERE
+                                  (POINT_KEY::text = '$pnt' or 
+                                     POINT_KEY in (SELECT POINT_KEY from catalog where TAG='$pnt')) and
+                                UNIX_TIMESTAMP < $FILTDH and ( (TYPE_ANADIG = 'A' and UNIX_TIMESTAMP > $FILTDH - 24*60*60) or (TYPE_ANADIG = 'D' and UNIX_TIMESTAMP > $FILTDH - 24*60*60) ) order by UNIX_TIMESTAMP desc limit 1 
+                                  ) as SEL
+                                ";
         }
       $uni = "UNION ";
       $cntsql++;
       if ( $cntsql > 25 )
        break;
       }
+	  
+	//echo $sql;  
     $result = $db->prepare($sql);
     $result->setFetchMode(PDO::FETCH_ASSOC);  
     $result->execute(array());
@@ -167,7 +173,7 @@ try
 
       if ( $FUNCAO == "S" )
         {
-        printf( "hvalues.push( { 'nponto':$nponto,'valor':%.3f,'flags':$flags,'unxtime':$unxtime } );\n", $valor );
+        printf( "hvalues.push( { 'nponto':'$pnt','valor':%.3f,'flags':$flags,'unxtime':$unxtime } );\n", $valor );
         }
       else
         {
@@ -198,7 +204,7 @@ try
  	
   if ( $FUNCAO == "S" )
     {
-      printf( "LIMSUPS[$pnt]=%f;LIMINFS[$pnt]=%f;\n", $lims, $limi );
+      printf( "LIMSUPS['$pnt']=%f;LIMINFS['$pnt']=%f;\n", $lims, $limi );
     }        
     
   }

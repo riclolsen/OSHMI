@@ -318,8 +318,8 @@ switch ( ARequestInfo->UnparsedParams[1] )
          {
          TPonto &pto = ((*it).second);
 
-         if (   pto.NPonto != 0 &&                // Não transfere nponto==0
-                !pto.EhComando()           // Não transfere estado de comando
+         if (   pto.NPonto != 0 &&  // Não transfere nponto==0
+                !pto.EhComando()    // Não transfere estado de comando
             )
          if ( pto.NPonto < NPONTO_SIST_MIN || pto.NPonto > NPONTO_SIST_MAX ) // tira os pontos internos
          if (   pto.TemAnotacao() ||
@@ -466,7 +466,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      if ( SEP == ',' )
        AResponseInfo->ContentText = AResponseInfo->ContentText+(String)"L=[];\n";  // inicializa array L no Javascript
 
-     float valor;
+     double valor;
      TFA_Qual qual;
      double tagalarm = 0;
      bool temponto;
@@ -665,7 +665,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      if ( SEP == ',' )
        AResponseInfo->ContentText = AResponseInfo->ContentText+(String)"L=[];\n";  // inicializa array L no Javascript
 
-     float valor;
+     double valor;
      TFA_Qual qual;
      double tagalarm = 0;
      bool temponto;
@@ -894,7 +894,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
        TDateTime agora = Now();
        AResponseInfo->ContentText = (String)"Data='" + agora.FormatString( WEBSERVER_DATE_FMT ) + (String)"';\n";
 
-       float valor;
+       double valor;
        TFA_Qual qual;
        double tagalarm = 0;
        bool temponto;
@@ -1199,7 +1199,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
       if ( found )
         {
         String S; int P;
-        float fval;
+        double fval;
 
         try {
           // troca o ponto pela vírgula para converter
@@ -1344,7 +1344,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
       String V, F;
 
       try {
-        float valor;
+        double valor;
         unsigned char flg;
         String tipopt = BL.GetTipo(nponto);
 
@@ -1399,7 +1399,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
             ms.NRPT = 1;
             ms.ORIG = 0;
             ms.PONTO[0].ID = nponto;
-            ms.PONTO[0].VALOR = valor;
+            ms.PONTO[0].VALOR = (float)valor;
             ms.PONTO[0].STAT = flg;
             fmBDTR->EnviaEscravosBDTR( (char *)&ms, sizeof(ms) );
             }
@@ -1429,17 +1429,27 @@ switch ( ARequestInfo->UnparsedParams[1] )
 
   case 'K': // comando
      {
-     int cnponto, val = 0, tipo, ret = 0;
-     float fval = 0;
-     cnponto = ARequestInfo->Params->Strings[0].SubString(3,6).ToInt();
-     // tipo = ARequestInfo->Params->Strings[2].SubString(3,5).ToInt();
+     int cnponto = 0, val = 0, tipo, ret = 0;
+     double fval = 0;
+     bool found = false;
+     TPonto pt;
 
-     bool found;
-     TPonto &pt = BL.GetRefPonto( cnponto, found );
-     if ( pt.EhComandoDigital() )
-       val = ARequestInfo->Params->Strings[1].SubString(3,5).ToInt();
-     else
-       fval = atof(ARequestInfo->Params->Strings[1].SubString(3,20).c_str());
+     try {
+       cnponto = ARequestInfo->Params->Strings[0].SubString(3,100).ToInt();
+       pt = BL.GetRefPonto( cnponto, found );
+     }
+     catch (Exception &E){ // invalid conversion to int: command as a tag
+       pt = BL.GetRefPontoByTag(ARequestInfo->Params->Strings[0].SubString(3,100), found);
+     }
+
+     if ( found )
+       {
+       cnponto = pt.NPonto;
+       if ( pt.EhComandoDigital() )
+         val = ARequestInfo->Params->Strings[1].SubString(3,5).ToInt();
+       else
+         fval = atof(ARequestInfo->Params->Strings[1].SubString(3,20).c_str());
+       }
 
      if ( found && pt.EhComando() && !BL.ComandoIntertravado( cnponto ) ) // testa se o ponto existe, é de comando e não está intertravado
        {
@@ -1521,31 +1531,31 @@ switch ( ARequestInfo->UnparsedParams[1] )
 
      if ( cnt == -1 )
        {
-       AResponseInfo->ContentText = "ComandoAck='Comando não cadastrado (IHM):" + (String)cnponto + "';";
+       AResponseInfo->ContentText = "ComandoAck='Command Unknown: " + (String)cnponto + "';";
        break;
        }
 
      if ( BL.GetSimulacao() == SIMULMOD_LOCAL )
        {
        if ( confCmdSimul )
-         AResponseInfo->ContentText = "ComandoAck='Comando recusado (BDTR):" + (String)cnponto + "," + (String)cmd + "';";
+         AResponseInfo->ContentText = "ComandoAck='Command Rejected: " + (String)cnponto + "," + (String)cmd + "';";
        else
-         AResponseInfo->ContentText = "ComandoAck='Comando aceito (BDTR):" + (String)cnponto + "," + (String)cmd + "';";
+         AResponseInfo->ContentText = "ComandoAck='OK: " + (String)cnponto + "," + (String)cmd + "';";
        break;
        }
 
      if ( cnponto == cmdNPonto && cnt == cmdCntAck )
        {
-       AResponseInfo->ContentText = "ComandoAck='Comando não confirmado:" + (String)cnponto + "';";
+       AResponseInfo->ContentText = "ComandoAck='Command Unconfirmed: " + (String)cnponto + "';";
        break;
        }
 
      if ( cnponto == cmdNPonto && cnt != cmdCntAck )
        {
        if ( falha )
-         AResponseInfo->ContentText = "ComandoAck='Comando recusado (BDTR):" + (String)cnponto + "," + (String)cmd + "';";
+         AResponseInfo->ContentText = "ComandoAck='Command Rejected: " + (String)cnponto + "," + (String)cmd + "';";
        else
-         AResponseInfo->ContentText = "ComandoAck='Comando aceito (BDTR):" +(String)cnponto + "," + (String)cmd + "';";
+         AResponseInfo->ContentText = "ComandoAck='OK: " +(String)cnponto + "," + (String)cmd + "';";
        break;
        }
 
@@ -1716,11 +1726,11 @@ void __fastcall TfmWebServ::NMHTTP1Success(CmdType Cmd)
   char * s = NMHTTP1->Body.c_str();
 
   int nponto, alarme, alrin, ret, cnt = 0;
-  float liminf;
-  float limsup;
+  double liminf;
+  double limsup;
   float hister;
   double tagalarm;
-  // float vlnor;
+  // double vlnor;
   String anotacao;
   char buf[2000];
   s = s - 1;
@@ -1765,7 +1775,7 @@ void __fastcall TfmWebServ::NMHTTP1Success(CmdType Cmd)
 
   nponto = 0; alarme = 0; alrin = 0; liminf = LIMINFMIN; limsup = LIMSUPMAX;
   hister = 0.0; tagalarm = 0.0; strcpy( buf, "" );
-  ret = sscanf( s, "%d %d %d %f %f %f %lf", &nponto, &alarme, &alrin, &liminf, &limsup, &hister, &tagalarm );
+  ret = sscanf( s, "%d %d %d %lf %lf %f %lf", &nponto, &alarme, &alrin, &liminf, &limsup, &hister, &tagalarm );
 
   if ( nponto == 0 || ret < 7 )
     break;

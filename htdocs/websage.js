@@ -1170,12 +1170,6 @@ directCommandExec : function(point, value)
   else
   if ( value === "OFF" )
     value = 1;
-  else
-  if ( parseFloat( value ) === NaN )
-    return;
-    
-  if ( parseInt( point ) === NaN )
-    return;
     
   WebSAGE.getScript( WebSAGE.g_remoteServer + '?K=' + point + '&V=' + value + '&T=1' );
 
@@ -2497,7 +2491,11 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
              if ( inksage_labelvec[lbv].width > 0 )
                {
                inksage_labelvec[lbv].dataini = (new Date()).getTime() - Math.abs(inksage_labelvec[lbv].width) * 1000;
-               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + '&U=' + inksage_labelvec[lbv].dataini/1000 + '&I=' + inksage_labelvec[lbv].x + '&F=S' + '&B=histdata(' + WebSAGE.InkSage.length + ','+inksage_labelvec[lbv].tag+');histdata' + '"' + ' );';
+               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + 
+                               '&U=' + inksage_labelvec[lbv].dataini/1000 + 
+                               '&I=' + inksage_labelvec[lbv].x + 
+                               '&F=S' + 
+                               '&B=histdata(' + WebSAGE.InkSage.length + ',\'' + inksage_labelvec[lbv].tag + '\');histdata' + '"' + ' );';
                }
              else  
                {
@@ -2506,7 +2504,11 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                                                dtn.getTime() % (Math.abs(inksage_labelvec[lbv].width) * 1000) +
                                                (dtn.getTimezoneOffset()*60*1000)  % (Math.abs(inksage_labelvec[lbv].width) * 1000);
                inksage_labelvec[lbv].datafim = inksage_labelvec[lbv].dataini + Math.abs(inksage_labelvec[lbv].width * 1000);
-               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + '&U=' + inksage_labelvec[lbv].dataini/1000 + '&I=' + inksage_labelvec[lbv].x + '&F=S' + '&B=histdata(' + WebSAGE.InkSage.length + ','+inksage_labelvec[lbv].tag+');histdata' + '"' + ' );';
+               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + 
+                               '&U=' + inksage_labelvec[lbv].dataini/1000 + 
+                               '&I=' + inksage_labelvec[lbv].x + 
+                               '&F=S' + 
+                               '&B=histdata(' + WebSAGE.InkSage.length + ',\'' + inksage_labelvec[lbv].tag + '\');histdata' + '"' + ' );';
                }
              WebSAGE.g_timeshift = WebSAGE.g_timeshift + 2000;
              setTimeout( calltps , WebSAGE.g_timeshift );
@@ -3043,11 +3045,11 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                   // is the value raising or lowering? (animate differently, over or undeline)
                   if ( Math.abs( WebSAGE.getValue(tag)) > Math.abs( WebSAGE.InkSage[i].lastVal ) )
                     {
-                    WebSAGE.InkSage[i].parent.changeAnim.setAttributeNS( null, 'values', 'line-through;overline;overline;line-through;overline;overline' );
+                    WebSAGE.InkSage[i].parent.changeAnim.setAttributeNS( null, 'values', 'none;overline;overline;none;overline;overline' );
                     }
                   else
                     {
-                    WebSAGE.InkSage[i].parent.changeAnim.setAttributeNS( null, 'values', 'line-through;underline;underline;line-through;underline;underline' );
+                    WebSAGE.InkSage[i].parent.changeAnim.setAttributeNS( null, 'values', 'none;underline;underline;none;underline;underline' );
                     }
                   }
 

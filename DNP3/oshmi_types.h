@@ -38,6 +38,8 @@ typedef struct
 	{
 		unsigned int onoff;
 		float setpoint;
+		int setpoint_i32;
+		short int setpoint_i16;
 	};
 	unsigned int sbo;
 	unsigned int qu;
@@ -109,5 +111,17 @@ typedef struct {
         float fr;      		// valor em ponto flutuante
         unsigned char qds; 	// qualificador do ponto
 } flutuante_seq;
-   
+
+typedef struct {
+	unsigned short nponto; // numero do ponto
+	unsigned char nponto3; // 3 byte do numero do ponto
+	unsigned int bcr;  	   // valor binary counter reading
+	unsigned char qds;     // qualificador do ponto
+} integrated;
+
+typedef struct {
+	unsigned int bcr;   // valor binary counter reading
+	unsigned char qds; 	// qualificador do ponto
+} integrated_seq;
+
 #pragma pack(pop)

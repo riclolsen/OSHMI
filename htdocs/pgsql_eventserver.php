@@ -31,8 +31,7 @@
 
 header("Content-type: text/javascript; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"eventserver.js\"");
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
+header("Cache-Control: no-store, must-revalidate");
     
 require_once 'timezone.php';
 

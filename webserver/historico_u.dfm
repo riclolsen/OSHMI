@@ -1,6 +1,6 @@
 object fmHist: TfmHist
-  Left = 219
-  Top = 186
+  Left = 221
+  Top = 187
   Width = 330
   Height = 210
   Caption = 'Historical Recoding'

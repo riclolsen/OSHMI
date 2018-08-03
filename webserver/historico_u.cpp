@@ -35,7 +35,7 @@ __fastcall TfmHist::TfmHist(TComponent* Owner)
 {
 }
 
-void TfmHist::PushVal( int nponto, float valor, int flags, double tagtempo )
+void TfmHist::PushVal( int nponto, double valor, int flags, double tagtempo )
 {
 THistValor hvl;
 hvl.nponto = nponto;
@@ -131,7 +131,7 @@ Label4->Caption = tickini - tickant;
         unxts = mktime( &unxtm );
 
 
-        S = S.sprintf( "(%u,%g,%u,%u),", hvl.nponto, hvl.valor, hvl.flags, unxts );
+        S = S.sprintf( "(%u,%.14g,%u,%u),", hvl.nponto, hvl.valor, hvl.flags, unxts );
         SQL = SQL + S;
         PGSQL = PGSQL + S;
 

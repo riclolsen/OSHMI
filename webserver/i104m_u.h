@@ -52,6 +52,8 @@ typedef struct
 	{
 		unsigned int onoff;
 		float setpoint;
+                int setpoint_i32;
+                short int setpoint_i16;
 	};
 	unsigned int sbo;
 	unsigned int qu;
@@ -78,7 +80,7 @@ private:	// User declarations
 public:		// User declarations
         __fastcall TfmIEC104M(TComponent* Owner);
         int ComandoIEC_Dig( unsigned int nponto, unsigned int onoff );
-        int ComandoIEC_Ana( unsigned int nponto, float val );
+        int ComandoIEC_Ana( unsigned int nponto, double val );
         int I104_cntIntgr;
         int cntPackt;
         int cntPacktDisc;

@@ -3,7 +3,7 @@
 
 // Parâmetros e constantes de configuração do sistema
 
-#define VERSAO "5.0"
+#define VERSAO "5.1"
 
 extern int IEC104_PORT;
 extern int IEC104_1_SEC; // endereço secundário da utr 1

@@ -1,7 +1,8 @@
 <?php 
-// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 header('content-type:text/plain');
+header("Cache-Control: no-store, must-revalidate");
 
 @$callbackfn = $_GET['B']; // parâmetro B : nome da função de callback
 

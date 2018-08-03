@@ -13,7 +13,7 @@
 typedef struct
 {
 int nponto;
-float valor;
+double valor;
 int flags;
 double tagtempo;
 } THistValor;
@@ -44,7 +44,7 @@ private:	// User declarations
 
 public:		// User declarations
         __fastcall TfmHist(TComponent* Owner);
-        void PushVal( int nponto, float valor, int flags, double tagtempo );
+        void PushVal( int nponto, double valor, int flags, double tagtempo );
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TfmHist *fmHist;

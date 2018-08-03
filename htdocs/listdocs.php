@@ -1,3 +1,7 @@
+<?PHP
+header("Cache-Control: no-store, must-revalidate");
+?>
+
 <html>
 <head>
 <meta charset="UTF-8">

@@ -119,10 +119,10 @@ return 0;
 //---------------------------------------------------------------------------
 
 // Envia comando analógico ao varredor iec104m
-int TfmIEC104M::ComandoIEC_Ana( unsigned int nponto, float val )
+int TfmIEC104M::ComandoIEC_Ana( unsigned int nponto, double val )
 {
 bool found;
-float temp;
+double temp;
 TPonto &pt = BL.GetRefPonto( nponto, found );
 if ( !found && nponto!=0 )
   return 1;
@@ -177,7 +177,9 @@ else
         temp = -32768;
       msgcmd.setpoint =  temp;
       break;
-
+    case 51: // C_BO_NA_1 Bitstring of 32 bits
+      msgcmd.setpoint_i32 = (int)val;
+      break;
     default:
     case 50: // C_SE_NC_1 Set-point short floating point
     case 63: // C_SE_TC_1 Set-point short floating point w/ time
@@ -224,7 +226,7 @@ if ( cbLog->Checked )
    logaln( (String)"< CMD Type:" + (String)msgcmd.tipo +
            (String)" Address:" + (String)msgcmd.endereco +
            (String)" RTU:" + (String)msgcmd.utr +
-           (String)" VAL:" + (String)msgcmd.setpoint
+           (String)" VAL:" + (String)val
          );
 
 return 0;
@@ -342,6 +344,9 @@ if ( pmsgsupsq->signature == MSGSUPSQ_SIG )
         break;
       case 36: // ponto flutuante c/ tag
         incinfo = 4 + 5 + 7;
+        break;
+      case 15:
+        incinfo = 4 + 5;
         break;
       default:
         cntPacktDisc++;

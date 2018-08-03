@@ -1,4 +1,5 @@
 <?PHP
+header("Cache-Control: no-store, must-revalidate");
 
 // xPlain Power Graphics - Copyright 2016 - Ricardo L. Olsen/DSC Systems
 // Script to consult a SQLITE OSHMI database

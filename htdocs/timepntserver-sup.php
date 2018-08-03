@@ -1,6 +1,6 @@
 <?PHP
 
-// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 // Parâmetros:
 //
@@ -22,8 +22,7 @@ error_reporting(E_ALL);
 
 header("Content-type: text/javascript; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"timepntserver.js\"");
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
+header("Cache-Control: no-store, must-revalidate");
     
 require_once 'timezone.php';
 // @date_default_timezone_set( date_default_timezone_get() );  // date_default_timezone_set('UTC');      

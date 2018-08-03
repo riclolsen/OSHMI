@@ -65,7 +65,7 @@ private:	// User declarations
 public:		// User declarations
         void AcertaFlags(unsigned char Byte);
         __fastcall TfmSimul(TComponent* Owner);
-        int SimulaComando(int nponto, float valor);
+        int SimulaComando(int nponto, double valor);
         void ProcessaSimulacao(void);
 };
 //---------------------------------------------------------------------------

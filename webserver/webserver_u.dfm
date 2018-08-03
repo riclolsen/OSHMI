@@ -1,6 +1,6 @@
 object fmWebServ: TfmWebServ
-  Left = 661
-  Top = 644
+  Left = 664
+  Top = 399
   Width = 592
   Height = 547
   Caption = 'fmWebServ'

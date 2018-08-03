@@ -2,9 +2,7 @@
 // OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 header('content-type: application/x-javascript; charset=UTF-8');
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
-
+header("Cache-Control: no-store, must-revalidate");
 
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);

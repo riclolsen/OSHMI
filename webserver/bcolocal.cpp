@@ -76,8 +76,8 @@ if ( ! ( Cnt % 3 ) )
   TDateTime dt = Now();
   unsigned short hour; unsigned short min; unsigned short sec; unsigned short msec;
   dt.DecodeTime( &hour, &min, &sec, &msec );
-  BL.EscrevePonto( NPONTO_HORA, (float) hour + (float) min / 60.0, 0x20, 0 );
-  BL.EscrevePonto( NPONTO_MINUTO, (float) min + (float) sec / 60.0, 0x20, 0 );
+  BL.EscrevePonto( NPONTO_HORA, (double) hour + (double) min / 60.0, 0x20, 0 );
+  BL.EscrevePonto( NPONTO_MINUTO, (double) min + (double) sec / 60.0, 0x20, 0 );
   }
 
 // percorre todo o banco e marca falha nos pontos com tag muito antigo
@@ -198,12 +198,12 @@ char * TPonto::GetModulo()
   return Modulo;
 }
 
-float TPonto::GetLimSup()
+double TPonto::GetLimSup()
 {
   return LimSup;
 }
 
-float TPonto::GetLimInf()
+double TPonto::GetLimInf()
 {
   return LimInf;
 }
@@ -252,12 +252,12 @@ void TPonto::SetTimeAlarm( double timetag )
  TagTempoAlarme = timetag;
 }
 
-void TPonto::SetLimInf( float val )
+void TPonto::SetLimInf( double val )
 {
   LimInf = val;
 }
 
-void TPonto::SetLimSup( float val )
+void TPonto::SetLimSup( double val )
 {
   LimSup = val;
 }
@@ -267,7 +267,7 @@ void TPonto::SetHister( float val )
   Hister = val;
 }
 
-void TPonto::SetValorTipico( float val )
+void TPonto::SetValorTipico( double val )
 {
   ValorTipico = val;
 }
@@ -365,7 +365,7 @@ if ( EhDigital() &&
 return true;
 }
 
-float TPonto::GetValorNormal()
+double TPonto::GetValorNormal()
 {
 return ValorNormal;
 }
@@ -568,7 +568,7 @@ if (fp)
   char descricao[100];
   char tipo, c;
   int nponto, ocr, endereco;
-  float f, valor_tipico;
+  double f, valor_tipico;
   int nponto_sup;
   int origem;
   int utr, asdu;
@@ -600,6 +600,7 @@ if (fp)
 
     int cnterr = 0;
 
+    /*
     if ( versao <= 1 )
       { // versao 1
       nf = sscanf(buff, "%d %s %c %s %d %d %d %d %c %d %d %f %f %d %d %d", &nponto, tag, &tipo, alarme, &ocr, &tpeq, &info, &origem, &c, &utr, &asdu, &kconv1, &kconv2, &nponto_sup, &estalm, &prior);
@@ -615,8 +616,9 @@ if (fp)
       valor_tipico = 0;  // não tem na versao 1
       }
     else
+    */
       { // versao 2 ou maior
-      nf = sscanf(buff, "%d %d %s %c %s %d %d %d %d %c %d %d %f %f %d %d %d %f", &nponto, &endereco, tag, &tipo, alarme, &ocr, &tpeq, &info, &origem, &c, &utr, &asdu, &kconv1, &kconv2, &nponto_sup, &estalm, &prior, &valor_tipico);
+      nf = sscanf(buff, "%d %d %s %c %s %d %d %d %d %c %d %d %f %f %d %d %d %lf", &nponto, &endereco, tag, &tipo, alarme, &ocr, &tpeq, &info, &origem, &c, &utr, &asdu, &kconv1, &kconv2, &nponto_sup, &estalm, &prior, &valor_tipico);
       cntline++;
       if ( nf < 16 )
          {
@@ -860,7 +862,7 @@ if (fp)
         Loga( (String)"Missing '/' in point state message! Line: " + cntline );
         }
       }
-
+    /*
     // determina ESTACAO, MODULO E DESCRICAO conforme a versão do arquivo
     if ( versao < 3 )
       { // deduz SE pelo ID, MODULO pelo início da DESCRICAO
@@ -880,6 +882,7 @@ if (fp)
         }
       }
     else
+    */
       { // da versão 3 em diante muda a descrição, onde vem os 3 campos SE~VAO~DESCRICAO separados pelo ~
       pch = strchr(descricao, '~');
 
@@ -1335,7 +1338,7 @@ else
 return true;
 }
 
-bool TBancoLocal::GetPonto(int nponto, float &valor, TFA_Qual &qual, double &tagtempo)
+bool TBancoLocal::GetPonto(int nponto, double &valor, TFA_Qual &qual, double &tagtempo)
 {
 map <int, TPonto>::iterator it;
 it=Pontos.find(nponto);
@@ -1358,7 +1361,7 @@ map <int, TPonto> & ref=Pontos;
   return ref;
 }
 
-int TBancoLocal::EscrevePonto(int nponto, float valor, unsigned char qualif, int calculo, int usakconv, int temtagtmp, int espontaneo)
+int TBancoLocal::EscrevePonto(int nponto, double valor, unsigned char qualif, int calculo, int usakconv, int temtagtmp, int espontaneo)
 {
 int rg;
 int inclui_ev = 0;
@@ -2375,7 +2378,7 @@ int bp;
 void TBancoLocal::Calcula(int nponto)
 {
 map <int, TPonto>::iterator it;
-float r=0;
+double r=0;
 int i;
 TFA_Qual q;
 int temtagtmp = 0;
@@ -2720,7 +2723,7 @@ BipaNoSpeaker = bipa;
 }
 
 // Simulação randômica de valores, estados e eventos para todos os pontos
-void TBancoLocal::SetValorTipico( int nponto, float val )
+void TBancoLocal::SetValorTipico( int nponto, double val )
 {
 map <int, TPonto>::iterator it;
 
@@ -2770,7 +2773,7 @@ int TBancoLocal::EscreveIEC( unsigned int endereco, unsigned int tipo, void *pti
 {
 unsigned char * pdig;
 TFA_Qual qual;
-float val;
+double val;
 int temtag = 0;
 
 // converte endereço físico para nponto
@@ -2870,7 +2873,7 @@ try
             }
           break;
 
-      case 5:
+      case 5: // step position
           {
           step_seq * stp = (step_seq *) ptinfo;
           val = stp->vti & 0x7f;
@@ -2891,7 +2894,7 @@ try
       case 35: // scaled c/ tag
           {
           analogico_seq * ana = (analogico_seq *) ptinfo;
-          float div;
+          double div;
           if ( tipo == 9 || tipo == 34 )
             div = 32767;
           else
@@ -2907,7 +2910,20 @@ try
           qual.Falha = ana->qds & 0xC1; // testa IV, NT e OV
           }
           break;
-
+      case 15: // integrated totals
+          {
+          integrated_seq * integr = (integrated_seq *)ptinfo;
+          val = integr->bcr;
+          qual.CasaDecimal1 = 0;
+          qual.CasaDecimal2 = 0;
+          qual.Subst = 0;
+          qual.Origem1 = 0; // origem: supervisionado = 00
+          qual.Origem2 = 0;
+          qual.Quest = 0;
+          qual.Tipo = TIPO_ANALOGICO; // 0=digital, 1=analógico
+          qual.Falha = integr->qds & 0xC0; // testa IV, leave CA and CY
+          }
+          break;
       case 13: // ponto flutuante
       case 36: // ponto flutuante c/ tag
           {

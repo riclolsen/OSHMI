@@ -195,7 +195,7 @@ static unsigned int cntseg = 0;
     int ponto;
 
       int i = 1;
-      float valor;
+      double valor;
       TFA_Qual qual;
       TDateTime timetag, dt;
 

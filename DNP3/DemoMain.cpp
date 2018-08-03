@@ -17,9 +17,12 @@
  * This project was forked on 01/01/2013 by Automatak, LLC and modifications
  * may have been made to this file. Automatak, LLC licenses these modifications
  * to you under the terms of the License.
+ *
+ * Modified and integrated into OSHMI by Ricardo Lastra Olsen (2016-2018). 
+ *
  */
 
-#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.4 - Copyright 2016-2018 - Ricardo Lastra Olsen"
+#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.6 - Copyright 2016-2018 - Ricardo Lastra Olsen"
 
 #include <asiodnp3/DNP3Manager.h>
 #include <asiodnp3/PrintingSOEHandler.h>
@@ -56,7 +59,7 @@ using namespace opendnp3;
 // wait while receiving keep alive messages
 void waittobe_active(int shandle)
 {
-	int seconds_wait = KEEP_ALIVE_TIME * 3.5;
+	int seconds_wait = (int)(KEEP_ALIVE_TIME * 3.5);
 	time_t now;
 	time(&now);
 	time_t timeant = now;
@@ -178,6 +181,7 @@ int main(int argc, char* argv[])
 		int IPPort = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "IP_PORT", 20000);
 		int enable_unsolicited = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "ENABLE_UNSOLICITED", 1);
 		int integrity_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "INTEGRITY_SCAN", 180);
+		int class0_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS0_SCAN", 8);
 		int class1_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS1_SCAN", 5);
 		int class2_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS2_SCAN", 17);
 		int class3_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS3_SCAN", 29);
@@ -244,6 +248,11 @@ int main(int argc, char* argv[])
           integrity_scan = 0x7FFFFFFF;
 		integrityScanVec.push_back( pMasterVec[cntslaves]->AddClassScan(ClassField::AllClasses(), TimeDuration::Seconds(integrity_scan)) );
 		
+		// do a Class 1 exception poll every X seconds
+		if (class0_scan == 0)
+			class0_scan = 0x7FFFFFFF;
+		exceptionScanVec.push_back(pMasterVec[cntslaves]->AddClassScan(ClassField(ClassField::CLASS_0), TimeDuration::Seconds(class0_scan)));
+
 		// do a Class 1 exception poll every X seconds
 		if (class1_scan == 0)
 			class1_scan = 0x7FFFFFFF;
@@ -528,12 +537,12 @@ int main(int argc, char* argv[])
 
 					}
 						break;
-					case 49: // comando se setpoint escalado (scaled)
+					case 49: // setpoint scaled, will follow as DNP3 signed 16bit signed analog output
 						for (int i = 0; i < cntslaves; i++)
 						{
 							if (stackConfigVec[i].link.RemoteAddr == pmsg->utr) // encontra a utr
 							{
-								AnalogOutputInt16 ao(pmsg->setpoint);
+								AnalogOutputInt16 ao((int16_t)pmsg->setpoint_i16);
 								BlockingCommandCallback handler;
 								int index = pmsg->endereco - OFFSET_ANALOG_OUT;
 								if (pmsg->sbo)
@@ -553,15 +562,15 @@ int main(int argc, char* argv[])
 								msg.prim = stackConfigVec[i].link.LocalAddr;
 								msg.sec = stackConfigVec[i].link.RemoteAddr;
 								msg.signature = MSGSUP_SIG;
-								msg.taminfo = sizeof(short);
-								*(short *)msg.info = (short)pmsg->setpoint;
-								int packet_size = sizeof(int) * 7 + sizeof(short);
+								msg.taminfo = sizeof(int16_t);
+								*(int16_t *)msg.info = pmsg->setpoint_i16;
+								int packet_size = sizeof(int) * 7 + sizeof(int16_t);
 								soehVec[i].SendOSHMI(&msg, packet_size);
 								break;
 							}
 						}
 						break;
-					case 50: // comando de setpoint ponto flutuante
+					case 50: // setpoint float, will follow as DNP3 single precision analog output
 						for (int i = 0; i < cntslaves; i++)
 						{
 							if (stackConfigVec[i].link.RemoteAddr == pmsg->utr) // encontra a utr
@@ -593,6 +602,39 @@ int main(int argc, char* argv[])
 								break;
 							}
 						}
+					case 51: // bitstring command 32 bits, will follow as DNP3 signed 32bit signed analog output
+						for (int i = 0; i < cntslaves; i++)
+						{
+							if (stackConfigVec[i].link.RemoteAddr == pmsg->utr) // encontra a utr
+							{
+								AnalogOutputInt32 ao((int32_t)pmsg->setpoint_i32);
+								BlockingCommandCallback handler;
+								int index = pmsg->endereco - OFFSET_ANALOG_OUT;
+								if (pmsg->sbo)
+									pCommandProcessorVec[i]->SelectAndOperate(ao, index, handler);
+								else
+									pCommandProcessorVec[i]->DirectOperate(ao, index, handler);
+								auto response = handler.WaitForResult();
+								std::cout << "OSHMI Cmd-> RTU:" << pmsg->utr << " Addr:" << index << " " << pmsg->setpoint_i32 << " SBO:" << pmsg->sbo
+									<< " Res:" << CommandResultToString(response.GetResult()) <<
+									" Sts:" << CommandStatusToString(response.GetStatus()) << std::endl;
+
+								// retorna confirmação como asdu de comando para cima
+								t_msgsup msg;
+								msg.causa = (response.GetStatus() == CommandStatus::SUCCESS) ? 0x00 : 0x40;
+								msg.endereco = pmsg->endereco;
+								msg.tipo = pmsg->tipo;
+								msg.prim = stackConfigVec[i].link.LocalAddr;
+								msg.sec = stackConfigVec[i].link.RemoteAddr;
+								msg.signature = MSGSUP_SIG;
+								msg.taminfo = sizeof(int32_t);
+								*(int32_t *)msg.info = pmsg->setpoint_i32;
+								int packet_size = sizeof(int) * 7 + sizeof(int32_t);
+								soehVec[i].SendOSHMI(&msg, packet_size);
+								break;
+							}
+						}
+						break;
 						break;
 				} // switch
 			} // while

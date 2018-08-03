@@ -152,6 +152,36 @@ QTester104:
 
 -------------------------------------------------------------------
 
+Notes for version 5.1:
+
+Webserver.exe:
+ - Point values are now stored internally as 64bit floats.
+ - Now the system can handle very big values down to historian level.
+ - Fixed reading of UTF-8 config files with BOM.
+
+Screen Viewer:
+ - Support for plot graphics by tag.
+ - Simpler animation for changed values (just underline or overline).
+
+DNP3 driver:
+ - Updated to version 0.6.
+ - Added support for Class 0 Scan.
+ - Added support for 32 bits Analog Outputs.
+ - Added support for 32 bits Counters and Frozen Counters.
+ - Added support for Analog Outputs Status.
+ - Added support for Digital Outputs Status.
+
+Trend Viewer:
+ - Fixed div tag missing a '>'.
+
+Other:
+ - Added directive "Cache Control: no-cache, must-revalidate" to Nginx configuration for SVG
+   displays and some other files. Allowing for a better cache validation in client browsers.
+ - Support for direct commands by tag.
+ - Remove redundant set of mime type header for SVG files in nginx_http(s).conf.
+
+-------------------------------------------------------------------
+
 Notes for version 5.0:
 
 The full web interface was converted to UTF-8 encoding for better internationalization and

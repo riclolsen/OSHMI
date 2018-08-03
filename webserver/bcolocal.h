@@ -42,8 +42,8 @@ using namespace std;
 
 #define NPONTO_SIST_MAX      100000
 #define NPONTO_BANCO_ATIVO   NPONTO_SIST_MAX-1
-#define NPONTO_OSHMI_OPER  NPONTO_SIST_MAX-2
-#define NPONTO_OSHMI_MODO  NPONTO_SIST_MAX-3
+#define NPONTO_OSHMI_OPER    NPONTO_SIST_MAX-2
+#define NPONTO_OSHMI_MODO    NPONTO_SIST_MAX-3
 #define NPONTO_ACERTO_HORA   NPONTO_SIST_MAX-4
 #define NPONTO_COMUNIC_BDTR  NPONTO_SIST_MAX-5
 #define NPONTO_COMUNIC_I104  NPONTO_SIST_MAX-6
@@ -311,9 +311,9 @@ unsigned int AlarmeTemporizado; // =0:sem alarme temporizado, >0 tempo para temp
 public:
 volatile bool Acessando; // flag para exclusão no acesso
 int NPonto;              // número do ponto, chave de acesso ao ponto
-float Valor;             // valor atual
-float ValorNormal;       // valor normal
-short sValor;            // valor inteiro
+double Valor;            // valor atual
+double ValorNormal;      // valor normal
+short sValor;            // valor inteiro 16 bits c/ sinal
 short lixo_alinhamento;  //
 char TipoAD;             // tipo do ponto: 'A'=analógico 'D'=digital
 TFA_Qual Qual;           // qualificador
@@ -325,18 +325,18 @@ double TagTempoAlarme;   // hora do alarme
 double Timeout;          // tempo para falhar o ponto não atualizado
 double TimeoutCongel;    // tempo para sinalizar ponto analógico congelado
 double TagTempoEvento;   // último tag de tempo registrado em evento
-float ValorHist;         // último valor gravado no histórico
+double ValorHist;         // último valor gravado no histórico
 unsigned TickHist;       // system tick da útima gravação no histórico em ms
 float BandaMortaHist;    // Banda morta para histórico em percentual do valor corrente
 int Congelamento;        // 0 = normal, 1 = ponto congelado
 unsigned CntAltEst;      // conta alterações no valor
 int CntAtu;              // contador de atualizações
-float LimInf;            // Limite inferior
-float LimSup;            // Limite superior
+double LimInf;            // Limite inferior
+double LimSup;            // Limite superior
 float Hister;            // Histerese para alarme
 float KConv1;            // fatores de conversão a.x+b
 float KConv2;
-float ValorTipico;       // valor típico para o ponto (para simulação)
+double ValorTipico;      // valor típico para o ponto (para simulação)
 int RegiaoAlmLimite;     // Regiao de alarme de limite (normal, inferior ou superior)
 bool AlrIn;              // Inibição do alrme
 int PontoSupCmd;         // Liga o ponto de comando ao supervisionado
@@ -388,15 +388,15 @@ char * GetNome();
 char * GetModulo();
 int GetSupCmd();
 String GetTipo();
-float GetValorNormal();
+double GetValorNormal();
 int GetEstadoAlarme();
-float GetLimSup();
-float GetLimInf();
+double GetLimSup();
+double GetLimInf();
 void SetTimeAlarm( double timetag );
 double GetTimeAlarm();
 int GetPriority();
-void SetLimInf( float val );
-void SetLimSup( float val );
+void SetLimInf( double val );
+void SetLimSup( double val );
 void SetHister( float val );
 bool TemAnotacao();
 bool ComandoBloqueado();
@@ -415,7 +415,7 @@ bool Congelado();
 bool TemCadastro();
 bool ValorOk();
 void SetAnotacao( char * anot );
-void SetValorTipico( float val );
+void SetValorTipico( double val );
 bool GetAlrIn();
 void SetAlrIn( bool val );
 void Alarmar();
@@ -461,7 +461,7 @@ map <int, TPonto> & GetMapaPontos(void);
 
 // Devolve o valor, o qualificador e o tag de tempo do ponto.
 // Retorna true se ok, false se o ponto não está no banco local.
-bool GetPonto(int nponto, float &valor, TFA_Qual &qual, double &tagtempo);
+bool GetPonto(int nponto, double &valor, TFA_Qual &qual, double &tagtempo);
 // retorna referência para estrutura ponto
 TPonto & GetRefPonto(int nponto);
 TPonto & GetRefPonto(int nponto, bool &found);
@@ -469,7 +469,7 @@ TPonto & GetRefPontoByTag(String tag, bool &found);
 
 bool PontoExiste( int nponto );
 
-int EscrevePonto(int nponto, float valor, unsigned char qualif, int calculo=0, int usakconv=0, int temtagtmp=0, int espontaneo=0);
+int EscrevePonto(int nponto, double valor, unsigned char qualif, int calculo=0, int usakconv=0, int temtagtmp=0, int espontaneo=0);
 int GetTagPonto(int nponto, char * tag);
 int GetModDescrPonto(int nponto, char * descr);
 int AlarmeNaoReconhecidoPonto(int nponto);
@@ -486,7 +486,7 @@ int EscreveIEC(unsigned int endereco, unsigned int tipo, void * ptinfo, unsigned
 
 String GetNome(int nponto);
 String GetTipo(int nponto);
-void SetValorTipico(int nponto, float val);
+void SetValorTipico(int nponto, double val);
 bool GetAlrIn(int nponto);
 
 void SilenciaBeep();
@@ -584,6 +584,18 @@ typedef struct {
         float fr;      		// valor em ponto flutuante
         unsigned char qds; 	// qualificador do ponto
 } flutuante_seq;
+
+typedef struct {
+	unsigned short nponto; // numero do ponto
+	unsigned char nponto3; // 3 byte do numero do ponto
+	unsigned int bcr;      // valor binary counter reading
+	unsigned char qds;     // qualificador do ponto
+} integrated;
+
+typedef struct {	unsigned int bcr;   // valor binary counter reading
+	unsigned char qds;  // qualificador do ponto
+} integrated_seq;
+
 
 long round_( double x );
 

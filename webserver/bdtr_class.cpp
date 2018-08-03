@@ -382,7 +382,7 @@ try
         {
         A_ana *a;
         a = (A_ana *)( Buff + (sizeof(*m)-sizeof(*a)+i*sizeof(*a)) );
-        float val = a->VALOR / pow (10, a->STAT&DECBITS);
+        float val = (float)a->VALOR / pow (10, a->STAT&DECBITS);
         int endponto = a->ID;
         EscrevePonto(endponto, val, a->STAT, 0, !Convertido, 0, Espontaneo);
         if (Logar)
@@ -428,7 +428,7 @@ try
         A_ana_tag *a;
         a = (A_ana_tag *)( Buff + (sizeof(*m)-sizeof(*a)+i*sizeof(*a)) );
         int endponto = a->ID;
-        float val = a->VALOR / pow (10, a->STAT&DECBITS);
+        float val = (float)a->VALOR / pow (10, a->STAT&DECBITS);
         EscrevePonto(endponto, val, a->STAT, 0, !Convertido, 0, Espontaneo);
         if (Logar)
           if (strlen(linha)<5000)

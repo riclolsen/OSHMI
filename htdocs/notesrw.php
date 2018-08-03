@@ -4,8 +4,7 @@
 error_reporting(E_ALL);
 
 header("Content-Type: application/json; charset=utf-8");
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
+header("Cache-Control: no-store, must-revalidate");
     
 require_once 'timezone.php';
 

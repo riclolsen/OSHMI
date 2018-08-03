@@ -44,7 +44,7 @@ void __fastcall TfmSimul::btEscreveClick(TObject *Sender)
 {
     int nponto, posvirg;
     TFA_Qual flags;
-    float valor;
+    double valor;
     bool ehevento = ( Sender == NULL );  // Sender==NULL indica evento
 
 try {
@@ -162,7 +162,7 @@ catch (Exception &E)
 void __fastcall TfmSimul::btBuscaClick(TObject *Sender)
 {
 int nponto;
-float valor;
+double valor;
 TFA_Qual flags;
 double tagtempo;
 char str[500];
@@ -364,7 +364,7 @@ if ( SIMULACAO )
 
 #pragma warn -aus
 // processa a simulação de comando, resultado no ponto supervisionado associado
-int TfmSimul::SimulaComando(int nponto, float valor)
+int TfmSimul::SimulaComando(int nponto, double valor)
 {
 // só simula se for modo mestre ou local
 if ( ( BL.GetSimulacao()!=SIMULMOD_MESTRE ) && ( BL.GetSimulacao()!=SIMULMOD_LOCAL ) )
@@ -501,9 +501,9 @@ if ( (BL.GetSimulacao() != SIMULMOD_LOCAL) && (BL.GetSimulacao() != SIMULMOD_MES
 static int first=1;
 map <int, TPonto> &PontosTR = BL.GetMapaPontos();
 map <int, TPonto>::iterator it;
-float valor;
+double valor;
 int falha;
-float val;
+double val;
 TFA_Qual flg;
 double tagtempo;
 int cntev = 0;

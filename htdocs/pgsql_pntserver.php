@@ -2,8 +2,7 @@
 // OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
 
 header('content-type: application/x-javascript; charset=UTF-8');
-header("Cache-Control: no-cache");
-header("Pragma: no-cache");
+header("Cache-Control: no-store, must-revalidate");
 
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
@@ -16,7 +15,7 @@ if ( @$_GET['G'] ) // filter for alarms
 
 @$callbackfn = $_GET['B']; // parameter B : callback function
 
-@$lstSE = $_GET['S']; // parâmetro S : filtro de subestação
+@$lstSE = $_GET['S']; // parameter S : substation filter
 if ( $lstSE != "" )
   {
   $db = new PDO( 'pgsql:host=127.0.0.1;port=5432;dbname=oshmi;user=grafana;password=oshmi;sslmode=disable;' );
@@ -39,65 +38,66 @@ if ( $lstSE != "" )
   }
 
 @$mstatus = $_GET['M']; // parameter M: status request
-if ( $mstatus == 1 ) 
-  { // inform the number of not akcnowledged events, consider alarm state when this number > 0
-  $db = new PDO( 'pgsql:host=127.0.0.1;port=5432;dbname=oshmi;user=postgres;password=oshmi;sslmode=disable;' );	 
-  $sql = "select count(*) from seq_events where acknowledge<=1";
-  $result = $db->prepare($sql);
-  $result->execute(array());
-  $col_cnt = 0;
-  foreach ($result as $line)
-    {
-    list($col_cnt)=$line;
-	}  
-  $alm = $col_cnt > 0? 1 : 0;
-  print("HA_ALARMES=$alm;\n");
-  print("NUM_VAR=$col_cnt;\n\n");      
-  if ( $callbackfn != '' )
-    print("$callbackfn();\n");
-  die();  
-  }  
 
-$dd=0;$mm=0;$yy=0;
-$pontos=array();
-$ident=array();
-$descr=array();
-$unidade=array();
-$lista_datas=array();
-$lstdt=array();
-
-@$pntinfo = $_GET['I']; // parameter I : point key or tag list
-
-$DataConsulta = date("d/m/Y H:i:s");
-if ( $pntinfo == "" )
-  printf("Data='$DataConsulta';\n");
-
-$par = @$_GET['P']; // parameter P :  point key or tag list
-
-$post_par = @$_POST['E']; // parameter E via post : point key or tag list (priority over P via get)
-if ( $post_par != "" )
-  $par = $post_par;
-
-$lista_pnt=explode(',',$par);
-
-if ( $pntinfo!="" && $pntinfo!=0 && $par!==null )
-  { $lista_pnt[]="xxxx"; }
-  else
-if ( $pntinfo!="" && $pntinfo!=0 && $par=="" )
-  array_push($lista_pnt, $pntinfo);  
-  
-$lst='';
-foreach($lista_pnt as $pnt)
-  {
-  $pnt=trim($pnt);
-  if ($pnt!=0 && $pnt!='')
-    $pontos[]=$pnt;
-  $lst=$lst."'".$pnt."',";
-  }
-
- 
 try {
-	// database connection
+	
+	if ( $mstatus == 1 ) 
+		{ // inform the number of not akcnowledged events, consider alarm state when this number > 0
+		$db = new PDO( 'pgsql:host=127.0.0.1;port=5432;dbname=oshmi;user=postgres;password=oshmi;sslmode=disable;' );	 
+		$sql = "select count(*) from seq_events where acknowledge<=1";
+		$result = $db->prepare($sql);
+		$result->execute(array());
+		$col_cnt = 0;
+		foreach ($result as $line)
+			{
+			list($col_cnt)=$line;
+		}  
+		$alm = $col_cnt > 0? 1 : 0;
+		print("HA_ALARMES=$alm;\n");
+		print("NUM_VAR=$col_cnt;\n\n");      
+		if ( $callbackfn != '' )
+			print("$callbackfn();\n");
+		die();  
+		}  
+
+	$dd=0;$mm=0;$yy=0;
+	$pontos=array();
+	$ident=array();
+	$descr=array();
+	$unidade=array();
+	$lista_datas=array();
+	$lstdt=array();
+
+	@$pntinfo = $_GET['I']; // parameter I : point key or tag list
+
+	$DataConsulta = date("d/m/Y H:i:s");
+	if ( $pntinfo == "" )
+		printf("Data='$DataConsulta';\n");
+
+	$par = @$_GET['P']; // parameter P :  point key or tag list
+
+	$post_par = @$_POST['E']; // parameter E via post : point key or tag list (priority over P via get)
+	if ( $post_par != "" )
+		$par = $post_par;
+
+	$lista_pnt=explode(',',$par);
+
+	if ( $pntinfo!="" && $pntinfo!=0 && $par!==null )
+		{ $lista_pnt[]="xxxx"; }
+		else
+	if ( $pntinfo!="" && $pntinfo!=0 && $par=="" )
+		array_push($lista_pnt, $pntinfo);  
+		
+	$lst='';
+	foreach($lista_pnt as $pnt)
+		{
+		$pnt=trim($pnt);
+		if ($pnt!=0 && $pnt!='')
+			$pontos[]=$pnt;
+		$lst=$lst."'".$pnt."',";
+		}
+
+ 	// database connection
 	$db = new PDO( 'pgsql:host=127.0.0.1;port=5432;dbname=oshmi;user=grafana;password=oshmi;sslmode=disable;' );
 
  	// Vai pegar dados de tempo real
