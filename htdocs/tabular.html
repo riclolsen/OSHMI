@@ -712,7 +712,7 @@ for ( i in L )
     }
   }
 
-if ( lmods.length <= 2 ) // if 1 bay only, presents no choice
+if ( lmods.length < 2 ) // if 1 bay only, presents no choice
   return;
 
 lmods[lmods.length] = ""; // 1st option is empty

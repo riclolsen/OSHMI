@@ -1,5 +1,6 @@
 OSHMI - Open Substation HMI
-    Copyright 2008-2018 - Ricardo L. Olsen (https://www.linkedin.com/in/ricardo-olsen/)
+    Copyright 2008-2018 - Ricardo L. Olsen 
+    (https://www.linkedin.com/in/ricardo-olsen/)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,36 +19,36 @@ The system will install to "c:\oshmi\".
 
 Acknowledgements:
 
-  Inkscape: https://inkscape.org
-  Inkscape + SAGE: https://sourceforge.net/projects/sage-scada
-  Chromium: by "The Chromium Authors". 
-  Chromium binaries: http://chromium.woolyss.com
-  ICCP Client by Fernando Covatti: https://github.com/fcovatti/iccp
-  Opendnp3: https://www.automatak.com/opendnp3/
-  Libmodbus: http://libmodbus.org/
-  QT: http://www.qt.io
-  Lua Language: https://www.lua.org
-  The Indy Project: http://www.indyproject.org
+  Inkscape - https://inkscape.org
+  Inkscape + SAGE - https://sourceforge.net/projects/sage-scada
+  Chromium - by "The Chromium Authors". 
+  Chromium binaries - http://chromium.woolyss.com
+  ICCP Client by Fernando Covatti - https://github.com/fcovatti/iccp
+  Opendnp3 - https://www.automatak.com/opendnp3/
+  Libmodbus - http://libmodbus.org/
+  QT - http://www.qt.io
+  Lua Language - https://www.lua.org
+  The Indy Project - http://www.indyproject.org
   FIPS-180-1 compliant SHA-1 implementation by Paul Bakker http://polarssl.org
-  NSIS (Nullsoft Scriptable Install System): http://nsis.sourceforge.net/Main_Page
+  NSIS (Nullsoft Scriptable Install System) - http://nsis.sourceforge.net/Main_Page
   Open Sans Fonts by Steve Matteson
-  Source Sans Pro by Adobe Systems Incorporated. License: http://scripts.sil.org/OFL
-  Google Fonts: https://fonts.google.com/
-  JQuery: http://jquery.com
-  JQuery UI: http://jqueryui.com
-  Shortcut: http://www.openjs.com/scripts/events/keyboard_shortcuts
-  Core JS: http://www.sitepoint.com
-  Modernzr: http://www.modernizr.com
-  Flot: http://www.flotcharts.org
-  Snap SVG: http://snapsvg.io
-  Pergola: http://www.dotuscomus.com/pergola
-  X3DOM: http://www.x3dom.org
-  Chroma.js: https://github.com/gka/chroma.js
-  TabSystem: http://www.developer-x.com
-  CSS Animation Cheat Sheet: http://www.justinaguilar.com/animations
-  D3JS: http://d3js.org
-  Radar-chart-d3: https://github.com/alangrafu/radar-chart-d3
-  Vega A Visualization Grammar: https://vega.github.io/vega
+  Source Sans Pro by Adobe Systems Incorporated. License - http://scripts.sil.org/OFL
+  Google Fonts - https://fonts.google.com/
+  JQuery - http://jquery.com
+  JQuery UI - http://jqueryui.com
+  Shortcut - http://www.openjs.com/scripts/events/keyboard_shortcuts
+  Core JS - http://www.sitepoint.com
+  Modernzr - http://www.modernizr.com
+  Flot - http://www.flotcharts.org
+  Snap SVG - http://snapsvg.io
+  Pergola - http://www.dotuscomus.com/pergola
+  X3DOM - http://www.x3dom.org
+  Chroma.js - https://github.com/gka/chroma.js
+  TabSystem - http://www.developer-x.com
+  CSS Animation Cheat Sheet - http://www.justinaguilar.com/animations
+  D3JS - http://d3js.org
+  Radar-chart-d3 - https://github.com/alangrafu/radar-chart-d3
+  Vega A Visualization Grammar - https://vega.github.io/vega
   NSSM - The Non-Sucking Service Manager: http://nssm.cc
   NGINX - http://nginx.org
   APACHE - http://apache.org
@@ -57,7 +58,7 @@ Acknowledgements:
   PostgreSQL - https://www.postgresql.org/
   BIGSQL - https://www.openscg.com/bigsql/package-manager.jsp/
   Grafana - https://grafana.com/
-  Some icons from: http://keyamoon.com/icomoon and http://raphaeljs.com/icons
+  Some icons from - http://keyamoon.com/icomoon and http://raphaeljs.com/icons
   CSS Loaders from Luke Haas - https://projects.lukehaas.me/css-loaders/
   
 -------------------------------------------------------------------
@@ -69,17 +70,19 @@ To quickly run the system after installed, open the OSHMI desktop folder and:
   - On the OSHMI desktop folder: execute _Start_OSHMI.
  OR 
   - Execute the "Webserver" program.
-  - Next open the Screen Viewer and the Events Viewer using the icons on the OSHMI folder.
+  - Next open the Screen Viewer (and other viewers) using the icons on the OSHMI folder.
  OR
-  - Execute the "HMIShell" program.
-  - Next open the Screen Viewer and the Events Viewer using the HMIShell.
+  - Execute the "HMIShell" program (intended method for production/locked HMIs).
+  - Next open the Screen Viewer (and other viewers) using the HMIShell.
 
 The default password for HMIShell is "oshmi".
 
 The system is preconfigured to run a simulation with an example point list and screens.
-To simulate a command, click on a breaker and push the "Command" button then choose an action like "open" or "close" and push the action button.
+To simulate a command, click on a breaker and push the "Command" button then choose 
+  an action like "open" or "close" and push the action button.
 To stop the system click on the "Stop_All" icon in the OSHMI folder.
-To edit and create new SVG screens, use the customized Inkscape+SAGE (shortucut in the OSHMI folder). 
+To edit and create new SVG screens, use the customized Inkscape+SAGE 
+  (shortucut in the OSHMI folder). 
 Screens are in "c:\oshmi\svg\".
 OSHMI configuration files are in "c:\oshmi\conf\".
 For more info about configuration please read the OSHMI Configuration Manual.
@@ -89,23 +92,25 @@ To allow other IP addresses edit the "c:\oshmi\conf\nginx_access_control.conf" f
 
 -------------------------------------------------------------------
 
-The customized Inkscape SVG graphics editor is a derivative of the Inkscape Project work and of the Ecava SAGE work,
- it is not in any way associated with the Inkscape Project nor Ecava.
+The customized Inkscape SVG graphics editor is a derivative of the Inkscape Project
+ work and of the Ecava SAGE work, it is not in any way associated with the Inkscape 
+ Project nor Ecava.
 We respect and intend to comply with the branding policy of the Inkscape Project
   https://inkscape.org/en/about/branding/
-In our view the modifications introduced are not substantial and do not intend to create a competitive product.
-The modifications introduced are meant only to allow the use of the sotware as a SCADA Synoptics Editor.
-We respect the GPL license of the upstream work by making the source code of modifications to the original Inkscape and SAGE code available at:
+In our view, the modifications introduced are not substantial and do not intend 
+  to create a competitive product.
+The modifications introduced are meant only to allow the use of the sotware as a 
+  SCADA Synoptics Editor.
+We respect the GPL license of the upstream work by making the source code of the 
+  modifications to the original Inkscape and SAGE code available at:
 
 Source Code:
   https://sourceforge.net/p/oshmiopensubstationhmi/mercurial/ci/default/tree/inkscape_sage_src/
 
-The original SAGE (SCADA Animation Graphic Editor) software and source code is available here:
-  https://sourceforge.net/projects/sage-scada/
-
 -------------------------------------------------------------------
 
-Recommended utils (can be downloaded running the "download_external_progs.bat" script that is located inside the "extprogs" folder):
+Recommended utils (can be downloaded running the "download_external_progs.bat" script that 
+  is located inside the "extprogs" folder):
  - Alternative (older) screen editor Inkscape 0.481 + SAGE 3.03. (To edit/create SVG screens)
      https://sourceforge.net/projects/sage-scada/files/SAGE%20v3.03/inkscape0481_sage303.exe/download
  - SysInternals (useful systems utilities)
@@ -118,6 +123,7 @@ Recommended Operating Systems:
  - Windows 10 Pro/Home/Enterprise, 32 or 64 bits.
  - Windows 8/8.1 Pro/Home, 32 or 64 bits.
  - Windows 7 Pro/Home, 32 or 64 bits.
+ - Modern Windows server OSs.
 
 Please use an updated OS.
 
@@ -125,7 +131,8 @@ If you encounter errors related to Windows Universal C Runtime (CRT), see:
   https://support.microsoft.com/help/2999226/update-for-universal-c-runtime-in-windows
 
 Can also run on:
- - Linux (under Wine, experimental).
+ - Linux Mint (under Wine, experimental), follow instructions from the OSHMI configuration manual.
+ - Other Linux distros (no specific instructions provided).
 
 Not anymore compatible Operating Systems:
  - Windows Vista 32/64 bits (require an old version of Chromium not included).
@@ -137,7 +144,7 @@ Not anymore compatible Operating Systems:
 User interface can be used on:
  - IOS 7+ devices.
  - Android 4.1+ devices.
- - Any device with Chrome, Firefox, Opera or Safari.
+ - Any device with an HTML5 browser like Chrome, Firefox, Opera or Safari.
 
 -------------------------------------------------------------------
 
@@ -149,6 +156,36 @@ Webserver, HMIShell, Mon_Proc and Sim_TR:
 
 QTester104:
  - QT 5.9.2 or newer.
+
+DNP3 and Modbus Drivers:
+ - Visual Studio Community (2015 or newer).
+
+-------------------------------------------------------------------
+
+Notes for version 5.2:
+
+Tabular:
+ - Fixed bay detection for select box when the number of bays is 2.
+
+DNP3 driver.
+ - Updated to 0.7 based on a newer version of Opendnp3 (2.2.0).
+ - Compilation on Visual Studio 2017.
+ - Fixed channel creation (multiple slaves on same IP/Port generate only one channel).
+ - Better logs.
+ - Non-blocking execution of commands.
+
+Modbus driver.
+ - Compilation on Visual Studio 2017.
+
+HMIShell:
+ - Browser command lines arguments changed for opening viewers.
+ - BROWSER_OPTIONS key in hmi.ini created (applied to all viewers).
+ - Possibility of pointing to OSHMI servers according to OS logged-in user name.
+
+Nginx configuration:
+ - Changed position of the include of nginx_access_control.conf in nginx_http.conf 
+   and nginx_https.conf. The effects of IP access directives now extends to 
+   the full server sections.
 
 -------------------------------------------------------------------
 

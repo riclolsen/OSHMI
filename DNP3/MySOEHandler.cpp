@@ -47,9 +47,6 @@ void ShutdownSockets()
 
 namespace opendnp3
 {
-
-// MySOEHandler MySOEHandler::instance;
-
 MySOEHandler::MySOEHandler()
 {
 	InitializeSockets();
@@ -121,15 +118,12 @@ unsigned char MySOEHandler::xlatequalif(int qdnp)
 	return q104;
 }
 
-
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<Binary, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values)
 {
 	int packet_size;
 	int max_pointspkt = PKTDIG_MAXPOINTS;
 
-	//Print(header, meas, tsmode);
-
-	PrintHeaderInfo(header, tsmode);
+	PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
@@ -137,18 +131,15 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	msg.signature = MSGSUPSQ_SIG;
 	msg.prim = MasterAddress;
 	msg.sec = SlaveAddress;
-	msg.causa = ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) ? 3 : 20;
+	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
 
-	if ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::STATIC)
-		|| 
-		(((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) && (static_cast<int>(header.variation)) == 1) // event without time
-		) 
+	if ( info.gv != GroupVariation::Group2Var2 ) // event without time
 	{
 		msg.tipo = 1;
 		msg.taminfo = sizeof(digital_notime_seq); // value size for the type (not counting the 4 byte address)
-		meas.foreach([&](const IndexedValue<Binary, uint16_t>& pair)
+		values.ForeachItem([&](const Indexed<Binary>& pair)
 		{
 			// acerta endereco do ponto
 			unsigned int * paddr = (unsigned int *)(msg.info + (count  % max_pointspkt) * (sizeof(int) + sizeof(digital_notime_seq)));
@@ -156,12 +147,12 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 			// valor e qualidade
 			digital_notime_seq * obj = (digital_notime_seq *)(paddr + 1);
-			obj->iq = xlatequalif(pair.value.quality);
+			obj->iq = xlatequalif(pair.value.flags.value);
 			obj->iq |= pair.value.value? 1 : 0;
 
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
-				static_cast<int>(pair.value.quality) << " : " <<
+				static_cast<int>(pair.value.flags.value) << " : " <<
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
@@ -179,10 +170,9 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	SendOSHMI(&msg, packet_size);
 	}
 	else
-		if ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) // event
 	{
 		msg.taminfo = sizeof(digital_w_time7_seq); // value size for the type (not counting the 4 byte address)
-		meas.foreach([&](const IndexedValue<Binary, uint16_t>& pair)
+		values.ForeachItem([&](const Indexed<Binary>& pair)
 		{
 			max_pointspkt = PKTEVE_MAXPOINTS;
 			msg.tipo = 30;
@@ -193,7 +183,7 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 			// valor e qualidade
 			digital_w_time7_seq * obj = (digital_w_time7_seq *)(paddr + 1);
-			obj->iq = xlatequalif(pair.value.quality);
+			obj->iq = xlatequalif(pair.value.flags.value);
 			obj->iq |= pair.value.value ? 1 : 0;
 
 			time_t tmi = pair.value.time / 1000;
@@ -209,7 +199,7 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
-				static_cast<int>(pair.value.quality) << " : " <<
+				static_cast<int>(pair.value.flags.value) << " : " <<
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
@@ -228,14 +218,12 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	}
 }
 
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<DoubleBitBinary, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values)
 {
 	int packet_size;
 	int max_pointspkt = PKTDIG_MAXPOINTS;
 
-	//Print(header, meas, tsmode);
-
-	PrintHeaderInfo(header, tsmode);
+	PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
@@ -243,18 +231,15 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	msg.signature = MSGSUPSQ_SIG;
 	msg.prim = MasterAddress;
 	msg.sec = SlaveAddress; 
-	msg.causa = ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) ? 3 : 20;
+	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
 
-	if ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::STATIC)
-		||
-		(((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) && (static_cast<int>(header.variation)) == 1) // event without time
-		)
+	if ( info.gv != GroupVariation::Group2Var2 )  // event without time
 	{
 		msg.tipo = 3;
 		msg.taminfo = sizeof(digital_notime_seq); // value size for the type (not counting the 4 byte address)
-		meas.foreach([&](const IndexedValue<DoubleBitBinary, uint16_t>& pair)
+		values.ForeachItem([&](const Indexed<DoubleBitBinary>& pair)
 		{
 			// acerta endereco do ponto
 			unsigned int * paddr = (unsigned int *)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(digital_notime_seq)));
@@ -262,12 +247,12 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 			// valor e qualidade
 			digital_notime_seq * obj = (digital_notime_seq *)(paddr + 1);
-			obj->iq = xlatequalif(pair.value.quality);
+			obj->iq = xlatequalif(pair.value.flags.value);
 			obj->iq |= (static_cast<int>(pair.value.value)) ? 1 : 0;
 
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
-				static_cast<int>(pair.value.quality) << " : " <<
+				static_cast<int>(pair.value.flags.value) << " : " <<
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
@@ -285,11 +270,10 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	SendOSHMI(&msg, packet_size);		
 	}
 	else
-		if ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) // event
 		{
 			max_pointspkt = PKTEVE_MAXPOINTS;
 			msg.taminfo = sizeof(digital_w_time7_seq); // value size for the type (not counting the 4 byte address)
-			meas.foreach([&](const IndexedValue<DoubleBitBinary, uint16_t>& pair)
+			values.ForeachItem([&](const Indexed<DoubleBitBinary>& pair)
 			{
 				msg.tipo = 31;
 
@@ -299,7 +283,7 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 				// valor e qualidade
 				digital_w_time7_seq * obj = (digital_w_time7_seq *)(paddr + 1);
-				obj->iq = xlatequalif(pair.value.quality);
+				obj->iq = xlatequalif(pair.value.flags.value);
 				obj->iq |= (static_cast<int>(pair.value.value)) ? 1 : 0;
 
 				time_t tmi = pair.value.time / 1000;
@@ -315,7 +299,7 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
      			std::cout << "[" << pair.index << "] : " <<
 					ValueToString(pair.value) << " : " <<
-					static_cast<int>(pair.value.quality) << " : " <<
+					static_cast<int>(pair.value.flags.value) << " : " <<
 					pair.value.time << " RTU:" << msg.sec << std::endl;
 
 				count++;
@@ -335,11 +319,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 }
 
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<Analog, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Analog>>& values)
 {
 	int packet_size;
 
-	PrintHeaderInfo(header, tsmode);
+	PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
@@ -347,13 +331,13 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	msg.signature = MSGSUPSQ_SIG;
 	msg.prim = MasterAddress;
 	msg.sec = SlaveAddress;
-	msg.causa = ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) ? 3 : 20;
+	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
 
 	msg.tipo = 13;
 	msg.taminfo = sizeof(flutuante_seq); // value size for the type (not counting the 4 byte address)
-	meas.foreach([&](const IndexedValue<Analog, uint16_t>& pair)
+	values.ForeachItem([&](const Indexed<Analog>& pair)
 	{
 		// acerta endereco do ponto
 		unsigned int * paddr = (unsigned int *)(msg.info + (count % PKTANA_MAXPOINTS) * (sizeof(int) + sizeof(flutuante_seq)));
@@ -362,11 +346,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 		// valor e qualidade
 		flutuante_seq * obj = (flutuante_seq *)(paddr + 1);
 		obj->fr = (float)pair.value.value;
-		obj->qds = xlatequalif(pair.value.quality);
+		obj->qds = xlatequalif(pair.value.flags.value);
 
 		std::cout << "[" << pair.index << "] : " <<
 			pair.value.value << " : " <<
-			static_cast<int>(pair.value.quality) << " : " <<
+			static_cast<int>(pair.value.flags.value) << " : " <<
 			pair.value.time << " RTU:" << msg.sec << std::endl;
 
 		count++;
@@ -385,11 +369,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	SendOSHMI(&msg, packet_size);
 }
 
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<Counter, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Counter>>& values)
 {
 	int packet_size;
 
-	PrintHeaderInfo(header, tsmode);
+	PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
     // monta buffer de mensagem para OSHMI no formato I104M
@@ -397,13 +381,13 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	msg.signature = MSGSUPSQ_SIG;
 	msg.prim = MasterAddress;
 	msg.sec = SlaveAddress;
-	msg.causa = ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) ? 3 : 20;
+	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
 
 	msg.tipo = 15;
 	msg.taminfo = sizeof(integrated_seq); // value size for the type (not counting the 4 byte address)
-	meas.foreach([&](const IndexedValue<Counter, uint16_t>& pair)
+	values.ForeachItem([&](const Indexed<Counter>& pair)
 	{
 		// acerta endereco do ponto
 		unsigned int * paddr = (unsigned int *)(msg.info + (count % PKTANA_MAXPOINTS) * (sizeof(int) + sizeof(integrated_seq)));
@@ -412,11 +396,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 		// valor e qualidade
 		integrated_seq * obj = (integrated_seq *)(paddr + 1);
 		obj->bcr = pair.value.value;
-		obj->qds = xlatequalif(pair.value.quality);
+		obj->qds = xlatequalif(pair.value.flags.value);
 
 		std::cout << "[" << pair.index << "] : " <<
 			pair.value.value << " : " <<
-			static_cast<int>(pair.value.quality) << " : " <<
+			static_cast<int>(pair.value.flags.value) << " : " <<
 			pair.value.time << " RTU:" << msg.sec << std::endl;
 
 		count++;
@@ -435,13 +419,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	SendOSHMI(&msg, packet_size);
 }
 
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<FrozenCounter, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<FrozenCounter>>& values)
 {
 	int packet_size;
 
-	//Print(header, meas, tsmode);
-
-	PrintHeaderInfo(header, tsmode);
+	PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
@@ -449,13 +431,13 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	msg.signature = MSGSUPSQ_SIG;
 	msg.prim = MasterAddress;
 	msg.sec = SlaveAddress;
-	msg.causa = ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) ? 3 : 20;
+	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
 
 	msg.tipo = 15;
 	msg.taminfo = sizeof(integrated_seq); // value size for the type (not counting the 4 byte address)
-	meas.foreach([&](const IndexedValue<FrozenCounter, uint16_t>& pair)
+	values.ForeachItem([&](const Indexed<FrozenCounter>& pair)
 	{
 		// acerta endereco do ponto
 		unsigned int * paddr = (unsigned int *)(msg.info + (count % PKTANA_MAXPOINTS) * (sizeof(int) + sizeof(integrated_seq)));
@@ -464,11 +446,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 		// valor e qualidade
 		integrated_seq * obj = (integrated_seq *)(paddr + 1);
 		obj->bcr = pair.value.value;
-		obj->qds = xlatequalif(pair.value.quality);
+		obj->qds = xlatequalif(pair.value.flags.value);
 
 		std::cout << "[" << pair.index << "] : " <<
 			pair.value.value << " : " <<
-			static_cast<int>(pair.value.quality) << " : " <<
+			static_cast<int>(pair.value.flags.value) << " : " <<
 			pair.value.time << " RTU:" << msg.sec << std::endl;
 
 		count++;
@@ -487,12 +469,12 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	SendOSHMI(&msg, packet_size);
 }
 
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<BinaryOutputStatus, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<BinaryOutputStatus>>& values)
 {
 	int packet_size;
 	int max_pointspkt = PKTDIG_MAXPOINTS;
 
-	PrintHeaderInfo(header, tsmode);
+	PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
@@ -500,18 +482,15 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	msg.signature = MSGSUPSQ_SIG;
 	msg.prim = MasterAddress;
 	msg.sec = SlaveAddress;
-	msg.causa = ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) ? 3 : 20;
+	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
 
-	if ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::STATIC)
-		||
-		(((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) && (static_cast<int>(header.variation)) == 1) // event without time
-		)
+	if (info.gv != GroupVariation::Group11Var2) // event without time
 	{
 		msg.tipo = 1;
 		msg.taminfo = sizeof(digital_notime_seq); // value size for the type (not counting the 4 byte address)
-		meas.foreach([&](const IndexedValue<BinaryOutputStatus, uint16_t>& pair)
+		values.ForeachItem([&](const Indexed<BinaryOutputStatus>& pair)
 		{
 			// acerta endereco do ponto
 			unsigned int * paddr = (unsigned int *)(msg.info + (count  % max_pointspkt) * (sizeof(int) + sizeof(digital_notime_seq)));
@@ -519,12 +498,12 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 			// valor e qualidade
 			digital_notime_seq * obj = (digital_notime_seq *)(paddr + 1);
-			obj->iq = xlatequalif(pair.value.quality);
+			obj->iq = xlatequalif(pair.value.flags.value);
 			obj->iq |= pair.value.value ? 1 : 0;
 
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
-				static_cast<int>(pair.value.quality) << " : " <<
+				static_cast<int>(pair.value.flags.value) << " : " <<
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
@@ -542,10 +521,9 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 		SendOSHMI(&msg, packet_size);
 	}
 	else
-		if ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) // event
 		{
 			msg.taminfo = sizeof(digital_w_time7_seq); // value size for the type (not counting the 4 byte address)
-			meas.foreach([&](const IndexedValue<BinaryOutputStatus, uint16_t>& pair)
+			values.ForeachItem([&](const Indexed<BinaryOutputStatus>& pair)
 			{
 				max_pointspkt = PKTEVE_MAXPOINTS;
 				msg.tipo = 30;
@@ -556,7 +534,7 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 				// valor e qualidade
 				digital_w_time7_seq * obj = (digital_w_time7_seq *)(paddr + 1);
-				obj->iq = xlatequalif(pair.value.quality);
+				obj->iq = xlatequalif(pair.value.flags.value);
 				obj->iq |= pair.value.value ? 1 : 0;
 
 				time_t tmi = pair.value.time / 1000;
@@ -572,7 +550,7 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 
 				std::cout << "[" << pair.index << "] : " <<
 					ValueToString(pair.value) << " : " <<
-					static_cast<int>(pair.value.quality) << " : " <<
+					static_cast<int>(pair.value.flags.value) << " : " <<
 					pair.value.time << " RTU:" << msg.sec << std::endl;
 
 				count++;
@@ -591,11 +569,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 		}
 }
 
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<AnalogOutputStatus, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<AnalogOutputStatus>>& values)
 {
 	int packet_size;
 
-	PrintHeaderInfo(header, tsmode);
+	PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
     // monta buffer de mensagem para OSHMI no formato I104M
@@ -603,13 +581,13 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	msg.signature = MSGSUPSQ_SIG;
 	msg.prim = MasterAddress;
 	msg.sec = SlaveAddress;
-	msg.causa = ((static_cast<int>(header.type)) == static_cast<int>(GroupVariationType::EVENT)) ? 3 : 20;
+	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
 
 	msg.tipo = 13;
 	msg.taminfo = sizeof(flutuante_seq); // value size for the type (not counting the 4 byte address)
-	meas.foreach([&](const IndexedValue<AnalogOutputStatus, uint16_t>& pair)
+	values.ForeachItem([&](const Indexed<AnalogOutputStatus>& pair)
 	{
 		// acerta endereco do ponto
 		unsigned int * paddr = (unsigned int *)(msg.info + (count % PKTANA_MAXPOINTS) * (sizeof(int) + sizeof(flutuante_seq)));
@@ -618,11 +596,11 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
         // valor e qualidade
 		flutuante_seq * obj = (flutuante_seq *)(paddr + 1);
 		obj->fr = (float)pair.value.value;
-		obj->qds = xlatequalif(pair.value.quality);
+		obj->qds = xlatequalif(pair.value.flags.value);
 
 		std::cout << "[" << pair.index << "] : " <<
 			pair.value.value << " : " <<
-			static_cast<int>(pair.value.quality) << " : " <<
+			static_cast<int>(pair.value.flags.value) << " : " <<
 			pair.value.time << " RTU:" << msg.sec << std::endl;
 
 		count++;
@@ -641,14 +619,14 @@ void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsm
 	SendOSHMI(&msg, packet_size);
 }
 
-void MySOEHandler::OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<OctetString, uint16_t>>& meas)
+void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values)
 {
-	this->PrintHeaderInfo(header, tsmode);
+	this->PrintHeaderInfo(info);
 	NoDataCntTime = 0; // mantém link vivo
 
-	meas.foreach([&](const IndexedValue<OctetString, uint16_t>& pair)
+	values.ForeachItem([&](const Indexed<OctetString>& pair)
 	{
-		std::cout << "OctetString " <<  " [" << pair.index << "] : Size : " << pair.value.ToReadOnly().Size() << std::endl;
+		std::cout << "OctetString " << " [" << pair.index << "] : Size : " << pair.value.Size() << std::endl;
 	});
 }
 

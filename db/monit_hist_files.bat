@@ -1,5 +1,10 @@
+@ECHO OFF
+
 rem Monitor the number of hist*.sql files and choose the pragmas file
 rem for speed when there are many or safety when there are a few
+
+wmic process get commandline |find /I "monit_hist_files.bat"   |find /C /I "cmd" |find /I "2"
+if %ERRORLEVEL% EQU 0 GOTO FIM
 
 CD \oshmi\db
 
@@ -25,3 +30,5 @@ set safepgmant=%safepgm%
 PING -n 15 127.0.0.1 > nul
 
 GOTO infloop
+
+:FIM

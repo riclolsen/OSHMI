@@ -204,6 +204,18 @@ void __fastcall TfmShell::popTelasItemsClick(TObject *Sender)
 }
 //---------------------------------------------------------------------------
 
+String StringReplace(String Str, String What, String For)
+{
+int p = Str.Pos(What);
+if (p==0)
+  return Str;
+
+Str = Str.Delete(p, What.Length());
+Str = Str.Insert(For, p);
+
+return Str;
+}
+
 __fastcall TfmShell::TfmShell(TComponent* Owner)
         : TForm(Owner)
 {
@@ -237,13 +249,14 @@ Loga( (String)"System Started. User=" + (String)UserName );
 TIniFile *pIni = new TIniFile(ARQ_CONF_IHM);
 if ( pIni != NULL )
   {
-  VISOR_EVENTOS = pIni->ReadString("RUN","EVENTS_VIEWER", "").Trim();
-  VISOR_TABULAR = pIni->ReadString("RUN","TABULAR_VIEWER", "").Trim();
-  VISOR_TELAS = pIni->ReadString("RUN","SCREEN_VIEWER", "").Trim();
-  VISOR_TENDENCIAS = pIni->ReadString("RUN","TREND_VIEWER", "").Trim();
-  VISOR_CURVAS = pIni->ReadString("RUN","CURVES_VIEWER", "").Trim();
-  VISOR_DOCS = pIni->ReadString("RUN","DOCS_VIEWER", "").Trim();
-  VISOR_LOGS = pIni->ReadString("RUN","LOGS_VIEWER", "").Trim();
+  String BROWSER_OPTIONS = pIni->ReadString("RUN","BROWSER_OPTIONS", "--process-per-site --no-sandbox --disable-popup-blocking --no-proxy-server --bwsi --disable-extensions --disable-sync --no-first-run").Trim();
+  VISOR_EVENTOS = StringReplace(pIni->ReadString("RUN","EVENTS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_TABULAR = StringReplace(pIni->ReadString("RUN","TABULAR_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_TELAS = StringReplace(pIni->ReadString("RUN","SCREEN_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_TENDENCIAS = StringReplace(pIni->ReadString("RUN","TREND_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_CURVAS = StringReplace(pIni->ReadString("RUN","CURVES_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_DOCS = StringReplace(pIni->ReadString("RUN","DOCS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_LOGS = StringReplace(pIni->ReadString("RUN","LOGS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
 
   DELAY = pIni->ReadInteger( "RUN", "DELAY", 15 );
   INTERVAL = pIni->ReadInteger( "RUN", "INTERVAL", 5 );
@@ -269,8 +282,14 @@ if ( pIni != NULL )
   String SERVER1 = "127.0.0.1";
   String SERVER2 = "127.0.0.1";
 
+  // server 1 and 2 addresses
   SERVER1 = pIni->ReadString( "HMISHELL", "SERVER1", SERVER1 ).Trim();
   SERVER2 = pIni->ReadString( "HMISHELL", "SERVER2", SERVER2 ).Trim();
+
+  // server 1 and 2 addresses for a OS logged in user [UserName]
+  SERVER1 = pIni->ReadString( "HMISHELL", (String)"SERVER1_" + (String)UserName, SERVER1 ).Trim();
+  SERVER2 = pIni->ReadString( "HMISHELL", (String)"SERVER2_" + (String)UserName, SERVER2 ).Trim();
+
   LAST_SERVER = pIni->ReadInteger( "HMISHELL", "LAST_SERVER", LAST_SERVER );
   PROC_BEEP = pIni->ReadInteger( "HMISHELL", "BEEP", PROC_BEEP );
   if ( LAST_SERVER == 2 )

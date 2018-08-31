@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.5.1"
-!define VERSION_ "5.1.0.0"
+!define VERSION "v.5.2"
+!define VERSION_ "5.2.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -144,8 +144,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   StrCpy $NAVWINCMD "browser\chrome.exe"
   StrCpy $NAVLINCMD "/usr/bin/chromium-browser"
   StrCpy $NAVDATDIR "--user-data-dir=$INSTDIR\browser-data"
-  StrCpy $NAVPREOPT "--disable-popup-blocking --process-per-site --no-sandbox"
-  StrCpy $NAVPOSOPT "--no-proxy-server"
+  StrCpy $NAVPREOPT "--process-per-site --no-sandbox"
+  StrCpy $NAVPOSOPT "--disable-popup-blocking --no-proxy-server --bwsi --disable-extensions --disable-sync --no-first-run"
   StrCpy $NAVVISABO "/htdocs/about.html"
   StrCpy $NAVVISEVE "/htdocs/events.html"
   StrCpy $NAVVISHEV "/htdocs/events.html?MODO=4"
@@ -448,22 +448,22 @@ Section "" ; empty string makes it hidden, so would starting with -
   StrCmp $0 "https" viewer_shortcuts_end
 
 ; chaves para o windows   
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "EVENTS_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISEVE"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TABULAR_VIEWER"    '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTAB"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "SCREEN_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTEL"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TREND_VIEWER"      '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTRE"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "CURVES_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISCUR"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "DOCS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISDOC"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "LOGS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISLOG"'
+  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "EVENTS_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISEVE"'
+  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TABULAR_VIEWER"    '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTAB"'
+  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "SCREEN_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTEL"'
+  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TREND_VIEWER"      '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTRE"'
+  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "CURVES_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISCUR"'
+  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "DOCS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISDOC"'
+  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "LOGS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISLOG"'
  
 ; chaves para o linux   
-;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";EVENTS_VIEWER"    '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISEVE'
-;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";TABULAR_VIEWER"   '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTAB'
-;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";SCREEN_VIEWER"    '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTEL'
-;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";TREND_VIEWER"     '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISTRE'
-;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";CURVES_VIEWER"    '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISCUR'
-;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";DOCS_VIEWER"      '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISDOC'
-;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";LOGSS_VIEWER"     '$NAVLINCMD $NAVPREOPT $NAVPOSOPT --app=$HTTPSRV$NAVVISLOG'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";EVENTS_VIEWER"    '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISEVE'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";TABULAR_VIEWER"   '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISTAB'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";SCREEN_VIEWER"    '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISTEL'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";TREND_VIEWER"     '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISTRE'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";CURVES_VIEWER"    '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISCUR'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";DOCS_VIEWER"      '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISDOC'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";LOGSS_VIEWER"     '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISLOG'
 
  viewer_shortcuts_end:    
 

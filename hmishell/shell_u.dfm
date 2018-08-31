@@ -1,6 +1,6 @@
 object fmShell: TfmShell
-  Left = 286
-  Top = 967
+  Left = 290
+  Top = 971
   AutoSize = True
   BorderIcons = []
   BorderStyle = bsNone

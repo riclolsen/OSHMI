@@ -72,6 +72,8 @@
 #define PKTEVE_MAXPOINTS       100
 #define PKTANA_MAXPOINTS       150      
 
+
+
 namespace opendnp3
 {
 
@@ -88,9 +90,9 @@ public:
 	int MasterAddress = 0;
 	int NoDataCntTime = 0;
 	bool NoDataState = false;
-	int NoDataTimeout = 300;
+	int NoDataTimeout = 0;
 	int SlaveNo = -1;
-
+	
 	void SetSlaveNo(int no)
 	{
 		SlaveNo = no;
@@ -125,12 +127,6 @@ public:
 		}
 	}
 
-	/*
-	static MySOEHandler& Instance()
-	{
-		return instance;
-	}
-	*/
 	void SetSlaveAddress(int addr)
 	{
 		SlaveAddress = addr;
@@ -153,15 +149,21 @@ public:
 
 		redundant_hmi = true;
 	}
+   
+	void Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<Analog>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<Counter>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<FrozenCounter>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryOutputStatus>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogOutputStatus>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values) override final;
 
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<Binary, uint16_t>>& meas) override final;
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<DoubleBitBinary, uint16_t>>& meas) override final;
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<Analog, uint16_t>>& meas) override final;
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<Counter, uint16_t>>& meas) override final;
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<FrozenCounter, uint16_t>>& meas) override final;
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<BinaryOutputStatus, uint16_t>>& meas) override final;
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<AnalogOutputStatus, uint16_t>>& meas) override final;
-	void OnReceiveHeader(const HeaderRecord& header, TimestampMode tsmode, const IterableBuffer<IndexedValue<OctetString, uint16_t>>& meas) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<TimeAndInterval>>& values) override final {};
+	void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryCommandEvent>>& values) override final {};
+	void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) override final {};
+	void Process(const HeaderInfo& info, const ICollection<Indexed<SecurityStat>>& values) override final {};
+	void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) override final {};
 
 	unsigned char xlatequalif(int qdnp);
 	void SendKeepAlive();
@@ -177,36 +179,21 @@ protected:
 
 private:
 
-	/*static*/ void PrintHeaderInfo(const HeaderRecord& header, TimestampMode tsmode)
+	void PrintHeaderInfo(const HeaderInfo& header)
 	{
-		std::cout << "Header: " << " Group" << static_cast<int>(header.group) << "Var" << static_cast<int>(header.variation);
-		std::cout << QualifierCodeToString(header.qualifier) << " timestamps: " << GetTimeString(tsmode) << std::endl;
+		std::cout << "Header: " << " Group" << GroupVariationToString(header.gv);
+		std::cout << QualifierCodeToString(header.qualifier) << " timestamps: " << GetTimeString(header.tsmode) << std::endl;
 	}
 
 	template <class T>
-	/*static*/ void Print(const HeaderRecord& header, const IterableBuffer<IndexedValue<T, uint16_t>>& buffer, TimestampMode tsmode)
-	{
-		PrintHeaderInfo(header, tsmode);
-
-		buffer.foreach([&](const IndexedValue<T, uint16_t>& pair)
-		{
-
-			std::cout << "[" << pair.index << "] : " <<
-			          ValueToString(pair.value) << " : " <<
-			          static_cast<int>(pair.value.quality) << " : " <<
-					  pair.value.time << std::endl;
-		});
-	}	
-
-	template <class T>
-	/*static */ std::string ValueToString(const T& meas)
+    std::string ValueToString(const T& meas)
 	{
 		std::ostringstream oss;
 		oss << meas.value;
 		return oss.str();
 	}
 
-	/*static*/ std::string GetTimeString(TimestampMode tsmode)
+    std::string GetTimeString(TimestampMode tsmode)
 	{
 		std::ostringstream oss;	
 		switch (tsmode)
@@ -225,13 +212,11 @@ private:
 		return oss.str();
 	}
 
-	/*static*/ std::string ValueToString(const DoubleBitBinary& meas)
+	std::string ValueToString(const DoubleBitBinary& meas)
 	{
 		return DoubleBitToString(meas.value);
 	}
 
-	
-	// static MySOEHandler instance;
 };
 
 }
