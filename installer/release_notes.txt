@@ -162,6 +162,37 @@ DNP3 and Modbus Drivers:
 
 -------------------------------------------------------------------
 
+Notes for version 5.3:
+
+Webserver:
+ - New JSON UDP protocol driver interface. Now it is easy to feed data to 
+   OSHMI using simple JSON UDP messages. See the Configuration Manual.   
+ - Can now export files with realtime data to MongoDB.
+ - Fixed setting of hysteresis for out of range verification of analog values.
+ - Try to avoid errors due to malformed float values.
+ - Restricted I104M protocol driver UDP messages to trusted origins.
+
+QTester104:
+ - Updated to version 1.24.
+ - Allowed different common addresses in the same connection.
+
+MongoDB:
+ - Available as an addon for 64 bit Windows systems.
+
+PHP:
+ - MongoDB extension enabled.
+
+Chromium:
+ - Updated to version 69.0.3497.81.
+
+Nginx:
+ - Allowed access by default to htdocs/eventsync.php in nginx_http.conf .
+
+SQLite:
+ - Updated to version 3.25.2.
+
+-------------------------------------------------------------------
+
 Notes for version 5.2:
 
 Tabular:
@@ -178,7 +209,7 @@ Modbus driver.
  - Compilation on Visual Studio 2017.
 
 HMIShell:
- - Browser command lines arguments changed for opening viewers.
+ - Browser command-line arguments changed for opening viewers.
  - BROWSER_OPTIONS key in hmi.ini created (applied to all viewers).
  - Possibility of pointing to OSHMI servers according to OS logged-in user name.
 

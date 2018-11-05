@@ -112,6 +112,8 @@ using namespace std;
 #define ESTALM_ALL 2
 #define ESTALM_EVT 3
 
+#define CODOCR_TAP 216
+
 #define CODTPEQ_KV    1
 #define CODTPEQ_AMP   3
 #define CODTPEQ_MW    6
@@ -301,6 +303,13 @@ unsigned int UTR;
 unsigned int Flags;
 } TEventoAtrasado;
 
+#define TPONTO_TAG_SIZE 30
+#define TPONTO_UNI_SIZE 10
+#define TPONTO_EST_SIZE 30
+#define TPONTO_MOD_SIZE 30
+#define TPONTO_DES_SIZE 80
+#define TPONTO_STA_SIZE 25
+
 // Estrutura para descrição de um Ponto
 class TPonto
 {
@@ -325,14 +334,14 @@ double TagTempoAlarme;   // hora do alarme
 double Timeout;          // tempo para falhar o ponto não atualizado
 double TimeoutCongel;    // tempo para sinalizar ponto analógico congelado
 double TagTempoEvento;   // último tag de tempo registrado em evento
-double ValorHist;         // último valor gravado no histórico
+double ValorHist;        // último valor gravado no histórico
 unsigned TickHist;       // system tick da útima gravação no histórico em ms
 float BandaMortaHist;    // Banda morta para histórico em percentual do valor corrente
 int Congelamento;        // 0 = normal, 1 = ponto congelado
 unsigned CntAltEst;      // conta alterações no valor
 int CntAtu;              // contador de atualizações
-double LimInf;            // Limite inferior
-double LimSup;            // Limite superior
+double LimInf;           // Limite inferior
+double LimSup;           // Limite superior
 float Hister;            // Histerese para alarme
 float KConv1;            // fatores de conversão a.x+b
 float KConv2;
@@ -361,16 +370,16 @@ int CodTpEq;             // código do tipo de equipamento
 int CodInfo;             // código da informação complementar
 int CodOCR;              // código da OCR
 int CasaDecimal;         // número de casas para o histórico
-bool EnviaComandoPortaModbus; // deve enviar comando pela porta especial do driver modbus
-int Parcelas[MAX_PARCELAS];  // parcelas de cálculo
-char Anotacao[1000];      // Anotação
-char Tag[30];            // Tag do ponto, ID do SAGE
-char Unidade[10];        // Unidade de medida
-char Estacao[30];        // Estação, instalação, localidade ou subestação
-char Modulo[30];         // Módulo, vão, ou bay. subdivisão de estação para agrupamento de pontos
-char Descricao[80];      // Descrição da grandeza supervisionada
-char EstadoOn[25];       // Descritivo para o Estado On
-char EstadoOff[25];      // Descritivo para o Estado Off
+bool EnviaComandoPortaModbus;  // deve enviar comando pela porta especial do driver modbus
+int Parcelas[MAX_PARCELAS];    // parcelas de cálculo
+char Anotacao[1000];             // Anotação
+char Tag[TPONTO_TAG_SIZE];       // Tag do ponto, ID do SAGE
+char Unidade[TPONTO_UNI_SIZE];   // Unidade de medida
+char Estacao[TPONTO_EST_SIZE];   // Estação, instalação, localidade ou subestação
+char Modulo[TPONTO_MOD_SIZE];    // Módulo, vão, ou bay. subdivisão de estação para agrupamento de pontos
+char Descricao[TPONTO_DES_SIZE]; // Descrição da grandeza supervisionada
+char EstadoOn[TPONTO_STA_SIZE];  // Descritivo para o Estado On
+char EstadoOff[TPONTO_STA_SIZE]; // Descritivo para o Estado Off
 TEventoAtrasado EventoAtrasado; // Evento atrasado para alarme temporizado 
 
 TPonto(); // construtor
@@ -440,13 +449,12 @@ int ModoSimulacao; // indica modo simulação
 unsigned NumVariacoes; // regista o número de variações digitais
 
 map <int, TPonto> Pontos; // mapa para os pontos a escutar, chave de nponto
-map <int, int> MapNPontoPorEndUTR; // mapa para achar nponto pelo endereço físico e utr
-map <String, int> MapNPontoPorTag; // mapa para encontrar nponto pelo tag
-
-set <String> ListaSEs; // lista das subestações
 
 public:
+map <int, int> MapNPontoPorEndUTR; // mapa para achar nponto pelo endereço físico e utr
+map <String, int> MapNPontoPorTag; // mapa para encontrar nponto pelo tag
 map <String, int> DisjModulo; // mapa pelo nome do módulo para o ponto do disjuntor
+set <String> ListaSEs; // lista das subestações
 int NPontoPorEndUTR ( int endereco, int utr );
 int LastBeepPnt; // último ponto a bipar (alarmar)
 bool BipaNoSpeaker; // informa se o alarme deve bipar no falante interno

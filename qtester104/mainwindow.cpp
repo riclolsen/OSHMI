@@ -40,7 +40,7 @@
 
 using namespace std;
 
-#define QTESTER_VERSION "v1.23"
+#define QTESTER_VERSION "v1.24"
 #define QTESTER_COPYRIGHT "Copyright © 2010-2018 Ricardo Lastra Olsen"
 
 //-------------------------------------------------------------------------------------------------------------------------

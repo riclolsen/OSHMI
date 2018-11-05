@@ -37,6 +37,7 @@ OSHMI - Open Substation HMI
 #include "simul.h"
 #include "i104m_u.h"
 #include "lua_u.h"
+#include "json_u.h"
 
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -144,7 +145,7 @@ if (  WEBSERVER_CLIENTES_REMOTOS[1] != '*' &&
       WEBSERVER_CLIENTES_REMOTOS.Pos( ARequestInfo->RemoteIP ) == 0
    )
   {
-  logaln( (String)"R< Unauthorized request: " + ARequestInfo->RemoteIP );
+  logaln( (String)"R< Unauthorized request from: " + ARequestInfo->RemoteIP );
   return;
   }
 
@@ -1237,7 +1238,6 @@ switch ( ARequestInfo->UnparsedParams[1] )
           if ( S.Trim() != "" )
             {
             fval = fabs(atof(S.c_str()));
-            if ( (fval < HUGE_VAL) && (fval > HUGE_VAL) )
               pt.SetHister( fval );
             }
           } catch ( Exception &E ) { logaln( "E: 5-" + E.Message ); }
@@ -1500,6 +1500,21 @@ switch ( ARequestInfo->UnparsedParams[1] )
                ret = fmBDTR->bdtr.MandaComandoAna( cnponto, fval );
                BL.IncNumVar(); // reporta variação para que a aplicação atualize o status mais rapidamente
                Loga( (String)"Command Sent(BDTR): IP=" + ARequestInfo->RemoteIP + (String)" user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
+               }
+             }
+             
+           if (UDP_JSON_PORT_CMD != 0)
+             {
+             if ( pt.EhComandoDigital() )
+               {
+               ret = fmJSON->Command( pt, val&0x01?0:1 ); // val=2 -> ON(true), val=1 -> OFF(false)
+               Loga( (String)"Command Sent(JSON): IP=" + ARequestInfo->RemoteIP + (String)" user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)val + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
+               }
+             else
+               {
+               ret = fmJSON->Command( pt, fval);
+               BL.IncNumVar(); // reporta variação para que a aplicação atualize o status mais rapidamente
+               Loga( (String)"Command Sent(JSON): IP=" + ARequestInfo->RemoteIP + (String)" user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
                }
              }
            }

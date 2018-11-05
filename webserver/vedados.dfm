@@ -1,7 +1,7 @@
 object fmVeDados: TfmVeDados
-  Left = 242
+  Left = 510
   Top = 294
-  Width = 898
+  Width = 1050
   Height = 609
   BorderIcons = [biMinimize, biMaximize]
   Caption = 'OSHMI - WebServer'
@@ -163,7 +163,7 @@ object fmVeDados: TfmVeDados
     Shape = stCircle
   end
   object lbTime: TLabel
-    Left = 845
+    Left = 997
     Top = 8
     Width = 31
     Height = 13
@@ -179,7 +179,7 @@ object fmVeDados: TfmVeDados
     Shape = stCircle
   end
   object shWeb: TShape
-    Left = 383
+    Left = 455
     Top = 18
     Width = 14
     Height = 14
@@ -199,20 +199,6 @@ object fmVeDados: TfmVeDados
     Height = 13
     Caption = 'SDE'
   end
-  object Label4: TLabel
-    Left = 367
-    Top = 1
-    Width = 48
-    Height = 13
-    Caption = 'Web Serv'
-  end
-  object Label5: TLabel
-    Left = 433
-    Top = 1
-    Width = 43
-    Height = 13
-    Caption = 'DumpDB'
-  end
   object shI104: TShape
     Left = 255
     Top = 18
@@ -221,7 +207,7 @@ object fmVeDados: TfmVeDados
     Shape = stCircle
   end
   object shDumpDB: TShape
-    Left = 441
+    Left = 513
     Top = 18
     Width = 25
     Height = 14
@@ -234,10 +220,17 @@ object fmVeDados: TfmVeDados
     Height = 13
     Caption = 'IEC104'
   end
+  object shJSON: TShape
+    Left = 384
+    Top = 18
+    Width = 14
+    Height = 14
+    Shape = stCircle
+  end
   object sgPontos: TStringGrid
     Left = 0
     Top = 40
-    Width = 889
+    Width = 1041
     Height = 568
     Anchors = [akLeft, akTop, akRight, akBottom]
     ColCount = 12
@@ -328,7 +321,7 @@ object fmVeDados: TfmVeDados
     OnClick = btSDEClick
   end
   object btWebServ: TButton
-    Left = 363
+    Left = 435
     Top = 0
     Width = 55
     Height = 17
@@ -337,7 +330,7 @@ object fmVeDados: TfmVeDados
     OnClick = btWebServClick
   end
   object edtPasswd: TEdit
-    Left = 744
+    Left = 808
     Top = 6
     Width = 113
     Height = 21
@@ -347,7 +340,7 @@ object fmVeDados: TfmVeDados
     OnChange = edtPasswdChange
   end
   object btDumpdb: TButton
-    Left = 427
+    Left = 499
     Top = 0
     Width = 55
     Height = 17
@@ -356,7 +349,7 @@ object fmVeDados: TfmVeDados
     OnClick = btDumpdbClick
   end
   object btClose: TButton
-    Left = 671
+    Left = 743
     Top = 0
     Width = 55
     Height = 17
@@ -365,7 +358,7 @@ object fmVeDados: TfmVeDados
     OnClick = btCloseClick
   end
   object btSimul: TButton
-    Left = 488
+    Left = 560
     Top = 0
     Width = 55
     Height = 17
@@ -374,7 +367,7 @@ object fmVeDados: TfmVeDados
     OnClick = btSimulClick
   end
   object btScript: TButton
-    Left = 550
+    Left = 622
     Top = 0
     Width = 55
     Height = 17
@@ -392,7 +385,7 @@ object fmVeDados: TfmVeDados
     OnClick = btIEC104Click
   end
   object btHist: TButton
-    Left = 610
+    Left = 682
     Top = 0
     Width = 55
     Height = 17
@@ -400,15 +393,24 @@ object fmVeDados: TfmVeDados
     TabOrder = 12
     OnClick = btHistClick
   end
+  object btJSON: TButton
+    Left = 360
+    Top = 0
+    Width = 65
+    Height = 17
+    Caption = 'JSON'
+    TabOrder = 13
+    OnClick = btJSONClick
+  end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    Left = 872
+    Left = 928
   end
   object NMUDPWD: TNMUDP
     RemoteHost = '127.0.0.1'
     RemotePort = 8081
     LocalPort = 8082
     ReportLevel = 0
-    Left = 904
+    Left = 960
   end
 end

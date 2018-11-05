@@ -35,6 +35,7 @@ OSHMI - Open Substation HMI
 #include "lua_u.h"
 #include "historico_u.h"
 #include "i104m_u.h"
+#include "json_u.h"
 
 // Colunas do StringGrid
 #define COL_PONTO  0
@@ -70,6 +71,14 @@ void TfmVeDados::PulseI104(TColor cor)
   if ( fmVeDados->Visible )
   if ( fmVeDados->shI104->Brush->Color != cor)
    fmVeDados->shI104->Brush->Color = cor;
+}
+
+void TfmVeDados::PulseJSON(TColor cor)
+{
+  if ( fmVeDados )
+  if ( fmVeDados->Visible )
+  if ( fmVeDados->shJSON->Brush->Color != cor)
+   fmVeDados->shJSON->Brush->Color = cor;
 }
 
 void TfmVeDados::PulseSDE(TColor cor)
@@ -128,6 +137,15 @@ __fastcall TfmVeDados::TfmVeDados(TComponent* Owner)
 
     // start Grafana if possible 
     ExecExternApp( GRAFANA_START.c_str() );
+    }
+
+  // Run Mongodb database insertion processes
+  if( DB_MONGODB )
+    {
+    ExecExternApp( MONGO_START.c_str() );
+    ExecExternApp( RUN_MONGOPROCHIST.c_str() );
+    // ExecExternApp( RUN_MONGOPROCEVENTOS.c_str() );
+    ExecExternApp( RUN_MONGOPROCPONTOS.c_str() );
     }
 
   // se tem outra IHM tenta sincronizar os eventos
@@ -192,6 +210,11 @@ static unsigned int cntseg = 0;
     {
     map <int, TPonto> &PontosTR = BL.GetMapaPontos();
     map <int, TPonto>::iterator it;
+    
+    // verifica o tamanho do string grid
+    if ( (unsigned)sgPontos->RowCount < PontosTR.size() + 2 )
+      sgPontos->RowCount = PontosTR.size() + 2;
+
     int ponto;
 
       int i = 1;
@@ -203,6 +226,8 @@ static unsigned int cntseg = 0;
         shBDTR->Brush->Color = clWhite;
       if (shI104->Brush->Color != clWhite)
         shI104->Brush->Color = clWhite;
+      if (shJSON->Brush->Color != clWhite)
+        shJSON->Brush->Color = clWhite;
       if (shSDE->Brush->Color != clWhite)
         shSDE->Brush->Color = clWhite;
       if (shWeb->Brush->Color != clWhite)
@@ -228,10 +253,6 @@ static unsigned int cntseg = 0;
         if ( i >= sgPontos->TopRow &&
              i <= sgPontos->TopRow + sgPontos->VisibleRowCount )
           {
-          // verifica o tamanho do string grid
-          if ( (unsigned)sgPontos->RowCount != PontosTR.size() +1 )
-            sgPontos->RowCount = PontosTR.size() + 1;
-
           String S;
           S = ponto; // mostra o número do ponto
           if ( S != sgPontos->Cells[COL_PONTO][i] )
@@ -310,7 +331,7 @@ void __fastcall TfmVeDados::btBDTRClick(TObject *Sender)
 
 void __fastcall TfmVeDados::btSDEClick(TObject *Sender)
 {
-  fmSDE->Show(); 
+  fmSDE->Show();
 }
 //---------------------------------------------------------------------------
 
@@ -479,6 +500,12 @@ fmIEC104M->Show();
 void __fastcall TfmVeDados::btHistClick(TObject *Sender)
 {
 fmHist->Show();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfmVeDados::btJSONClick(TObject *Sender)
+{
+  fmJSON->Show();
 }
 //---------------------------------------------------------------------------
 

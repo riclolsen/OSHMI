@@ -42,6 +42,12 @@ int BDTR_ACERTO_HORA = 0;
 int BDTR_PERIODO_ENVIO_ACERTO_HORA = 0;
 int PONTO_OPERACAO = 0;
 
+// Protocol driver JSON UDP interface
+int UDP_JSON_PORT = 9100;
+int UDP_JSON_PORT_CMD = 9101;
+String UDP_JSON_ENDPOINT1;
+String UDP_JSON_ENDPOINT2;
+
 String IHMRED_IP_OUTRO_IHM = "";
 int IHMRED_ACERTO_HORA = 0;
 int IHMRED_PERIODO_ENVIO_ACERTO_HORA = 5;
@@ -72,6 +78,7 @@ int HIST_DEADBANDFACTOR = 100;
 int HIST_LIFETIME = 36;
 
 int DB_POSTGRESQL=0; // enable write postgresql files
+int DB_MONGODB=0; // enable write mongodb files
 
 int HIDE = 0;
 int IHM_FINALIZANDO = 0;
@@ -98,6 +105,15 @@ String RUN_PGPROCPONTOS = "hidec.exe ..\\db\\process_pg_dumpdb.bat";
 String END_PGPROCHIST = "hidec.exe ..\\db\\terminate_pg_hist.bat";
 String END_PGPROCEVENTOS = "hidec.exe ..\\db\\terminate_pg_soe.bat";
 String END_PGPROCPONTOS = "hidec.exe ..\\db\\terminate_pg_dumpdb.bat";
+
+
+String MONGO_START = "hidec.exe ..\\mongodb\\mongodb_start.bat";
+String RUN_MONGOPROCHIST = "hidec.exe ..\\db\\process_mongo_hist.bat";
+//String RUN_MONGOPROCEVENTOS = "hidec.exe ..\\db\\process_mongo_soe.bat";
+String RUN_MONGOPROCPONTOS = "hidec.exe ..\\db\\process_mongo_dumpdb.bat";
+String END_MONGOPROCHIST = "hidec.exe ..\\db\\terminate_mongo_hist.bat";
+//String END_MONGOPROCEVENTOS = "hidec.exe ..\\db\\terminate_mongo_soe.bat";
+String END_MONGOPROCPONTOS = "hidec.exe ..\\db\\terminate_mongo_dumpdb.bat";
 
 String GRAFANA_START = "hidec.exe ..\\grafana\\grafana_start.bat";
 
@@ -126,6 +142,11 @@ IHMRED_IP_OUTRO_IHM = pIni->ReadString( "REDUNDANCY", "OTHER_HMI_IP", IHMRED_IP_
 IHMRED_ACERTO_HORA =  pIni->ReadInteger( "REDUNDANCY", "ACCEPT_TIME", IHMRED_ACERTO_HORA );
 IHMRED_PERIODO_ENVIO_ACERTO_HORA = pIni->ReadInteger( "REDUNDANCY", "SEND_TIME_PERIOD", IHMRED_PERIODO_ENVIO_ACERTO_HORA );
 
+UDP_JSON_PORT = pIni->ReadInteger( "JSON", "UDP_JSON_PORT", UDP_JSON_PORT );
+UDP_JSON_PORT_CMD = pIni->ReadInteger( "JSON", "UDP_JSON_PORT_CMD", UDP_JSON_PORT_CMD );
+UDP_JSON_ENDPOINT1 = pIni->ReadString( "JSON", "UDP_JSON_ENDPOINT1", "127.0.0.1" );
+UDP_JSON_ENDPOINT2 = pIni->ReadString( "JSON", "UDP_JSON_ENDPOINT2", "IHMRED_IP_OUTRO_IHM" );
+
 NUMMAX_ALARMES = pIni->ReadInteger( "WEBSERVER", "MAX_EVENTS", NUMMAX_ALARMES );
 PRIORIDADE_PANICO = pIni->ReadInteger( "WEBSERVER", "PANIC_PRIORITY", PRIORIDADE_PANICO );
 LAST_PRIORITY_THAT_BEEPS = pIni->ReadInteger( "WEBSERVER", "LAST_PRIORITY_THAT_BEEPS", LAST_PRIORITY_THAT_BEEPS );
@@ -138,6 +159,7 @@ HIST_RECORD = pIni->ReadInteger( "HIST", "RECORD", HIST_RECORD );
 HIST_DEADBANDFACTOR = pIni->ReadInteger( "HIST", "DEADBAND_FACTOR", HIST_DEADBANDFACTOR );
 HIST_LIFETIME = pIni->ReadInteger( "HIST", "LIFETIME", HIST_LIFETIME );
 DB_POSTGRESQL = pIni->ReadInteger( "HIST", "DB_POSTGRESQL", DB_POSTGRESQL );
+DB_MONGODB = pIni->ReadInteger( "HIST", "DB_MONGODB", DB_MONGODB );
 
 HIDE = pIni->ReadInteger( "RUN", "HIDE", 0 );
 SIMULACAO = pIni->ReadInteger( "RUN", "SIMULATION", 0 );

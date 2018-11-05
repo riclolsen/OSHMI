@@ -318,12 +318,12 @@ void iec104_class::packetReadyTCP()
          return;
          }
 
-      if ( apdu.asduh.ca != slaveAddress && apdu.asduh.ca != slaveASDUAddrCmd && len>4 )
-        {
-        broken_msg=false;
-        mLog.pushMsg("R--> ASDU WITH UNEXPECTED ORIGIN! Ignoring...");
-        // continue;
-        }
+      //if ( apdu.asduh.ca != slaveAddress && apdu.asduh.ca != slaveASDUAddrCmd && len>4 )
+      //  {
+      //  broken_msg=false;
+      //  mLog.pushMsg("R--> ASDU WITH UNEXPECTED ORIGIN! Ignoring...");
+      //  // continue;
+      //  }
 
       broken_msg=false;
 
@@ -445,11 +445,11 @@ void iec104_class::parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond)
         return;
     }
 
-    if ( papdu->asduh.ca != slaveAddress && papdu->asduh.ca != slaveASDUAddrCmd && sz>6 )
-    { // invalid frame
-        mLog.pushMsg("R--> ASDU WITH UNEXPECTED ORIGIN! Ignoring...");
-        return;
-    }
+    //if ( papdu->asduh.ca != slaveAddress && papdu->asduh.ca != slaveASDUAddrCmd && sz>6 )
+    //{ // invalid frame
+    //    mLog.pushMsg("R--> ASDU WITH UNEXPECTED ORIGIN! Ignoring...");
+    //    return;
+    //}
 
     if (sz==6)
     { // Control messages

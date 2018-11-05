@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.5.2"
-!define VERSION_ "5.2.0.0"
+!define VERSION "v.5.3"
+!define VERSION_ "5.3.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -262,6 +262,10 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\db\terminate_pg_soe.bat"
   File /a "..\db\terminate_pg_dumpdb.bat"
   File /a "..\db\terminate_monit_hist_files.bat"
+  File /a "..\db\process_mongo_hist.bat"
+  File /a "..\db\process_mongo_dumpdb.bat"
+  File /a "..\db\terminate_mongo_hist.bat"
+  File /a "..\db\terminate_mongo_dumpdb.bat"
 
   SetOutPath $INSTDIR\i18n
   File /a "..\i18n\*.*"
@@ -366,6 +370,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\docs\lua_reference_manual.pdf"
   File /a "..\docs\inkscape-shortcuts1.svg"
   File /a "..\docs\inkscape-shortcuts2.svg"
+  File /a "..\docs\inkscape-shortcuts1.pdf"
+  File /a "..\docs\inkscape-shortcuts2.pdf"
 
   SetOutPath $INSTDIR\fonts
   File /a /r "..\fonts\*.*"  

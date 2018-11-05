@@ -68,7 +68,7 @@ __published:	// IDE-managed Components
         TLabel *lbPackt;
         TTimer *Timer2;
         TLabel *lbPacktNok;
-        TMemo *mmLog;
+        TMemo *mmLOG;
         TCheckBox *cbLog;
         TIdUDPServer *IdUDPServer1;
         void __fastcall Timer1Timer(TObject *Sender);

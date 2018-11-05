@@ -505,7 +505,7 @@ if ( EhComando() &&
      CmdASDU==59 ||
      CmdASDU==60 ||
      // BACALHAU: enquanto temos muitos comandos de tap cadastrados como analógicos, vou forçar que é digital
-     (CodOCR==216 && CodTpEq==16 && CodInfo==0)
+     (CodOCR==CODOCR_TAP && CodTpEq==CODTPEQ_TAP && CodInfo==0)
      )
    )
    return true;
@@ -646,7 +646,7 @@ if (fp)
          tipo == 'D'
          ||
          // força comando de tap como digital
-         ( origem == CODORIGEM_COMANDO && ocr == 216 && tpeq == 16 && info == 0 )
+         ( origem == CODORIGEM_COMANDO && ocr == CODOCR_TAP && tpeq == CODTPEQ_TAP && info == 0 )
          )
        )
       {
@@ -836,7 +836,7 @@ if (fp)
 
     if ( tipo == 'D' ||
     // força comando de tap como digital
-         ( origem == CODORIGEM_COMANDO && ocr == 216 && tpeq == 16 && info == 0 )
+         ( origem == CODORIGEM_COMANDO && ocr == CODOCR_TAP && tpeq == CODTPEQ_TAP && info == 0 )
        )
       {
       char * pchar = strchr(alarme,'/');
@@ -1050,7 +1050,7 @@ Pontos[NPONTO_OSHMI_MODO].TipoAD = 'D';
 Pontos[NPONTO_OSHMI_MODO].Endereco = NPONTO_OSHMI_MODO;
 strcpy(Pontos[NPONTO_OSHMI_MODO].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_OSHMI_MODO].Tag,"HMIX-WEBSERVER_MODE");
-strcpy(Pontos[NPONTO_OSHMI_MODO].EstadoOff,"SECUNDARY");
+strcpy(Pontos[NPONTO_OSHMI_MODO].EstadoOff,"SECONDARY");
 strcpy(Pontos[NPONTO_OSHMI_MODO].EstadoOn,"PRIMARY");
 strcpy(Pontos[NPONTO_OSHMI_MODO].Descricao,"Webserver mode");
 
@@ -2928,6 +2928,48 @@ try
       case 36: // ponto flutuante c/ tag
           {
           flutuante_seq * flut = (flutuante_seq *) ptinfo;
+
+          /*
+          // do not update non-numeric values
+          feclearexcept(FE_ALL_EXCEPT);
+          val = flut->fr;
+          if( fetestexcept(FE_INVALID) ||
+              fetestexcept(FE_OVERFLOW) ||
+              fetestexcept(FE_DIVBYZERO)
+            )
+            {
+            Loga( (String)"Invalid float format for point: " + (String)nponto + (String)" type: " + tipo );
+            return -6;
+            }
+          */
+
+          val = flut->fr;
+          if( _isnan(val) || !_finite(val) )
+            {
+            Loga( (String)"Invalid float format for point: " + (String)nponto + (String)" type: " + tipo );
+            return -6;
+            }
+
+          switch ( _fpclass(val) )
+            {
+            // do not update non-numeric values
+            case _FPCLASS_UNSUP: // s = "Unsupported IEEE format"
+            case _FPCLASS_SNAN:  // s = "Signaling NaN";
+            case _FPCLASS_QNAN:  // s = "Quiet NaN";
+            case _FPCLASS_NINF:  // s = "Negative infinity (-INF)";
+            case _FPCLASS_PINF:  // s = "Positive infinity (+INF)";
+              Loga( (String)"Invalid float format for point: " + (String)nponto + (String)" type: " + tipo );
+              return -6;
+
+            // acceptable classes  
+            //case _FPCLASS_NN:   s = "Negative normalized non-zero";
+            //case _FPCLASS_ND:   s = "Negative denormalized";
+            //case _FPCLASS_NZ:   s = "Negative zero (-0)";
+            //case _FPCLASS_PZ:   s = "Positive 0 (+0)";
+            //case _FPCLASS_PD:   s = "Positive denormalized";
+            //case _FPCLASS_PN:   s = "Positive normalized non-zero";
+            }
+
           val = flut->fr;
           qual.CasaDecimal1 = 0;
           qual.CasaDecimal2 = 0;
@@ -2961,7 +3003,7 @@ try
   }
 catch ( Exception &E )
   {
-  Loga( E.Message + (String)" | Erro no tratamento do ponto " + (String)nponto + (String)" tipo " + tipo );
+  Loga( E.Message + (String)" | Exception on value for point: " + (String)nponto + (String)" type: " + tipo );
   }
 
 fmVeDados->PulseI104(); // pulse IEC 104 LED

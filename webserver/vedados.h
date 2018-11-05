@@ -41,8 +41,6 @@ __published:	// IDE-managed Components
         TShape *shWeb;
         TLabel *Label2;
         TLabel *Label3;
-        TLabel *Label4;
-        TLabel *Label5;
         TButton *btClose;
         TShape *shI104;
         TShape *shDumpDB;
@@ -52,6 +50,8 @@ __published:	// IDE-managed Components
         TButton *btIEC104;
         TLabel *Label1;
         TButton *btHist;
+        TButton *btJSON;
+        TShape *shJSON;
         void __fastcall Timer1Timer(TObject *Sender);
         void __fastcall btBuscaPontoClick(TObject *Sender);
         void __fastcall btBDTRClick(TObject *Sender);
@@ -69,12 +69,14 @@ __published:	// IDE-managed Components
         void __fastcall btScriptClick(TObject *Sender);
         void __fastcall btIEC104Click(TObject *Sender);
         void __fastcall btHistClick(TObject *Sender);
+        void __fastcall btJSONClick(TObject *Sender);
 private:	// User declarations
 public:		// User declarations
         __fastcall TfmVeDados(TComponent* Owner);
         int EncontraPonto;
         void PulseBDTR(TColor cor = clRed);
         void PulseI104(TColor cor = clRed);
+        void PulseJSON(TColor cor = clRed);
         void PulseSDE(TColor cor = clRed);
         void PulseWeb(TColor cor = clRed);
         void PulseDumpDB(TColor cor = clRed);

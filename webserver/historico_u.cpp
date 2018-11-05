@@ -79,11 +79,19 @@ Label4->Caption = tickini - tickant;
       fppg = fopen( fname.c_str(), "at" );
       }
 
+    FILE * fpmg = NULL;
+    if (DB_MONGODB)
+      {
+      fname = fname.sprintf( "..\\db\\mongo_hist_%u.js", GetTickCount() );
+      fpmg = fopen( fname.c_str(), "at" );
+      }
+
     if ( fp != NULL )
       {
-      String SQL, PGSQL;
-      SQL = SQL + (String)"BEGIN DEFERRED TRANSACTION;\n";
-      PGSQL = PGSQL + (String)"START TRANSACTION;\n";
+      String SQL, PGSQL, MONGODB;
+      SQL = (String)"BEGIN DEFERRED TRANSACTION;\n";
+      PGSQL = (String)"START TRANSACTION;\n";
+      MONGODB = (String)"var bulk=db.realtime_data.initializeUnorderedBulkOp();\n";
       // vou usar insert or replace para fazer valer o último estado quando repetir a hora
       // também é útil para não dar erro
       String S;
@@ -130,10 +138,27 @@ Label4->Caption = tickini - tickant;
         unxtm.tm_isdst = isdst; // deixa para o sistema determinar se está ou não em Horário de Verão
         unxts = mktime( &unxtm );
 
-
         S = S.sprintf( "(%u,%.14g,%u,%u),", hvl.nponto, hvl.valor, hvl.flags, unxts );
         SQL = SQL + S;
         PGSQL = PGSQL + S;
+
+        if (DB_MONGODB && fpmg != NULL)
+          {
+          S = S.sprintf( "bulk.find({_id:%u}).upsert().updateOne({$set:{value:%.14g,flags:%u,timestamp:%u}});\n", hvl.nponto, hvl.valor, hvl.flags, unxts );
+          // buggy sprintf printing 00.000xyz or -00.000xyz like values cause errors inserting on MongoDB (turn 00.000 into 0.000)
+          int p = S.Pos(":00.");
+          if ( p )
+            {
+            S = S.Delete(p+1, 1);
+            }
+          p = S.Pos(":-00.");
+          if ( p )
+            {
+            S = S.Delete(p+2, 1);
+            }
+
+          MONGODB = MONGODB + S;
+          }
 
         if ( ++cnt > ( LIM_INSERT * 2.5 ) ) // evita trancar aqui por muito tempo
           {
@@ -159,10 +184,16 @@ Label4->Caption = tickini - tickant;
       PGSQL[PGSQL.Length()] = ' '; // troca a última vírgula por espaço
       PGSQL = PGSQL + (String) "ON CONFLICT (nponto, data) DO UPDATE SET valor=EXCLUDED.valor, flags=EXCLUDED.flags;\n"; // UPSERT: force update to latest values
       PGSQL = PGSQL + (String) "COMMIT;\n";
+      MONGODB = MONGODB + "bulk.execute();\n";
       if ( fppg != NULL )
         {
         fputs( PGSQL.c_str(), fppg );
         fclose( fppg );
+        }
+      if ( fpmg != NULL )
+        {
+        fputs( MONGODB.c_str(), fpmg );
+        fclose( fpmg );
         }
       }
     }

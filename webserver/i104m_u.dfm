@@ -1,6 +1,6 @@
 object fmIEC104M: TfmIEC104M
-  Left = 135
-  Top = 544
+  Left = 719
+  Top = 706
   Width = 612
   Height = 452
   Caption = 'fmIEC104M'
@@ -27,11 +27,12 @@ object fmIEC104M: TfmIEC104M
     Height = 13
     Caption = 'lbPacktNok'
   end
-  object mmLog: TMemo
+  object mmLOG: TMemo
     Left = 8
     Top = 72
     Width = 577
     Height = 329
+    ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 0
   end

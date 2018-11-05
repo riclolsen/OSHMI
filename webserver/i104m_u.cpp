@@ -264,11 +264,11 @@ void TfmIEC104M::logaln( String msg )
 {
 if ( cbLog->Checked )
   {
-  if ( mmLog->Lines->Count > 1500 )
+  if ( mmLOG->Lines->Count > 1500 )
    for ( int i = 0; i < 50; i++ )
-      mmLog->Lines->Delete(0);
+      mmLOG->Lines->Delete(0);
 
-  mmLog->Lines->Add( msg.c_str() );
+  mmLOG->Lines->Add( msg.c_str() );
   }
 }
 //---------------------------------------------------------------------------
@@ -284,6 +284,14 @@ String s;
 
 t_msgsup * pmsgsup = (t_msgsup *)buffer;
 t_msgsupsq * pmsgsupsq = (t_msgsupsq *)buffer;
+
+if (  WEBSERVER_CLIENTES_REMOTOS[1] != '*' &&
+      WEBSERVER_CLIENTES_REMOTOS.Pos( ABinding->PeerIP ) == 0
+   )
+  {
+  logaln( (String)"> Unauthorized request from: " + ABinding->PeerIP );
+  return;
+  }
 
 int bytesread = AData->Read( buffer, sizeof(buffer) );
 
@@ -302,6 +310,7 @@ if ( pmsgsup->signature == MSGSUP_SIG )
 
   if ( cbLog->Checked )
      {
+     logaln( (String)"> From:" + ABinding->PeerIP );
      logaln( (String)"> Type:" + (String)pmsgsup->tipo +
              (String)" Address:" + (String)pmsgsup->endereco +
              (String)" Sec:" + (String)pmsgsup->sec +

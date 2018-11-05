@@ -1,10 +1,11 @@
 # OSHMI - Open Substation HMI
-A modern SCADA HMI for substations and other automation applications.
+A modern SCADA HMI for substations, IoT and other automation applications.
 
-This project exists because we believe that by combining existing open source projects and tools we can create a very capable, mobile and cloud-friendly HMI system that can rival proprietary software. This approach makes it possible to sum the forces of each project (Chromium, SVG/HTML5, PHP, Lua, SQLite, Inkscape, OpenDNP3, Nginx, Vega, PostgreSQL, Grafana,…) to achieve a great set of open, evergreen, modular and customizable tools for building great HMIs for automation projects. If you also believe this is possible, please give OSHMI a try and collaborate with the project!
+This project exists because I believe that by combining existing open source projects and tools we can create a very capable, mobile and cloud-friendly HMI system that can rival proprietary software. This approach makes it possible to sum the forces of each project (Chromium, SVG/HTML5, PHP, Lua, SQLite, Inkscape, OpenDNP3, Nginx, Vega, PostgreSQL, Grafana,…) to achieve a great set of open, evergreen, modular and customizable tools for building great HMIs for automation projects. If you also believe this is possible, please give OSHMI a try and collaborate with the project!
 
 - Mobile and Cloud friendly.
-- Created for substation automation and control centers, but can be used for general SCADA HMI automation applications.
+- Created for substation automation and control centers, but can be used for IoT and general SCADA HMI automation applications.
+- JSON over UDP data and control interface for easy integration with IoT devices and other systems.
 - Built with open source, web based technologies and tools: SVG, HTML5, Javascript, PHP, Lua, QT, SQLite, Nginx, Inkscape, Vega.
 - Strong focus on UX and High Performance HMI / ISA101 compatible graphics.
 - Redundant mode of operation, dual server/ ?n? clients. Unlimited points, clients, monitors and viewers.
@@ -51,4 +52,3 @@ Some graphics designed and obtained from Freepik https://www.freepik.com/
 This is not a toy project! It's been actually used in dozens of substations up to 230kV level and in control centers.
 
 Feel free to ask any question.
-

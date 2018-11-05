@@ -1,6 +1,6 @@
 object fmBDTR: TfmBDTR
-  Left = 105
-  Top = 255
+  Left = 117
+  Top = 267
   Width = 795
   Height = 583
   Caption = 'fmBDTR'

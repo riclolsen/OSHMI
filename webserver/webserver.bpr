@@ -14,11 +14,14 @@
       luasrc\loslib.obj luasrc\lparser.obj luasrc\lstate.obj luasrc\lstring.obj 
       luasrc\lstrlib.obj luasrc\ltable.obj luasrc\ltablib.obj luasrc\ltm.obj 
       luasrc\lua.obj luasrc\lundump.obj luasrc\lvm.obj luasrc\lzio.obj 
-      luasrc\print.obj luasrc\bit.obj historico_u.obj sqlite3.obj i104m_u.obj"/>
+      luasrc\print.obj luasrc\bit.obj historico_u.obj sqlite3.obj i104m_u.obj 
+      \\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver\jsmn.obj 
+      json_u.obj"/>
     <RESFILES value="webserver.res"/>
     <DEFFILE value=""/>
     <RESDEPEN value="$(RESFILES) webserver_u.dfm bdtr_com.dfm vedados.dfm eventos_u.dfm 
-      dumpdb_u.dfm about_u.dfm simul.dfm lua_u.dfm historico_u.dfm i104m_u.dfm"/>
+      dumpdb_u.dfm about_u.dfm simul.dfm lua_u.dfm historico_u.dfm i104m_u.dfm 
+      json_u.dfm"/>
     <LIBFILES value=""/>
     <LIBRARIES value="VCLX50.lib NMFast50.lib vcldb50.lib Vclbde50.lib Indy50.lib Vcl50.lib"/>
     <SPARELIBS value="Vcl50.lib Indy50.lib Vclbde50.lib vcldb50.lib NMFast50.lib VCLX50.lib"/>
@@ -26,7 +29,7 @@
       ibsmp50.bpi vcldbx50.bpi TeeUI50.bpi TeeDB50.bpi Tee50.bpi TeeQR50.bpi 
       VCLIB50.bpi bcbie50.bpi vclie50.bpi Inetdb50.bpi Inet50.bpi NMFast50.bpi 
       dclocx50.bpi bcb97axserver50.bpi Indy50.bpi"/>
-    <PATHCPP value=".;luasrc"/>
+    <PATHCPP value=".;luasrc;\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver"/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
@@ -36,8 +39,8 @@
     <USERDEFINES value=""/>
     <SYSDEFINES value="_RTLDLL;NO_STRICT"/>
     <MAINSOURCE value="webserver.cpp"/>
-    <INCLUDEPATH value="..\..\sre_to_sql;&quot;C:\Program Files (x86)\Borland\CBuilder5\Projects\&quot;;\\.;..\shell;$(BCB)\..\CBUILD~1Projects;luasrc;$(BCB)\include;$(BCB)\include\vcl;&quot;c:\C5\&quot;"/>
-    <LIBPATH value="..\..\sre_to_sql;\\.;..\shell;$(BCB)\Projects;luasrc;c:\C5\;$(BCB)\lib\obj;$(BCB)\lib"/>
+    <INCLUDEPATH value="\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver;..\..\sre_to_sql;&quot;C:\Program Files (x86)\Borland\CBuilder5\Projects\&quot;;\\.;..\shell;$(BCB)\..\CBUILD~1Projects;luasrc;$(BCB)\include;$(BCB)\include\vcl;&quot;c:\C5\&quot;"/>
+    <LIBPATH value="\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver;..\..\sre_to_sql;\\.;..\shell;$(BCB)\Projects;luasrc;c:\C5\;$(BCB)\lib\obj;$(BCB)\lib"/>
     <WARNINGS value="-w-8065 -w-par"/>
   </MACROS>
   <OPTIONS>
@@ -57,7 +60,7 @@
 IncludeVerInfo=1
 AutoIncBuild=0
 MajorVer=5
-MinorVer=1
+MinorVer=3
 Release=0
 Build=0
 Debug=0
@@ -71,22 +74,24 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=OSHMI
 FileDescription=Webserver
-FileVersion=5.1.0.0
+FileVersion=5.3.0.0
 InternalName=Webserver
 LegalCopyright=(c) 2008-2018 Ricardo Lastra Olsen
 LegalTrademarks=
 OriginalFilename=webserver.exe
 ProductName=OSHMI: Open Substation HMI
-ProductVersion=5.1.0.0
+ProductVersion=5.3.0.0
 Comments=
 
 [HistoryLists\hlIncludePath]
-Count=1
-Item0=..\..\sre_to_sql;C:\Program Files (x86)\Borland\CBuilder5\Projects\;\\.;..\shell;$(BCB)\..\CBUILD~1Projects;luasrc;$(BCB)\include;$(BCB)\include\vcl;c:\C5\
+Count=2
+Item0=\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver;..\..\sre_to_sql;C:\Program Files (x86)\Borland\CBuilder5\Projects\;\\.;..\shell;$(BCB)\..\CBUILD~1Projects;luasrc;$(BCB)\include;$(BCB)\include\vcl;c:\C5\
+Item1=..\..\sre_to_sql;C:\Program Files (x86)\Borland\CBuilder5\Projects\;\\.;..\shell;$(BCB)\..\CBUILD~1Projects;luasrc;$(BCB)\include;$(BCB)\include\vcl;c:\C5\
 
 [HistoryLists\hlLibraryPath]
-Count=1
-Item0=..\..\sre_to_sql;\\.;..\shell;$(BCB)\Projects;luasrc;c:\C5\;$(BCB)\lib\obj;$(BCB)\lib
+Count=2
+Item0=\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver;..\..\sre_to_sql;\\.;..\shell;$(BCB)\Projects;luasrc;c:\C5\;$(BCB)\lib\obj;$(BCB)\lib
+Item1=..\..\sre_to_sql;\\.;..\shell;$(BCB)\Projects;luasrc;c:\C5\;$(BCB)\lib\obj;$(BCB)\lib
 
 [HistoryLists\hlDebugSourcePath]
 Count=1

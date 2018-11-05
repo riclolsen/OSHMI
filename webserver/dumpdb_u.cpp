@@ -39,18 +39,52 @@ TfmDumpdb *fmDumpdb;
 int CntDump=0;
 
 list <String> ListaDumpSQL;
+list <String> ListaDumpMongo;
 
 #pragma warn -aus
 
 void TfmDumpdb::ProcessaFilaSQL()
 {
 int cnt = 0;
+int cntmongo = 0;
 int error = 0;
 DWORD ini = GetTickCount();
 static int transerror = 0;
 
 static cntcall = 0;
 Label6->Caption = ++cntcall;
+
+if ( ListaDumpMongo.size() > 0 )
+  {
+    FILE * fpmg = NULL;
+    String fname;
+    
+    if ( DB_MONGODB )
+      {
+      fname = fname.sprintf( "..\\db\\mongo_dumpdb_%u.js", GetTickCount() );
+      fpmg = fopen( fname.c_str(), "at" );
+      }
+
+    if ( DB_MONGODB && fpmg != NULL )
+      {
+      String S, MONGODBSTR;
+      MONGODBSTR = (String)"var bulk=db.realtime_data.initializeUnorderedBulkOp();\n";
+      while ( !ListaDumpMongo.empty() ) // enquanto houver consulta
+        {
+        cntmongo++;
+        if ( cntmongo >= 490 ) //  evita trancar aqui por muito tempo e limite de insert composto em SQLITE é 500
+          break;
+        String S;
+        S = ListaDumpMongo.front();   // pega a primeira da fila
+        ListaDumpMongo.pop_front();   // retira-a da fila
+        MONGODBSTR = MONGODBSTR + S;
+        }
+      MONGODBSTR = MONGODBSTR + "bulk.execute();\n";
+      fputs( MONGODBSTR.c_str(), fpmg );
+      fclose( fpmg );
+      }
+  }
+
 
 if ( ListaDumpSQL.size() > 0 )
   {
@@ -73,6 +107,7 @@ if ( ListaDumpSQL.size() > 0 )
       SQL = SQL + (String)"insert or replace into dumpdb (nponto, id, descricao, valor, flags, lims, limi, hister, data, hora, ts, alrin, vlrini, histor, bmorta, periodo, tipo, unidade, eston, estoff, supcmd, timeout, anotacao, estacao, estalm, prior ) values ";
       PGSQL = PGSQL + (String)"START TRANSACTION;\n";
       PGSQL = PGSQL + (String)"insert into dumpdb (nponto, id, descricao, valor, flags, lims, limi, hister, data, hora, ts, alrin, vlrini, histor, bmorta, periodo, tipo, unidade, eston, estoff, supcmd, timeout, anotacao, estacao, estalm, prior ) values ";
+
       while (!ListaDumpSQL.empty()) // enquanto houver consulta
         {
         cnt++;
@@ -125,7 +160,7 @@ map <int, TPonto> &PontosTR=BL.GetMapaPontos();
 map <int, TPonto>::iterator it;
 map <int, TPonto>::iterator fim;
 int ponto;
-char buff[500];
+char buffdescr[500];
 char tipo;
 
 // se ainda não fez integridade, não faz dump, a menos seja forcado 
@@ -160,7 +195,7 @@ try
 
     fmVeDados->PulseDumpDB( clRed );
 
-    pto.GetModDescr( buff );
+    pto.GetModDescr( buffdescr );
 
     unsigned short year;
     unsigned short month;
@@ -195,7 +230,7 @@ try
     S = S.sprintf( "%d,'%s','%s',%f,%d,%f,%f,%f,%d,%d,%d,%d,%f,%d,%f,%d,'%c','%s','%s','%s',%d,%d,'%s','%s',%d,%d",
                    ponto,
                    pto.GetNome(),
-                   buff,
+                   buffdescr,
                    pto.Valor,
                    pto.Qual.Byte,
                    pto.LimSup,
@@ -222,6 +257,30 @@ try
                    );
 
     ListaDumpSQL.push_back( S );
+
+    if (DB_MONGODB)
+      {
+      S = S.sprintf( "bulk.find({_id:%u}).upsert().updateOne({$set:{tag:'%s',description:'%s',type_anadig:'%c',unit:'%s',group_main:'%s',group_secondary:'%s',state_off:'%s',state_on:'%s',comments:'%s',lo_lim:%f,hi_lim:%f,hysteresis:%f,alarm_st:%d,priotity:%d,is_cmd:%d,supcmd:%d}});\n",
+                     ponto,
+                     pto.GetNome(),
+                     buffdescr,
+                     tipo,
+                     pto.GetUnidade(),
+                     pto.GetEstacao(),
+                     pto.GetModulo(),
+                     pto.GetEstadoOff(),
+                     pto.GetEstadoOn(),
+                     pto.GetAnotacao(),
+                     pto.LimInf,
+                     pto.LimSup,
+                     pto.Hister,
+                     pto.EstadoAlarme,
+                     pto.Prioridade,
+                     pto.EhComando() ? 1 : 0,
+                     pto.EhComando() ? pto.GetSupCmd() : 0
+                     );
+      ListaDumpMongo.push_back( S );
+      }
 
     if ( nponto != 0 )
       break; // nponto!=0, faz só o primeiro
@@ -277,6 +336,8 @@ do
 
 if ( error != SQLITE_OK )
   {
+     sqlite3_finalize( res );
+     sqlite3_close( sqlite_db );
      exit(0);
   }
 

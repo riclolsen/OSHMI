@@ -1,5 +1,5 @@
 object fmWebServ: TfmWebServ
-  Left = 664
+  Left = 698
   Top = 399
   Width = 592
   Height = 547

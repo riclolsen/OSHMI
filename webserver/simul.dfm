@@ -1,6 +1,6 @@
 object fmSimul: TfmSimul
-  Left = 256
-  Top = 367
+  Left = 266
+  Top = 377
   Width = 655
   Height = 465
   Caption = 'Simul'

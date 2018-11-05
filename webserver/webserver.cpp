@@ -71,6 +71,8 @@ USEUNIT("luasrc\bit.c");
 USEFORM("historico_u.cpp", fmHist);
 USEUNIT("sqlite3.c");
 USEFORM("i104m_u.cpp", fmIEC104M);
+USEUNIT("\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver\jsmn.c");
+USEFORM("json_u.cpp", fmJSON);
 //---------------------------------------------------------------------------
 extern String IP_BDTR1;
 extern String IP_BDTR2;
@@ -109,6 +111,7 @@ WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                  Application->CreateForm(__classid(TfmLua), &fmLua);
                  Application->CreateForm(__classid(TfmHist), &fmHist);
                  Application->CreateForm(__classid(TfmIEC104M), &fmIEC104M);
+                 Application->CreateForm(__classid(TfmJSON), &fmJSON);
                  if ( IP_BDTR1 == "" && IP_BDTR2 == "" && SIMULACAO == 0 )
                    {
                    // roda varredor IEC104, mas primeiro mata algum que já esteja rodando
@@ -136,6 +139,9 @@ WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ExecExternApp( END_PGPROCHIST.c_str() );
         ExecExternApp( END_PGPROCEVENTOS.c_str() );
         ExecExternApp( END_PGPROCPONTOS.c_str() );
+        ExecExternApp( END_MONGOPROCHIST.c_str() );
+        //ExecExternApp( END_MONGOPROCEVENTOS.c_str() );
+        ExecExternApp( END_MONGOPROCPONTOS.c_str() );
 
         sprintf( execstr, "taskkill /F /IM %s", RUN_VARREDORIEC104 );
         ExecExternApp( execstr );

@@ -3,7 +3,7 @@
 
 // Parâmetros e constantes de configuração do sistema
 
-#define VERSAO "5.1"
+#define VERSAO "5.3"
 
 extern int IEC104_PORT;
 extern int IEC104_1_SEC; // endereço secundário da utr 1
@@ -24,6 +24,12 @@ extern int ENVIA_COMANDOS; // repassa ou não comandos vindos da IHM WEB ao BDTR
 extern int BDTR_ACERTO_HORA; // acerta ou não a hora pela recebida do BDTR
 extern int BDTR_PERIODO_ENVIO_ACERTO_HORA; // periodo de envio de acerto de hora ao BDTR (s), 0=não envia
 extern int PONTO_OPERACAO; // ponto para envio do estado da IHM
+
+// Protocol driver JSON UDP interface
+extern int UDP_JSON_PORT;
+extern int UDP_JSON_PORT_CMD;
+extern String UDP_JSON_ENDPOINT1;
+extern String UDP_JSON_ENDPOINT2;
 
 extern String IHMRED_IP_OUTRO_IHM;
 extern int IHMRED_ACERTO_HORA;
@@ -47,6 +53,7 @@ extern int HIST_DEADBANDFACTOR;
 extern int HIST_LIFETIME;
 
 extern int DB_POSTGRESQL; // enable write postgresql files 
+extern int DB_MONGODB; // enable write mongodb files 
 
 extern int DELAY;
 extern int INTERVAL;
@@ -78,6 +85,14 @@ extern String RUN_PGPROCPONTOS;
 extern String END_PGPROCHIST;
 extern String END_PGPROCEVENTOS;
 extern String END_PGPROCPONTOS;
+
+extern String MONGO_START;
+extern String RUN_MONGOPROCHIST;
+//extern String RUN_MONGOPROCEVENTOS;
+extern String RUN_MONGOPROCPONTOS;
+extern String END_MONGOPROCHIST;
+//extern String END_MONGOPROCEVENTOS;
+extern String END_MONGOPROCPONTOS;
 
 extern String GRAFANA_START; 
 

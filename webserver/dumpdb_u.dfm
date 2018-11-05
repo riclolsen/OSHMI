@@ -1,6 +1,6 @@
 object fmDumpdb: TfmDumpdb
-  Left = 203
-  Top = 252
+  Left = 208
+  Top = 257
   Width = 355
   Height = 185
   Anchors = [akLeft, akTop, akRight, akBottom]
