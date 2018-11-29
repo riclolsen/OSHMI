@@ -71,7 +71,7 @@ USEUNIT("luasrc\bit.c");
 USEFORM("historico_u.cpp", fmHist);
 USEUNIT("sqlite3.c");
 USEFORM("i104m_u.cpp", fmIEC104M);
-USEUNIT("\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver\jsmn.c");
+USEUNIT("jsmn.c");
 USEFORM("json_u.cpp", fmJSON);
 //---------------------------------------------------------------------------
 extern String IP_BDTR1;

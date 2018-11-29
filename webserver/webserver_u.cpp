@@ -504,10 +504,23 @@ switch ( ARequestInfo->UnparsedParams[1] )
            ehcomando = pt.EhComando();
 
            String SVal, ID, Subest;
-           SVal.sprintf("%.2f",valor);
 
            if ( SEP == '\t' )
+             { // for excel use full precision
+             if ( pt.TipoAD == 'A' )
+               { // analog
+               SVal.sprintf("%.14g",valor);
+               // buggy sprintf printing 00.000xyz or -00.000xyz like values cause errors (turn 00.000 into 0.000)
+               int p = SVal.Pos("00.");
+               if ( p )
+                 SVal = SVal.Delete(p, 1);
+               }
+             else
+               SVal.sprintf("%.0f",valor);
              StringReplaceCh(SVal, '.', ','); // troca os pontos por vírgula (para o excel)
+             }
+           else
+             SVal.sprintf("%.2f",valor);
 
            ID = (String)pt.GetNome();
            Subest = pt.Estacao;
@@ -703,10 +716,23 @@ switch ( ARequestInfo->UnparsedParams[1] )
            ehcomando = pt.EhComando();
 
            String SVal, ID, Subest;
-           SVal.sprintf("%.2f",valor);
 
            if ( SEP == '\t' )
+             { // for excel use full precision
+             if ( pt.TipoAD == 'A' )
+               { // analog
+               SVal.sprintf("%.14g",valor);
+               // buggy sprintf printing 00.000xyz or -00.000xyz like values cause errors (turn 00.000 into 0.000)
+               int p = SVal.Pos("00.");
+               if ( p )
+                 SVal = SVal.Delete(p, 1);
+               }
+             else
+               SVal.sprintf("%.0f",valor);
              StringReplaceCh(SVal, '.', ','); // troca os pontos por vírgula (para o excel)
+             }
+           else
+             SVal.sprintf("%.2f",valor);
 
            ID = (String)pt.GetNome();
            Subest = pt.Estacao;
@@ -927,10 +953,15 @@ switch ( ARequestInfo->UnparsedParams[1] )
              intertrav = 0;
 
            String S;
-           S.sprintf( "%.2f", valor );
 
            if ( qual.Tipo )
-             {
+             { // analog
+             S.sprintf( "%.14g", valor );
+             // buggy sprintf printing 00.000xyz or -00.000xyz like values cause errors (turn 00.xxx into 0.xxx)
+             int p = S.Pos("00.");
+             if ( p )
+               S = S.Delete(p, 1);
+
              if ( reqinfo )
                {
                ResponseAna = ResponseAna + (String)"TAGS[" + ListaPontos[i] + (String)"]='" + (String)pt.GetNome() + "';\n";
@@ -952,7 +983,8 @@ switch ( ARequestInfo->UnparsedParams[1] )
                ResponseAna = ResponseAna + "T[" + ListaPontos[i] + "]='';\n";
              }
            else
-             {
+             { // digital
+             S.sprintf( "%1.0f", valor );
              if ( reqinfo )
                {
                ResponseDig = ResponseDig + (String)"TAGS[" + ListaPontos[i] + (String)"]='" + (String)pt.GetNome() + "';\n";

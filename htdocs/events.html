@@ -202,7 +202,7 @@ try
   var se = ESTACAO;
     se = se + '-';  
 
-  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'VALOR_SUP', V[NPTO] + " " + UNIDADE + " (" + Msg.QValor + ")" );
+  WebSAGE.cmdWriteById( WebSAGE.g_win_cmd, 'VALOR_SUP', roundnum(V[NPTO],4) + " " + UNIDADE + " (" + Msg.QValor + ")" );
 
   var SQ = '';
   var Q = F[NPTO];

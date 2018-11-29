@@ -148,7 +148,7 @@ User interface can be used on:
 
 -------------------------------------------------------------------
 
-To compile the source code on Windows you will need the folowing environments:
+To compile the source code on Windows you will need the following environments:
 
 Webserver, HMIShell, Mon_Proc and Sim_TR:
  - Borland C++ Builder 5.
@@ -159,6 +159,17 @@ QTester104:
 
 DNP3 and Modbus Drivers:
  - Visual Studio Community (2015 or newer).
+
+-------------------------------------------------------------------
+
+Notes for version 5.4:
+
+Webserver:
+ - Fixed limited precision in serving values.
+
+DNP3 driver:
+ - Updated to version 0.71.
+ - Removed limitation of address zero for master and slaves.
 
 -------------------------------------------------------------------
 

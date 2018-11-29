@@ -15,8 +15,7 @@
       luasrc\lstrlib.obj luasrc\ltable.obj luasrc\ltablib.obj luasrc\ltm.obj 
       luasrc\lua.obj luasrc\lundump.obj luasrc\lvm.obj luasrc\lzio.obj 
       luasrc\print.obj luasrc\bit.obj historico_u.obj sqlite3.obj i104m_u.obj 
-      \\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver\jsmn.obj 
-      json_u.obj"/>
+      jsmn.obj json_u.obj"/>
     <RESFILES value="webserver.res"/>
     <DEFFILE value=""/>
     <RESDEPEN value="$(RESFILES) webserver_u.dfm bdtr_com.dfm vedados.dfm eventos_u.dfm 
@@ -29,7 +28,7 @@
       ibsmp50.bpi vcldbx50.bpi TeeUI50.bpi TeeDB50.bpi Tee50.bpi TeeQR50.bpi 
       VCLIB50.bpi bcbie50.bpi vclie50.bpi Inetdb50.bpi Inet50.bpi NMFast50.bpi 
       dclocx50.bpi bcb97axserver50.bpi Indy50.bpi"/>
-    <PATHCPP value=".;luasrc;\\vboxsrv\ricardolo\mnt\vm\work\projetos\builder_5\oshmi\webserver"/>
+    <PATHCPP value=".;luasrc"/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
