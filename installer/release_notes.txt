@@ -58,8 +58,10 @@ Acknowledgements:
   PostgreSQL - https://www.postgresql.org/
   BIGSQL - https://www.openscg.com/bigsql/package-manager.jsp/
   Grafana - https://grafana.com/
+  MongoDB - https://github.com/mongodb/mongo
   Some icons from - http://keyamoon.com/icomoon and http://raphaeljs.com/icons
   CSS Loaders from Luke Haas - https://projects.lukehaas.me/css-loaders/
+  JSMN - https://github.com/zserge/jsmn
   
 -------------------------------------------------------------------
 
@@ -148,6 +150,8 @@ User interface can be used on:
 
 -------------------------------------------------------------------
 
+BUILD REQUIREMENTS.
+
 To compile the source code on Windows you will need the following environments:
 
 Webserver, HMIShell, Mon_Proc and Sim_TR:
@@ -159,6 +163,16 @@ QTester104:
 
 DNP3 and Modbus Drivers:
  - Visual Studio Community (2015 or newer).
+
+-------------------------------------------------------------------
+
+Notes for version 5.5:
+
+Webserver:
+ - Reverted floating point treatment from version 5.3 due to performance loss.
+
+SQLite:
+ - Updated to version 3.25.3.
 
 -------------------------------------------------------------------
 

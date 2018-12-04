@@ -2942,7 +2942,7 @@ try
             return -6;
             }
           */
-
+/*
           val = flut->fr;
           if( _isnan(val) || !_finite(val) )
             {
@@ -2961,7 +2961,7 @@ try
               Loga( (String)"Invalid float format for point: " + (String)nponto + (String)" type: " + tipo );
               return -6;
 
-            // acceptable classes  
+            // acceptable classes
             //case _FPCLASS_NN:   s = "Negative normalized non-zero";
             //case _FPCLASS_ND:   s = "Negative denormalized";
             //case _FPCLASS_NZ:   s = "Negative zero (-0)";
@@ -2969,7 +2969,7 @@ try
             //case _FPCLASS_PD:   s = "Positive denormalized";
             //case _FPCLASS_PN:   s = "Positive normalized non-zero";
             }
-
+*/
           val = flut->fr;
           qual.CasaDecimal1 = 0;
           qual.CasaDecimal2 = 0;

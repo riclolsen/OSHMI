@@ -1,7 +1,7 @@
 object fmVeDados: TfmVeDados
-  Left = 504
-  Top = 523
-  Width = 1050
+  Left = 461
+  Top = 381
+  Width = 900
   Height = 609
   BorderIcons = [biMinimize, biMaximize]
   Caption = 'OSHMI - WebServer'
@@ -163,7 +163,7 @@ object fmVeDados: TfmVeDados
     Shape = stCircle
   end
   object lbTime: TLabel
-    Left = 997
+    Left = 847
     Top = 8
     Width = 31
     Height = 13
@@ -230,7 +230,7 @@ object fmVeDados: TfmVeDados
   object sgPontos: TStringGrid
     Left = 0
     Top = 40
-    Width = 1041
+    Width = 891
     Height = 568
     Anchors = [akLeft, akTop, akRight, akBottom]
     ColCount = 12
