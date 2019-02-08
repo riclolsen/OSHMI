@@ -342,7 +342,8 @@ void iec104_class::packetReadyTCP()
 
       userprocAPDU( &apdu, len + 2 );
       parseAPDU( &apdu, len + 2 );
-      break;
+      if (bytesAvailableTCP() == 0)
+          break;
       }
 
 /*

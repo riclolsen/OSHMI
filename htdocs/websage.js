@@ -1,7 +1,7 @@
 "use strict";
 // 
 // ----------------------------------------------------------------------------------------
-// This script looks for tagged objects inside a SVG file and animate them.
+// This script looks for tagged objects inside an SVG file and animate them.
 // Real time values are obtainded by requesting and evaluating javascript code from a special webserver.
 // 
 // Este script procura por objetos (com id como PNTnponto) 
@@ -12,7 +12,7 @@
 // Com os valores obtidos dos pontos são atualizados os objetos (DJ, SC e medidas) no SVG.
 // DEPENDENCIAS : util.js, jquery.js, jquery.ui, core.js, shortcut.js, messages.js, config_viewers.js  (todas devem estar incluidas antes deste script)  
 
-// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2019 - Ricardo L. Olsen
 
 /*jslint browser: true, bitwise: true, devel: true */
 /*jslint white: true */
@@ -27,7 +27,7 @@
 /*global DESC: true, ST_ON: true, ST_OFF: true, CNPTO: true, CID: true, CDESC: true, CST_ON: true, CST_OFF: true  */
 /*global LIMSUPS: true, LIMINFS: true, LIMS: true, LIMI: true, HISTER: true, ALRIN: true, ANOT: true, VLNOR: true, ESTALM: true, UNIDADE: true  */
 /*global SIMULACAO: true, ComandoAck: true, ANIMA: true, CLICK_POSX: true, CLICK_POSY: true, WebSAGE: true  */
-/*global optgroup: true, optval: true, opttxt: true, indtela:true, tela: true, PNTServer: true, TimePNTServer: true, ScreenViewer_RefreshTime: true  */
+/*global optgroup: true, optval: true, opttxt: true, PNTServer: true, TimePNTServer: true, ScreenViewer_RefreshTime: true  */
 /*global ScreenViewer_Background: true, ScreenViewer_ToolbarColor: true, ScreenViewer_RelationColor: true  */
 /*global ScreenViewer_TagFillColor: true, ScreenViewer_TagStrokeColor: true, ScreenViewer_TagInhAlmFillColor: true, ScreenViewer_TagInhAlmStrokeColor: true  */
 /*global ScreenViewer_DateColor: true, ScreenViewer_TimeMachineDateColor: true, ScreenViewer_TimeMachineBgColor: true, ScreenViewer_AlmBoxTableColor: true  */
@@ -60,6 +60,7 @@ var NUM_VAR_ANT = 0; // estado anterior da variável NUM_VAR | last state of NUM
 
 var SVGDoc = null; // documento SVG (DOM) | SVG Document
 var SVGSnap = null; // SVG Snap surface object
+var hvalues = [];
 
 // variáveis para os diálogos de info/comando | variables to communicate with point access/command diaglogs
 var NPTO = 0, ID, ESTACAO, MODULO, DESC, ST_ON, ST_OFF, CNPTO, CID, CDESC, CST_ON, CST_OFF;
@@ -108,191 +109,6 @@ if (!window.requestAnimationFrame) (function() {
 	window.cancelAnimationFrame = window[moz + caf] || window[webkit + caf] || window[webkit + 'CancelRequestAnimationFrame'] || cancelAnimationFrame;
 })();
 
-// Process the list of screens
-function lista_telas()
-{
-var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
-
-    if ( optionhtml !== "" )
-      {
-       $('#SELTELA').html( optionhtml );
-      }
-    else
-    for ( i = 0 ; i < optval.length; i++ )
-    {
-       elSel = document.getElementById('SELTELA');
-
-          elOptNew = document.createElement('option');
-          elOptNew.text = opttxt[i];
-          elOptNew.value =  optval[i];
-        
-          if ( typeof( optgroup[i] ) === "string" )
-            elOptNew.optg =  optgroup[i];
-          
-          if ( typeof( optfilt[i] ) === "string"  )
-            {
-            elOptNew.filtroalmbox = optfilt[i];
-            }
-          else
-            {
-            elOptNew.filtroalmbox = "";
-            }
-        
-          try
-          {
-              elSel.add(elOptNew, null); // standards compliant; doesn't work in IE
-          }
-          catch(ex)
-          {
-              elSel.add(elOptNew); // IE only
-          }
-    }
-     
-    for ( i = 0; i < WebSAGE.g_seltela.length; i++ )
-    {
-        if ( indtela > 0 && indtela == i ) // quando o parâmetro da URL INDTELA for um número, abre a tela correspondente
-        {
-            WebSAGE.g_seltela.selectedIndex = i;
-            document.fmTELA.submit();
-            return;
-        }
-    
-        if ( WebSAGE.g_seltela.options[i].value == tela )  // tela: variável do screen.html
-        { 
-            if ( typeof( WebSAGE.g_seltela.options[i].filtroalmbox ) != "undefined" )
-            if ( WebSAGE.g_seltela.options[i].filtroalmbox != "" )
-            if ( document.getElementById("almiframe").src == "" )          
-              {
-              document.getElementById("almiframe").src = "almbox.html?SUBST=" + WebSAGE.g_seltela.options[i].filtroalmbox;
-              document.getElementById('almiframe').style.display = '';
-              }
-
-            // seleciona tela aberta no combo box
-            WebSAGE.g_seltela.selectedIndex = i;
-            // coloca o nome da tela na barra de título
-            titu = WebSAGE.g_seltela.options[i].text;
-            pos = titu.indexOf("[");
-            if ( pos <= 0 ) 
-              { pos = 100; }
-            titu = titu.substring( 0, pos );
-            pos = titu.indexOf("{");
-            if ( pos <= 0 ) 
-              { pos = 100; }
-            titu = titu.substring( 0, pos );
-            titu = titu.replace( new RegExp("[\\s.]+$", "g"), "" );
-            WebSAGE.g_titulo_janela = titu + " - " + Msg.NomeVisorTelas + " - " + Msg.NomeProduto + " - " + Msg.VersaoProduto;
-            document.title = "."; // necessário devido a um bug do chromium!
-            document.title = WebSAGE.g_titulo_janela;
-            // coloca o nome da tela na toolbar, se configurado
-            if ( ScreenViewer_ShowScreenNameTB )
-              {
-              $("#NOME_TELA").text( titu + " " );
-              $('#NOME_TELA').css('display', '');
-              } 
-        }
-    }
- 
-    // prepara os links para as telas
-    try
-    {   
-        // Links para telas
-        if ( SVGDoc != null )
-        {  
-          nohs = SVGDoc.getElementsByTagName("a");
-          for ( i = 0; i < nohs.length; i++ )
-          {
-              textolink = nohs.item(i).getAttributeNS("http://www.w3.org/1999/xlink" , "href");
-
-              // mata o link original
-              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "href");
-              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "type");
-              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "actuate");
-              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "show");
-              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "href");
-
-              for ( t = 0; t < WebSAGE.g_seltela.length; t++ )
-                {
-                  if ( WebSAGE.g_seltela.options[t].value == ( "../svg/" + textolink ) )
-                  {
-                      nohs.item(i).setAttributeNS( null, "onclick", "window.parent.WebSAGE.g_seltela.selectedIndex=" + t + "; window.parent.document.fmTELA.submit();" );
-                      if ( nohs.item(i).style != null )
-                        {
-                          nohs.item(i).style.cursor = "pointer";
-                        }
-                  }
-                }
-          }
-
-          // acerta o estado dos botões de próxima tela e tela anterior
-          if ( WebSAGE.g_seltela.selectedIndex <= 1 )
-          { // é a primeira tela
-              document.getElementById("ANTETELAID").style.opacity = 0.2;
-              document.getElementById("ANTETELAID").style.cursor = '';
-          }
-          else
-          {
-              Core.addEventListener( document.getElementById("ANTETELAID"),  "click", WebSAGE.anteTela ) ;
-          } 
-
-          if ( WebSAGE.g_seltela.selectedIndex >= WebSAGE.g_seltela.length - 1 )
-          { // é a última tela
-              document.getElementById("PROXTELAID").style.opacity = 0.2;
-              document.getElementById("PROXTELAID").style.cursor = '';
-          }
-          else
-          { 
-              Core.addEventListener(document.getElementById("PROXTELAID"),  "click", WebSAGE.proxTela ); 
-          }
-
-          // onde houver um texto ou grupo com id igual a nome de tela, linkar
-          nohs = [];
-          tmp = SVGDoc.getElementsByTagName("text");
-          for ( i = 0; i < tmp.length; i++ ) 
-            { 
-            nohs.push( tmp.item(i) ); 
-            }
-          tmp = SVGDoc.getElementsByTagName("g");
-          for ( i = 0; i < tmp.length; i++ ) 
-            {
-            nohs.push( tmp.item(i) ); 
-            }
-
-          for ( i = 0; i < nohs.length; i++ )
-          {
-            if ( nohs[i].id != undefined )
-              {
-              idtela = nohs[i].id;
-              // faz um trimleft dos caracteres espaço e '+' para permitir multiplos link para uma mesma tela
-              idtela = idtela.replace(/^[ \+]+/, "");
-              if ( idtela.substr(0,3)=='PNT' || idtela.substr(0,3)=='NPT' || idtela=='' ) // estou procurando nome de tela e não numero de ponto
-                 { 
-                 continue; 
-                 }
-
-              for ( t = 0; t < WebSAGE.g_seltela.length; t++ )
-                {
-                  if ( WebSAGE.g_seltela.options[t].value == idtela ||
-                       WebSAGE.g_seltela.options[t].value == ( "../svg/" + idtela ) ||
-                       WebSAGE.g_seltela.options[t].value == ( "../svg/" + idtela + ".svg" ) )
-                  {
-                      nohs[i].setAttributeNS( null, "onclick", "window.parent.WebSAGE.g_seltela.selectedIndex=" + t + "; window.parent.document.fmTELA.submit();" );
-                      if ( nohs[i].style != null )
-                        {
-                          nohs[i].style.cursor = "pointer";
-                        }
-                  }
-                } 
-              }
-          }
-        }
-    }
-    catch ( err )
-    {
-      $('#SP_STATUS').text( err.name + ": " + err.message + " [1]" ); 
-      document.getElementById("SP_STATUS").title = err.stack;
-    }
-}
-
 // carrega uma imagem no elemento
 function LoadImage( elem, imgpath )
 {
@@ -323,8 +139,8 @@ function RemoveAnimate( elem )
 }
 
 // Permite criar uma animação em SVG
-// window.parent.Animate( thisobj, "animate", {'attributeName': 'ry', 'from': 0, 'to': 10, 'fill': 'freeze', 'repeatCount': 5, 'dur': 5 } );
-// window.parent.Animate( thisobj, 'animate', {'attributeName': 'width', 'from': 45, 'to': 55, 'repeatCount':5,'dur': 1 });
+// window.Animate( thisobj, "animate", {'attributeName': 'ry', 'from': 0, 'to': 10, 'fill': 'freeze', 'repeatCount': 5, 'dur': 5 } );
+// window.Animate( thisobj, 'animate', {'attributeName': 'width', 'from': 45, 'to': 55, 'repeatCount':5,'dur': 1 });
 function Animate( elem, animtype, params )
 {
   var k, animation;
@@ -348,20 +164,19 @@ function Animate( elem, animtype, params )
 
 function ShowHideTranslate( id, xd, yd )
 {
-var obj, embed, svgdoc;  
+var obj, svgdoc;  
 
 xd=xd||0;
 yd=yd||0;
 
-embed = document.getElementById('svgid');
-svgdoc = embed.getSVGDocument() || embed.contentDocument.documentElement.getElementsByTagName("svg")[0].parentNode;
+svgdoc = document.getElementById("svgdiv").children[0];
 
 if ( svgdoc === null )
    {
      return; 
    }
 
-obj = svgdoc.querySelector("svg").getElementById( id ); 
+obj = svgdoc.getElementById( id ); 
 if ( obj === null )
    {
      return; 
@@ -449,7 +264,6 @@ C : [], // para as cores das medidas
 T : [], // formato numérico das medidas
 Pass : 0, // conta as chamadas de CallServer
 g_showValsInterval : 0,
-RectFundo : 0, // retângulo do fundo do SVG
 g_seltela : 0,
 g_inicio : 1,
 g_MostraQualAna : 0,
@@ -462,7 +276,6 @@ g_sha1ant_dig : "",
 g_hidetoolbar: 0,
 g_timeOutPreview: 1500, // tempo para mostrar preview de tela linkada
 g_timerPreviewID: 0,  // timer para mostrar preview de tela linkada
-g_hasRadar: false, // register the presence of a radar chart
 
 // tamanhos para zoom/pan
 g_zpX: 0, 
@@ -470,7 +283,7 @@ g_zpY: 0,
 g_zpW: 0,
 g_zpH: 0,
 
-g_obj_onclick: "{ /*CLICK_POSX=evt.clientX;CLICK_POSY=evt.clientY;*/ var pt=parseInt('PONTO'); if (isNaN(pt)) pt=window.parent.NPTS['PONTO']; if( evt.ctrlKey || evt.which == 2 ) { window.parent.WebSAGE.reconhece(pt); } else { window.parent.WebSAGE.janelaInfo(pt); } }",
+g_obj_onclick: "{ /*CLICK_POSX=evt.clientX;CLICK_POSY=evt.clientY;*/ var pt=parseInt('PONTO'); if (isNaN(pt)) pt=window.NPTS['PONTO']; if( evt.ctrlKey || evt.which == 2 ) { window.WebSAGE.reconhece(pt); } else { window.WebSAGE.janelaInfo(pt); } }",
 g_titulo_janela: "",
 
 g_indSelPonto: -1,  // indice do objeto selecionado pelo teclado 
@@ -545,24 +358,203 @@ getTime: function ( tagornumber )
 return T[tagornumber] || T[NPTS[tagornumber]] || 0;
 },
 
-// busca e executa script de um servidor
-getScript: function ( srvurl, postdata )
+init_svg: function (filename) {
+
+  if (filename == "") {
+    WebSAGE.init();
+    document.getElementById("loader").style.display="none";
+    return;
+  }
+
+  try {
+    fetch(filename).
+      then(function (response) {
+          return response;		  
+      }).
+      then(response =>
+        response.text()).
+      then(data => {
+		//var ini = performance.now();
+        document.getElementById('svgdiv').innerHTML = data;
+        $(document.getElementById("svgdiv").children[0]).css('background-color', VisorTelas_BackgroundSVG);
+        document.getElementById("svgdiv").children[0].id = "svgid";
+        WebSAGE.init();
+        document.getElementById("loader").style.display="none";
+        //console.log(performance.now()-ini);
+		
+		var titu = WebSAGE.g_seltela.options[WebSAGE.g_seltela.options.selectedIndex].text;
+		var pos = titu.indexOf("[");
+		if ( pos <= 0 ) 
+		  { pos = 100; }
+		titu = titu.substring( 0, pos );
+		pos = titu.indexOf("{");
+		if ( pos <= 0 ) 
+		  { pos = 100; }
+		titu = titu.substring( 0, pos );
+		titu = titu.replace( new RegExp("[\\s.]+$", "g"), "" );
+        WebSAGE.g_titulo_janela = titu + " - " + Msg.NomeVisorTelas + " - " + Msg.NomeProduto + " - " + Msg.VersaoProduto;
+        // document.title = "."; // necessário devido a um bug do chromium!
+        document.title = WebSAGE.g_titulo_janela;		
+		// coloca o nome da tela na toolbar, se configurado
+		if ( ScreenViewer_ShowScreenNameTB )
+		  {
+		  $("#NOME_TELA").text( titu + " " );
+		  $('#NOME_TELA').css('display', '');
+		  } 
+      }).catch(function (error) {
+        console.log(error);
+      });
+  }
+  catch (E) {
+    console.log(E.message);
+  }
+},
+
+// Process the list of screens
+lista_telas: function (filename, indscr)
 {
-// substitui a chamada $.getScript que aparentemente causava memory leaks por $.ajax
-if ( postdata != "" )
-  $.ajax( { // crossDomain: true,
-            url: srvurl,
-            dataType: "text",
-            data: postdata,
-            type: "POST",
-            success: WebSAGE.onSuccess
-          } );
-else
-  $.ajax( { // crossDomain: true,
-            url: srvurl,
-            dataType: "text",
-            success: WebSAGE.onSuccess
-          } );
+var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
+    
+    WebSAGE.g_seltela = document.getElementById("SELTELA");
+
+    if ( optionhtml !== "" )
+      {
+       $('#SELTELA').html( optionhtml );
+      }
+    else
+    for ( i = 0 ; i < optval.length; i++ )
+    {
+       elSel = document.getElementById('SELTELA');
+
+          elOptNew = document.createElement('option');
+          elOptNew.text = opttxt[i];
+          elOptNew.value =  optval[i];
+        
+          if ( typeof( optgroup[i] ) === "string" )
+            elOptNew.optg =  optgroup[i];
+          
+          if ( typeof( optfilt[i] ) === "string"  )
+            {
+            elOptNew.filtroalmbox = optfilt[i];
+            }
+          else
+            {
+            elOptNew.filtroalmbox = "";
+            }
+        
+          try
+          {
+              elSel.add(elOptNew, null); // standards compliant; doesn't work in IE
+          }
+          catch(ex)
+          {
+              elSel.add(elOptNew); // IE only
+          }
+    }
+     
+    for ( i = 0; i < WebSAGE.g_seltela.length; i++ )
+    {
+        if ( indscr > 0 && indscr == i ) // quando o parâmetro da URL INDTELA for um número, abre a tela correspondente
+        {
+            WebSAGE.g_seltela.selectedIndex = i;
+            return WebSAGE.g_seltela.options[i].value;
+        }
+    
+        if ( WebSAGE.g_seltela.options[i].value == filename )  
+        { 
+            if ( typeof( WebSAGE.g_seltela.options[i].filtroalmbox ) != "undefined" )
+            if ( WebSAGE.g_seltela.options[i].filtroalmbox != "" )
+            if ( document.getElementById("almiframe").src == "" )          
+              {
+              document.getElementById("almiframe").src = "almbox.html?SUBST=" + WebSAGE.g_seltela.options[i].filtroalmbox;
+              document.getElementById('almiframe').style.display = '';
+              }
+
+            // seleciona tela aberta no combo box
+            WebSAGE.g_seltela.selectedIndex = i;
+        }
+    }
+ 
+    // prepara os links para as telas
+    try
+    {   
+        // Links para telas
+        if ( SVGDoc != null )
+        {  
+          nohs = SVGDoc.getElementsByTagName("a");
+          for ( i = 0; i < nohs.length; i++ )
+          {
+              textolink = nohs.item(i).getAttributeNS("http://www.w3.org/1999/xlink" , "href");
+
+              // mata o link original
+              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "href");
+              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "type");
+              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "actuate");
+              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "show");
+              nohs.item(i).removeAttributeNS("http://www.w3.org/1999/xlink", "href");
+
+              for ( t = 0; t < WebSAGE.g_seltela.length; t++ )
+                {
+                  if ( WebSAGE.g_seltela.options[t].value == ( "../svg/" + textolink ) )
+                  {
+                      nohs.item(i).setAttributeNS( null, "onclick", "window.WebSAGE.g_seltela.selectedIndex=" + t + "; window.document.fmTELA.submit();" );
+                      if ( nohs.item(i).style != null )
+                        {
+                          nohs.item(i).style.cursor = "pointer";
+                        }
+                  }
+                }
+          }
+
+          // onde houver um texto ou grupo com id igual a nome de tela, linkar
+          nohs = [];
+          tmp = SVGDoc.getElementsByTagName("text");
+          for ( i = 0; i < tmp.length; i++ ) 
+            { 
+            nohs.push( tmp.item(i) ); 
+            }
+          tmp = SVGDoc.getElementsByTagName("g");
+          for ( i = 0; i < tmp.length; i++ ) 
+            {
+            nohs.push( tmp.item(i) ); 
+            }
+
+          for ( i = 0; i < nohs.length; i++ )
+          {
+            if ( nohs[i].id != undefined )
+              {
+              idtela = nohs[i].id;
+              // faz um trimleft dos caracteres espaço e '+' para permitir multiplos link para uma mesma tela
+              idtela = idtela.replace(/^[ \+]+/, "");
+              if ( idtela.substr(0,3)=='PNT' || idtela.substr(0,3)=='NPT' || idtela=='' ) // estou procurando nome de tela e não numero de ponto
+                 { 
+                 continue; 
+                 }
+
+              for ( t = 0; t < WebSAGE.g_seltela.length; t++ )
+                {
+                  if ( WebSAGE.g_seltela.options[t].value == idtela ||
+                       WebSAGE.g_seltela.options[t].value == ( "../svg/" + idtela ) ||
+                       WebSAGE.g_seltela.options[t].value == ( "../svg/" + idtela + ".svg" ) )
+                  {
+                      nohs[i].setAttributeNS( null, "onclick", "window.WebSAGE.g_seltela.selectedIndex=" + t + "; window.document.fmTELA.submit();" );
+                      if ( nohs[i].style != null )
+                        {
+                          nohs[i].style.cursor = "pointer";
+                        }
+                  }
+                } 
+              }
+          }
+        }
+    }
+    catch ( err )
+    {
+      $('#SP_STATUS').text( err.name + ": " + err.message + " [1]" ); 
+      document.getElementById("SP_STATUS").title = err.stack;
+    }
+
+    return "";
 },
 
 tooltipRelac: function(item, pnt)
@@ -586,12 +578,6 @@ setTimeout( function(){
   item.appendChild( tooltip );
   item.hasTooltip = 1;
   }, 5000 );
-},
-
-onSuccess: function ( data )
-{
-  eval( data );
-  data = null;
 },
 
 // cria atalhos para as telas com base na letra entre { } no texto da tela
@@ -738,18 +724,17 @@ janelaInfo : function( nponto )
   // reconhece alarmes que houverem neste ponto
   if ( WebSAGE.getFlags(WebSAGE.g_nponto_sup) & 0x100 )
     {
-    WebSAGE.getScript( WebSAGE.g_remoteServer +
-                       '?R=' + WebSAGE.g_nponto_sup + '&D=00/00/0000&H=00:00:00&M=000&A=0&' +
-                       'PS=' + WebSAGE.g_pass++ 
-                     );  
+    getJSON( WebSAGE.g_remoteServer +
+             '?R=' + WebSAGE.g_nponto_sup + '&D=00/00/0000&H=00:00:00&M=000&A=0&' +
+             'PS=' + WebSAGE.g_pass++ 
+            );  
     }
 
-  if ( BrowserDetect.browser != 'Explorer' )
-    if ( typeof(WebSAGE.g_win_cmd.window) == 'object' ) // fecha janela info
-      if ( WebSAGE.g_win_cmd.window ) 
-        { 
-          WebSAGE.g_win_cmd.window.close();
-        }
+  if ( typeof(WebSAGE.g_win_cmd.window) == 'object' ) // fecha janela info
+    if ( WebSAGE.g_win_cmd.window ) 
+      { 
+        WebSAGE.g_win_cmd.window.close();
+      }
 
   setTimeout( WebSAGE.showValsInfo0, 200 );
 },
@@ -757,7 +742,7 @@ janelaInfo : function( nponto )
 // busca dado do ponto tempo real  
 showValsInfo0 : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=ANOTS[' + WebSAGE.g_nponto_sup + ']=ANOT;WebSAGE.showValsInfo1' );
+  getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=ANOTS[' + WebSAGE.g_nponto_sup + ']=ANOT;WebSAGE.showValsInfo1' );
 },
 
 // Abre uma janela popup com dados sobre o ponto   
@@ -988,17 +973,14 @@ try
     WebSAGE.mostraDestaqPonto( NPTO );
   
     // get nonblocking annotation
-    $.ajax( {
-            dataType: "json",
-            url: WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
-            success: 
-              function(data) {
+    getJSON( WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
+             function(data) {
                  if ( data[0] && data[0].hasOwnProperty('CONTENT') )
                    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = data[0].CONTENT;
                  else
                    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = "";
-                 },
-          });  
+                 }
+           );  
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
     }
 
@@ -1065,7 +1047,7 @@ janelaComando : function( nponto )
   WebSAGE.g_nponto_sup = nponto;  
   NPTO = 0; 
   CNPTO = 0;
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
+  getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
 },
 
 // Mostra dados sobre o comando na respectiva janela 
@@ -1171,7 +1153,7 @@ directCommandExec : function(point, value)
   if ( value === "OFF" )
     value = 1;
     
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?K=' + point + '&V=' + value + '&T=1' );
+  getScript( WebSAGE.g_remoteServer + '?K=' + point + '&V=' + value + '&T=1' );
 
   // Command log in browser's localStorage
   if (storageAvailable('localStorage')) 
@@ -1188,7 +1170,7 @@ directCommandExec : function(point, value)
 
 executaComando : function(cmd_01)
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
+  getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
 
   // Command log in browser's localStorage
   if (storageAvailable('localStorage')) 
@@ -1205,7 +1187,7 @@ executaComando : function(cmd_01)
 
 ackComando : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
+  getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
 },
 
 writeParams : function() 
@@ -1272,29 +1254,25 @@ writeParams : function()
                         replace(/\\/g, "/"). // backslashes causes problems!
                         replace(/\&/g, "");
 
-  WebSAGE.getScript( 
-               WebSAGE.g_remoteServer + 
-               '?W=' + NPTO + 
-               "&LI=" + li + 
-               "&LS=" + ls + 
-               "&HI=" + hs + 
-               "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked ? 1 : 0 ) + 
-               // troca os \n por |^ e tira as aspas e & que dão problema no javascript 
-               "&AN=" + ANOTS[NPTO] +
-               "&VN=" + 0
-             );  
+  getJSON( WebSAGE.g_remoteServer + 
+           '?W=' + NPTO + 
+           "&LI=" + li + 
+           "&LS=" + ls + 
+           "&HI=" + hs + 
+           "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked ? 1 : 0 ) + 
+           // troca os \n por |^ e tira as aspas e & que dão problema no javascript 
+           "&AN=" + ANOTS[NPTO] +
+           "&VN=" + 0
+         );  
 },
 
 // write non blocking annootation
 writeAnnotDoc : function()
 {
-  $.ajax( {
-          type: "POST",
-          url: WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
-          data:  { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
-          // success: success,
-          // dataType: "text"
-          } );
+  getJSON( WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
+           null,
+           { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
+          );
 },
 
 // open trend visor of point info
@@ -1358,7 +1336,7 @@ writeValor : function()
       val = WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").checked ? 0 : 1; 
     }
 
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
+  getJSON( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
 },
 
 timerBlink : function()
@@ -1429,13 +1407,6 @@ timerBlinkDraw : function()
   WebSAGE.g_blinkListAnaOld = WebSAGE.g_blinkListAna.slice();
 
   WebSAGE.g_blinkcnt++;
-},
-
-doResize : function ()
-{
-  var svgdiv = document.getElementById("svgdiv");
-  svgdiv.style.width = document.body.offsetWidth; 
-  svgdiv = null;  
 },
 
 // retorna o valor do ponto, se houver, interpreta tags tipo !ALMnnnnn e !TMPnnnnn
@@ -1658,7 +1629,7 @@ valorTagueado: function ( tag, obj )
       t = tag.substr(5).trim();
       try 
         {
-        return eval('var thisobj=window.SVGDoc.querySelector("svg").getElementById("' + obj.id + '"); ' + t);  
+        return eval('var thisobj=window.SVGDoc.getElementById("' + obj.id + '"); ' + t);  
         }
       catch( err )
         {
@@ -1986,38 +1957,38 @@ setPreview : function ( item, url, width, height )
   var winsz= "";
   if ( typeof( width ) != "undefined" )
     {
-    winsz = "window.parent.document.getElementById('previewframe').width = " + width + ";";
+    winsz = "window.document.getElementById('previewframe').width = " + width + ";";
     }
   if ( typeof( height ) != "undefined" )
     {
-    winsz = winsz + "window.parent.document.getElementById('previewframe').height = " + height + ";";
+    winsz = winsz + "window.document.getElementById('previewframe').height = " + height + ";";
     }
 
   // when mouse over the item, after a timeout, show the preview page
   item.setAttributeNS( 
      null, 
      "onmouseover", 
-       "clearTimeout(window.parent.WebSAGE.g_timerPreviewID); " + 
-       "if ( window.parent.document.getElementById('timemachinecontrols').style.display != 'none') { return; } " + // don't show if timemichine mode activated
+       "clearTimeout(window.WebSAGE.g_timerPreviewID); " + 
+       "if ( window.document.getElementById('timemachinecontrols').style.display != 'none') { return; } " + // don't show if timemichine mode activated
        winsz +
-       "if ( window.parent.window.innerWidth < 100 + parseInt(window.parent.document.getElementById('previewframe').width) ) { return; } " + // don't show if window not wide enough
-       "if ( window.parent.window.innerHeight < 100 + parseInt(window.parent.document.getElementById('previewframe').height) ) { return; } " + // don't show if window not high enough
-       "window.parent.WebSAGE.g_timerPreviewID = setTimeout( \"window.parent.document.getElementById('previewframe').src = '" + url +  "'; " + "window.parent.document.getElementById('previewdiv').style.display = '';\" , " + 
-       "window.parent.WebSAGE.g_timeOutPreview); " );
+       "if ( window.window.innerWidth < 100 + parseInt(window.document.getElementById('previewframe').width) ) { return; } " + // don't show if window not wide enough
+       "if ( window.window.innerHeight < 100 + parseInt(window.document.getElementById('previewframe').height) ) { return; } " + // don't show if window not high enough
+       "window.WebSAGE.g_timerPreviewID = setTimeout( \"window.document.getElementById('previewframe').src = '" + url +  "'; " + "window.document.getElementById('previewdiv').style.display = '';\" , " + 
+       "window.WebSAGE.g_timeOutPreview); " );
   // when mouse out of the preview, close it
   document.getElementById('previewdiv').setAttributeNS( 
       null, 
       "onmouseout",  
-      "clearTimeout(window.parent.WebSAGE.g_timerPreviewID); " + 
-        "window.parent.document.getElementById('previewdiv').style.display = 'none'; " + 
-        "window.parent.document.getElementById('previewframe').src = '';" );
+      "clearTimeout(window.WebSAGE.g_timerPreviewID); " + 
+        "window.document.getElementById('previewdiv').style.display = 'none'; " + 
+        "window.document.getElementById('previewframe').src = '';" );
   // when mouse out of the item that activated the preview, close the preview
   item.setAttributeNS( 
       null, 
       "onmouseout", 
-      "clearTimeout(window.parent.WebSAGE.g_timerPreviewID); " + 
-      "window.parent.document.getElementById('previewdiv').style.display = 'none'; " +
-      "window.parent.document.getElementById('previewframe').src = '';" );
+      "clearTimeout(window.WebSAGE.g_timerPreviewID); " + 
+      "window.document.getElementById('previewdiv').style.display = 'none'; " +
+      "window.document.getElementById('previewframe').src = '';" );
 },
 
 le_inkscapeSAGETags : function ( item )
@@ -2068,7 +2039,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
     if ( typeof( inksage_labelvec[lbv].tag ) != 'undefined' ) // tem tag de ponto
       {
          pnt = WebSAGE.acrescentaPontoLista( inksage_labelvec[lbv].tag );
-         if ( pnt != 99999 ) // dummy point   
+         if ( pnt !== 99999 && pnt !== 0 ) // dummy point   
          if ( typeof(item.blockPopup) == "undefined" )
          if ( item.pontoPopup == undefined ) // se já não tem popup definido
            {
@@ -2097,15 +2068,6 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                // Lib: https://github.com/alangrafu/radar-chart-d3
                if ( item.tagName !== "rect" )
                  break;
-               if ( ! WebSAGE.g_hasRadar )
-                 {
-                 WebSAGE.g_hasRadar = true;
-                 // insert css for radar (spider) charts into the screen SVG
-                 var el = $( document.createElementNS('http://www.w3.org/2000/svg', 'style') );
-                 $(el).load( "lib/radar-chart.css", function() {
-                        SVGDoc.getElementsByTagName("svg").item(0).appendChild( el[0] );
-                        } ) ;
-                 }
                  
                item.style.display = 'none'; // hide the rectangle
                item.dta = [ {
@@ -2155,7 +2117,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                jsoncfg.h = item.getAttributeNS( null, 'height' );
                jsoncfg.color = d3.scale.ordinal().range( [ item.style.fill ] );
                item.chart.config( jsoncfg );
-               var svg = d3.select( SVGDoc.getElementsByTagName("svg").item(0) );
+               var svg = d3.select( SVGDoc );
                // insert the chart in the parent of rect object (hopefully its inkscape layer)
                item.cht = svg.select("#"+SVGDoc.getElementById(item.id).parentNode.id).append('g').datum(item.dta).call( item.chart );
                // position according to the rectangle
@@ -2169,7 +2131,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
             case "#exec": // exec a script one time
                try 
                  {
-                 eval( 'var thisobj=window.SVGDoc.querySelector("svg").getElementById("' + item.id + '"); ' + inksage_labelvec[lbv].src );
+                 eval( 'var thisobj=window.SVGDoc.getElementById("' + item.id + '"); ' + inksage_labelvec[lbv].src );
                  }
                catch( err )
                  {
@@ -2195,7 +2157,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                 src = inksage_labelvec[lbv].src.split(",");
                 for ( j = 0; j < src.length; j++ )
                   {
-                  auxobj = SVGDoc.querySelector("svg").getElementById( src[j] );
+                  auxobj = SVGDoc.getElementById( src[j] );
                   if ( auxobj !== null )
                     {
                     xsacsrc = auxobj.getAttributeNS( null, "inkscape:label" ) || auxobj.getAttributeNS( "http://www.inkscape.org/namespaces/inkscape", "label" );
@@ -2414,7 +2376,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                       WebSAGE.g_seltela.options[t].value == ( "../svg/" + idtela ) ||
                       WebSAGE.g_seltela.options[t].value == ( "../svg/" + idtela + ".svg" ) )
                     {
-                        item.setAttributeNS( null, "onclick", "window.parent.WebSAGE.g_seltela.selectedIndex=" + t + "; window.parent.document.fmTELA.submit();" );
+                        item.setAttributeNS( null, "onclick", "window.WebSAGE.g_seltela.selectedIndex=" + t + "; window.document.fmTELA.submit();" );
                         item.style.cursor = "pointer";
                         // show the linked page preview on mouseover
                         WebSAGE.setPreview( item, 'screen.html?SELTELA=../svg/' + idtela + '&ZPX=0&ZPY=0&ZPW=5280&ZPH=3300&HIDETB=1', 700, 480 );
@@ -2464,11 +2426,14 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
              
              inksage_labelvec[lbv].valores = [];
              inksage_labelvec[lbv].datas = [];
-             inksage_labelvec[lbv].bb = item.getBBox();
-             inksage_labelvec[lbv].bb.left = inksage_labelvec[lbv].bb.x;
-             inksage_labelvec[lbv].bb.right = inksage_labelvec[lbv].bb.x + inksage_labelvec[lbv].bb.width;
-             inksage_labelvec[lbv].bb.top = inksage_labelvec[lbv].bb.y;
-             inksage_labelvec[lbv].bb.bottom = inksage_labelvec[lbv].bb.y + inksage_labelvec[lbv].bb.height;             
+			 //if ( item.hasOwnProperty("_bbox") )
+             //  inksage_labelvec[lbv].bb = item._bbox;
+	         //else
+             //  inksage_labelvec[lbv].bb = item.getBBox();                				 
+             //inksage_labelvec[lbv].bb.left = inksage_labelvec[lbv].bb.x;
+             //inksage_labelvec[lbv].bb.right = inksage_labelvec[lbv].bb.x + inksage_labelvec[lbv].bb.width;
+             //inksage_labelvec[lbv].bb.top = inksage_labelvec[lbv].bb.y;
+             //inksage_labelvec[lbv].bb.bottom = inksage_labelvec[lbv].bb.y + inksage_labelvec[lbv].bb.height;             
              pnt = WebSAGE.acrescentaPontoLista( inksage_labelvec[lbv].tag );
              if ( typeof(item.blockPopup) == "undefined" )
              if ( item.pontoPopup == undefined ) // se já não tem popup definido
@@ -2491,7 +2456,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
              if ( inksage_labelvec[lbv].width > 0 )
                {
                inksage_labelvec[lbv].dataini = (new Date()).getTime() - Math.abs(inksage_labelvec[lbv].width) * 1000;
-               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + 
+               calltps = 'getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + 
                                '&U=' + inksage_labelvec[lbv].dataini/1000 + 
                                '&I=' + inksage_labelvec[lbv].x + 
                                '&F=S' + 
@@ -2504,7 +2469,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                                                dtn.getTime() % (Math.abs(inksage_labelvec[lbv].width) * 1000) +
                                                (dtn.getTimezoneOffset()*60*1000)  % (Math.abs(inksage_labelvec[lbv].width) * 1000);
                inksage_labelvec[lbv].datafim = inksage_labelvec[lbv].dataini + Math.abs(inksage_labelvec[lbv].width * 1000);
-               calltps = '$.getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + 
+               calltps = 'getScript( WebSAGE.g_timePntServer + "?P=' + inksage_labelvec[lbv].tag + 
                                '&U=' + inksage_labelvec[lbv].dataini/1000 + 
                                '&I=' + inksage_labelvec[lbv].x + 
                                '&F=S' + 
@@ -2590,11 +2555,11 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
          // quando o objeto for clicado, amplia e apaga o objeto clicado (desobstrui a área).
          bb = item.getBoundingClientRect();
          item.setAttributeNS( null, "onclick", 
-                              " window.parent.WebSAGE.g_zpX = " + ( bb.left ) + 
-                              ";window.parent.WebSAGE.g_zpY = " + ( bb.top ) + 
-                              ";window.parent.WebSAGE.g_zpW = " + ( bb.width * 2.0  ) +
-                              ";window.parent.WebSAGE.g_zpH = " + ( bb.height * 2.0 ) +
-                              ";window.parent.WebSAGE.zoomPan(10);evt.currentTarget.style.display='none';"
+                              " window.WebSAGE.g_zpX = " + ( bb.left ) + 
+                              ";window.WebSAGE.g_zpY = " + ( bb.top ) + 
+                              ";window.WebSAGE.g_zpW = " + ( bb.width * 2.0  ) +
+                              ";window.WebSAGE.g_zpH = " + ( bb.height * 2.0 ) +
+                              ";window.WebSAGE.zoomPan(10);evt.currentTarget.style.display='none';"
                             );  
          break;               
       case "script":
@@ -2624,8 +2589,6 @@ preprocessaTela: function()
 {
   var nohs;
   var i;
-  
-  WebSAGE.doResize();
   
     if ( SVGDoc === null )
        { 
@@ -2723,13 +2686,13 @@ callServer : function ()
 
   // pede dados de tempo real ao servidor, con informações sobre os pontos na primeira vez
   // asks for real time data from the server, with point info on the first time
-  WebSAGE.getScript( WebSAGE.g_remoteServer + 
-                    '?P=' + // leave P parameter empty, list of points will be in the E (HTTP POST) parameter
-                    '&B=WebSAGE.showValsSVG' +  
-                    '&I=' +  ( WebSAGE.Pass === 0  ? 1 : 0 ) +
-                    '&PS=' + WebSAGE.Pass,
-                    'E=' + WebSAGE.lstpnt // force post, list of points in the E (HTTP POST) parameter
-                   );
+  getScript( WebSAGE.g_remoteServer + 
+             '?P=' + WebSAGE.lstpnt +
+             '&B=WebSAGE.showValsSVG' +  
+             '&I=' +  ( WebSAGE.Pass === 0  ? 1 : 0 ) +
+             '&PS=' + WebSAGE.Pass
+              // ,'E=' + WebSAGE.lstpnt // force post, list of points in the E (HTTP POST) parameter
+           );
 
   // vou testar, na metade do tempo, o status do webserver para ver se houve alguma mudança 
   WebSAGE.g_toutStatusID = setTimeout( WebSAGE.getServerStatus, WebSAGE.g_timeOutRefresh / 2 );
@@ -2743,7 +2706,7 @@ getServerStatus: function()
 {
   if ( typeof(xPlain) === "undefined" )
     {
-    WebSAGE.getScript( WebSAGE.g_remoteServer + '?M=1&B=WebSAGE.cbf_Status' );  
+    getScript( WebSAGE.g_remoteServer + '?M=1&B=WebSAGE.cbf_Status' );  
     }
 
   if ( BrowserDetect.browser == 'Safari' && typeof(WebSAGE.SafariRenderBugRedraw) == "undefined" )
@@ -2754,12 +2717,12 @@ getServerStatus: function()
     setTimeout(function(){ 
       var evt = document.createEvent("MouseEvents");
       evt.initMouseEvent("mousedown", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, SVGDoc);
-      SVGDoc.getElementsByTagName("svg").item(0).dispatchEvent(evt);
+      SVGDoc.dispatchEvent(evt);
       }, 100);
     setTimeout(function(){ 
       var evt = document.createEvent("MouseEvents");
       evt.initMouseEvent("mouseup", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, null);
-      SVGDoc.getElementsByTagName("svg").item(0).dispatchEvent(evt);
+      SVGDoc.dispatchEvent(evt);
       }, 110);
     }
 
@@ -2847,13 +2810,9 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
 
   WebSAGE.g_data_ant = Data;
    
-  var embed = document.getElementById('svgid');
   try 
     {
-    SVGDoc = embed.getSVGDocument();
-    if ( SVGDoc == null && typeof(embed.contentDocument.documentElement.getElementsByTagName("svg")[0]) != "undefined" )
-       SVGDoc = embed.contentDocument.documentElement.getElementsByTagName("svg")[0].parentNode;
-    embed = null;
+    SVGDoc = document.getElementById("svgdiv").children[0];
     }
   catch( exception ) 
     {
@@ -2909,7 +2868,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                case "#exec_on_update": // exec a script every time data changed
                  try 
                    {
-                   eval( 'var thisobj=window.SVGDoc.querySelector("svg").getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + WebSAGE.InkSage[i].src );
+                   eval( 'var thisobj=window.SVGDoc.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + WebSAGE.InkSage[i].src );
                    }
                  catch( err )
                    {
@@ -2958,7 +2917,17 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                 {
                   WebSAGE.InkSage[i].valores[tag].push( vt );
                   WebSAGE.InkSage[i].datas[tag].push( d.getTime() );
-                  bb = WebSAGE.InkSage[i].bb;
+				  
+				  if ( WebSAGE.InkSage[i].parent.hasOwnProperty("_bbox") )
+					  bb = WebSAGE.InkSage[i].parent._bbox;
+				  else  
+                      bb = WebSAGE.InkSage[i].parent.getBBox();
+				  
+                  bb.left = bb.x;
+                  bb.right = bb.x + bb.width;
+                  bb.top = bb.y;
+                  bb.bottom = bb.y + bb.height;             
+				  
                   if ( WebSAGE.InkSage[i].width > 0 )
                   // Gráfico tipo trending com janela de tempo escorregando
                   for ( indv = WebSAGE.InkSage[i].valores[tag].length-1; indv >= 0 ; indv--  )
@@ -3212,7 +3181,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                   WebSAGE.InkSage[i].parent.style.stroke = WebSAGE.InkSage[i].initstroke;
                   try 
                     {
-                      eval( 'var thisobj=window.SVGDoc.querySelector("svg").getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + script );
+                      eval( 'var thisobj=window.SVGDoc.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + script );
                     }                  
                   catch ( err ) 
                     { 
@@ -3413,12 +3382,12 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
     setTimeout(function(){ 
       var evt = document.createEvent("MouseEvents");
       evt.initMouseEvent("mousedown", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, SVGDoc);
-      SVGDoc.getElementsByTagName("svg").item(0).dispatchEvent(evt);
+      SVGDoc.dispatchEvent(evt);
       }, 100);
     setTimeout(function(){ 
       var evt = document.createEvent("MouseEvents");
       evt.initMouseEvent("mouseup", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, null);
-      SVGDoc.getElementsByTagName("svg").item(0).dispatchEvent(evt);
+      SVGDoc.dispatchEvent(evt);
       }, 110);
     }
   }
@@ -3463,17 +3432,15 @@ $('#HORA_ATU').text( Data );
 WebSAGE.g_blinkcnt = 0;
 
 // show the svg after the first pass
-if ( $("#svgid").css("opacity") != "1" )
-   { 
-     $("#svgid").css("opacity", "1"); 
-   }
+if ( document.getElementById("svgdiv").style.opacity == 0 )  
+  document.getElementById("svgdiv").style.opacity = 1;
  
 }, // showValsSVG
 
 doSilenciaBeep : function ()
 {
   document.getElementById("SILENCIA_ID").style.display = "none";
-  WebSAGE.getScript( WebSAGE.g_remoteServer + "?Z=1" );
+  getJSON( WebSAGE.g_remoteServer + "?Z=1" );
 },
 
 // cria as elipses amarelas de destaque de seleção de objetos 
@@ -3492,19 +3459,23 @@ produzDestaq : function ( obj , ponto )
  svg_ns = 'http://www.w3.org/2000/svg';
  block = document.createElementNS( svg_ns, 'ellipse' );
 
- // bb = obj.getBoundingClientRect();
- // x = bb.left + bb.width/2;
- // y = bb.top + bb.height/2;
- 
  try {
-   bb = obj.getBBox();
+   if (obj.hasOwnProperty("_bbox"))
+     {  
+	 bb = obj._bbox;
+	 }
+   else  
+     {
+     bb = obj.getBBox();
+     obj._bbox = bb;
+     }
  }
  catch (e) {
    return;
- }
+ } 
  x = bb.x + bb.width/2;
  y = bb.y + bb.height/2;
-  
+
  if ( x == 0 && y == 0 )
    {
    aux = obj.getAttributeNS( null, "x" );
@@ -3526,7 +3497,7 @@ produzDestaq : function ( obj , ponto )
    }
  
  id = "DESTAQ" + ponto;
- el = SVGDoc.querySelector("svg").getElementById( id );
+ el = SVGDoc.getElementById( id );
  if ( el !== null ) // avoid duplication of elipsis
    {
    return;
@@ -3569,9 +3540,8 @@ produzDestaq : function ( obj , ponto )
 
 // cria as etiquetas de anotação 
 produzEtiq : function ( obj , ponto )
-{
+{ 
  var animation, svg_ns, block, bb, x, y, id, eletq, aux, xfm;
- 
  //if (isNaN(parseInt(ponto)))
  //  id=id;
  
@@ -3586,7 +3556,7 @@ produzEtiq : function ( obj , ponto )
    }
 
  id = "ANOT" + ponto;
- eletq = SVGDoc.querySelector("svg").getElementById( id );
+ eletq = SVGDoc.getElementById( id );
  if ( eletq !== null ) // avoid duplication of labels
    {
    return;
@@ -3605,12 +3575,16 @@ produzEtiq : function ( obj , ponto )
  block.setAttributeNS( null, 'display', 'none' );
  block.setAttributeNS( null, 'onclick', WebSAGE.g_obj_onclick.replace(/PONTO/g, ponto) );
 
- // bb = obj.getBoundingClientRect();
- // x = bb.left + bb.width;
- // y = bb.top + bb.height;
- 
  try {
-   bb = obj.getBBox();
+   if (obj.hasOwnProperty("_bbox"))
+     {  
+	 bb = obj._bbox;
+	 }
+   else  
+     {
+     bb = obj.getBBox();
+     obj._bbox = bb;
+     }
  }
  catch (e) {
    return;
@@ -3669,7 +3643,7 @@ visibEtiq : function ( ponto )
   var eid, eletq, Fl;
   
   eid = 'ANOT' + ponto;
-  eletq = SVGDoc.querySelector("svg").getElementById( eid );
+  eletq = SVGDoc.getElementById( eid );
   
   Fl = WebSAGE.getFlags( ponto );
   
@@ -3749,10 +3723,6 @@ produzRelac : function ( obj , ponto )
  // block.setAttributeNS( null, 'stroke-width', 1 );
  block.setAttributeNS( null, 'display', 'none' ); 
 
- // var bb = obj.getBoundingClientRect();
- // var x = bb.left + bb.width;
- // var y = bb.top + bb.height;
- 
   try {
    bb = obj.getBBox();
  }
@@ -3844,13 +3814,6 @@ if ( SVGDoc === null )
 if ( mul === undefined )
   mul = 1;
   
-var rootnode = SVGDoc.getElementsByTagName("svg").item(0);
-
-if ( rootnode === null )
-  {
-    return;
-  }
-
 switch ( opc )
   {
   case 0:
@@ -3892,7 +3855,7 @@ switch ( opc )
     break;
   }
 
-rootnode.setAttributeNS( null, "viewBox", WebSAGE.g_zpX + " " + WebSAGE.g_zpY + " " +  WebSAGE.g_zpW + " " +  WebSAGE.g_zpH );
+SVGDoc.setAttributeNS( null, "viewBox", WebSAGE.g_zpX + " " + WebSAGE.g_zpY + " " +  WebSAGE.g_zpW + " " +  WebSAGE.g_zpH );
 },  
 
 anteTela: function()
@@ -4012,55 +3975,38 @@ reconhece: function( nponto )
 {
   if ( WebSAGE.getFlags(nponto) & 0x100 )
     { 
-      WebSAGE.getScript( WebSAGE.g_remoteServer +
-                      '?R=' + nponto + '&D=00/00/0000&H=00:00:00&M=000&A=0&' +
-                      'PS=' + WebSAGE.g_pass++ 
-                     );  
+      getJSON( WebSAGE.g_remoteServer +
+               '?R=' + nponto + '&D=00/00/0000&H=00:00:00&M=000&A=0&' +
+               'PS=' + WebSAGE.g_pass++ 
+             );  
     }
 },
 
 setaCorFundo: function( cor )
 {
-    var rootnode = SVGDoc.getElementsByTagName("svg").item(0);
-    if ( rootnode !== null )
-      {
-      if ( cor == "none" )  
-        { 
-          var sodipodibase = SVGDoc.querySelector("svg").getElementById("base");
-          if ( sodipodibase )
-            VisorTelas_BackgroundSVG = cor = sodipodibase.attributes.pagecolor.value;
-          else 
-            return;            
-          
-        }
-
-      // seta cor de background na raiz do svg
-      rootnode.setAttributeNS( null, "style", "background-color: " + cor + ";" );
-      // seta cor de background no div do svg
-      $('#svgdiv').css( 'background-color', cor );   
+    if ( cor == "none" )  
+      { 
+        var sodipodibase = SVGDoc.getElementById("base");
+        if ( sodipodibase )
+          VisorTelas_BackgroundSVG = cor = sodipodibase.attributes.pagecolor.value;
+        else 
+          return;            
         
-      // se tela não for editada pelo inkscape
-      if ( WebSAGE.g_isInkscape )  
-        { // Inkscape
-        }
-      else  
-        { // Não Inkscape
-        // faz o primeiro retângulo na cor do background
-        if ( typeof(WebSAGE.RectFundo) == 'object' )
-          { 
-            WebSAGE.RectFundo.setAttributeNS( null, 'style', 'fill:' + cor ); 
-          }
-        }
       }
-    
+
+    // seta cor de background na raiz do svg
+    SVGDoc.setAttributeNS( null, "style", "background-color: " + cor + ";" );
+    // seta cor de background no div do svg
+    $('#svgdiv').css( 'background-color', cor );   
+     
     document.body.bgColor = cor;
 },
 
 mostraDestaqPonto: function( nponto )
 {
-    var elem = SVGDoc.querySelector("svg").getElementById( 'DESTAQ' + nponto );
+    var elem = SVGDoc.getElementById( 'DESTAQ' + nponto );
     if ( elem == null )
-      elem = SVGDoc.querySelector("svg").getElementById( 'DESTAQ' + TAGS[nponto] );
+      elem = SVGDoc.getElementById( 'DESTAQ' + TAGS[nponto] );
     if ( elem != null )
       {
         elem.setAttributeNS( null, 'display', 'inline' );
@@ -4074,9 +4020,9 @@ mostraDestaqPonto: function( nponto )
 
 escondeDestaqPonto: function( nponto )
 {
-    var elem = SVGDoc.querySelector("svg").getElementById( 'DESTAQ' + nponto );
+    var elem = SVGDoc.getElementById( 'DESTAQ' + nponto );
     if ( elem == null )
-      elem = SVGDoc.querySelector("svg").getElementById( 'DESTAQ' + TAGS[nponto] );
+      elem = SVGDoc.getElementById( 'DESTAQ' + TAGS[nponto] );
     if ( elem !== null )
       {
         elem.setAttributeNS( null, 'display', 'none' );
@@ -4096,7 +4042,7 @@ listaDestacaveis: function ()
     
     for ( nponto in V )
       { 
-        id = SVGDoc.querySelector("svg").getElementById( 'DESTAQ' + nponto );  
+        id = SVGDoc.getElementById( 'DESTAQ' + nponto );  
         if ( id != null )
          { 
            WebSAGE.g_destaqList.push( nponto ); 
@@ -4232,15 +4178,14 @@ setupTimeMachine: function()
        var dtstr = printf( "%02d/%02d/%04d", dt.getUTCDate(), dt.getUTCMonth() + 1, dt.getUTCFullYear() );
        clearTimeout( WebSAGE.g_toutID );
        clearTimeout( WebSAGE.g_timeoutFalhaID );
-       WebSAGE.getScript(
-                  WebSAGE.g_timePntServer +
-                 '?P=' + // leave P parameter empty, list of points will be in the E (HTTP POST) parameter
-                 '&H=' + document.getElementById('tmpk').value +
-                 '&D=' + dtstr +
-                 '&B=WebSAGE.showValsSVG' +
-                 '&PS=' + WebSAGE.Pass,
-                 'P=' + WebSAGE.lstpnt // force post, list of points in the P (HTTP POST) parameter
-                 );
+       getScript( WebSAGE.g_timePntServer +
+                  '?P=' + // leave P parameter empty, list of points will be in the E (HTTP POST) parameter
+                  '&H=' + document.getElementById('tmpk').value +
+                  '&D=' + dtstr +
+                  '&B=WebSAGE.showValsSVG' +
+                  '&PS=' + WebSAGE.Pass,
+                  'P=' + WebSAGE.lstpnt // force post, list of points in the P (HTTP POST) parameter
+                );
 
   document.getElementById('timesldr').focus();
   $('#timemachinecontrols').css('display', '');
@@ -4373,7 +4318,7 @@ makeDraggable: function( obj )
 
 init: function()
   {
-  var rootnode, embed, i;  
+  var i;  
   
   WebSAGE.g_loadtime = new Date();
 
@@ -4387,15 +4332,6 @@ init: function()
   $('span[id]').attr( 'title', function( index ) { return Titles[this.id]; } );
   $('#SELTELA_OPC1').text( Msg.SELTELA_OPC1 );
   $('#HORA_ATU').css( 'color', ScreenViewer_DateColor ); 
-
-  if ( location.host.indexOf("127.0.0.1") >= 0 || location.host.indexOf("localhost") >=0 ) // se está acessando máquina local
-     { // na máquina local o webserver abre nova janela do navegador
-     $( '#ANORM_ID' ).bind( 'click', function() { WebSAGE.getScript( WebSAGE.g_remoteServer + "?x=6" ); } ); 
-     }
-  else  
-     { // na máquina remota abre uma janela nova tipo popup
-     $( '#ANORM_ID' ).bind( 'click', function() {window.open( 'tabular.html?SELMODULO=TODOS_ANORMAIS', 'Anormais', 'dependent=no,height=700,width=900,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no' );} );
-     }
 
   $( '#PRODUTO_ID' ).bind( 'dblclick', function() {window.open( 'about.html', 'About ', 'dependent=no,height=600,width=1000,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no' );} );
   
@@ -4413,14 +4349,10 @@ init: function()
   WebSAGE.g_idprefixes[i-1] = gup("IDPREFIX"+i);
   }    
 
-  embed = document.getElementById('svgid');
   try 
     {
-      SVGDoc = embed.getSVGDocument();
-      if ( SVGDoc == null && typeof(embed.contentDocument.documentElement.getElementsByTagName("svg")[0]) != "undefined" )
-         SVGDoc = embed.contentDocument.documentElement.getElementsByTagName("svg")[0].parentNode;
-      embed = null;
-      
+      SVGDoc = document.getElementById("svgdiv").children[0];
+
       if ( SVGDoc == null && tela !== "" ) // if SVG not loaded, reload page
         {
         // faz uma retentativa após meio segundo, pois talvez não deu tempo para carregar o arquivo SVG
@@ -4445,13 +4377,8 @@ init: function()
         { 
           ANIMA = 0x00; // no IPad não anima etiquetas e destaques.           
         }
-      
-      if ( SVGDoc != null )
-        rootnode = SVGDoc.getElementsByTagName("svg").item(0);
-      if ( rootnode != null )
-        { 
-          WebSAGE.g_isInkscape = (rootnode.getAttributeNS(null, "inkscape:version") || rootnode.getAttributeNS("http://www.inkscape.org/namespaces/inkscape", "version")) != ""; 
-        }
+
+      WebSAGE.g_isInkscape = (SVGDoc.getAttributeNS(null, "inkscape:version") || SVGDoc.getAttributeNS("http://www.inkscape.org/namespaces/inkscape", "version")) != ""; 
       if ( WebSAGE.g_isInkscape )
         {
         VisorTelas_BackgroundSVG = ScreenViewer_Background;  
@@ -4462,7 +4389,7 @@ init: function()
         WebSAGE.setaCorFundo( VisorTelas_BackgroundSVG );
       
       if ( SVGDoc != null )
-        SVGSnap = Snap(SVGDoc.rootElement); // obtain Snap surface      
+        SVGSnap = Snap(SVGDoc); // obtain Snap surface      
     }
   catch( exception ) 
     {
@@ -4498,6 +4425,9 @@ if ( typeof(xPlain) == "undefined" )
     WebSAGE.hideShowBar();
     }
   });     
+
+  Core.addEventListener( document.getElementById("ANTETELAID"),  "click", WebSAGE.anteTela ) ;
+  Core.addEventListener( document.getElementById("PROXTELAID"),  "click", WebSAGE.proxTela ); 
 
   shortcut.add( "F9",
                 function() { WebSAGE.doSilenciaBeep(); },
@@ -4560,7 +4490,7 @@ if ( typeof(xPlain) == "undefined" )
                 function() { 
                              if ( WebSAGE.g_indSelPonto < 0 )
                                return;
-                             var obj = SVGDoc.querySelector("svg").getElementById( 'DESTAQ' + WebSAGE.g_destaqList[ WebSAGE.g_indSelPonto ] ); 
+                             var obj = SVGDoc.getElementById( 'DESTAQ' + WebSAGE.g_destaqList[ WebSAGE.g_indSelPonto ] ); 
                              if ( obj.getAttributeNS( null, 'display') != 'none' )
                                {
                                var evt = {}; 
@@ -4639,7 +4569,7 @@ if ( typeof(xPlain) == "undefined" )
                  function() { 
                           var serializer = new XMLSerializer();
                           var svg_blob = new Blob([serializer.serializeToString(
-                                                       SVGDoc.getElementsByTagName("svg").item(0)
+                                                       SVGDoc
                                                  )],
                                                  {'type': "image/svg+xml"}
                                                  );
@@ -4648,9 +4578,6 @@ if ( typeof(xPlain) == "undefined" )
                           svg_win.document.title = "SVG Snapshot";
                           },
                 {'type':'keydown', 'propagate':false, 'target':document} );           
-
-  WebSAGE.doResize();
-  Core.addEventListener( window, 'resize', WebSAGE.doResize );
 
   // trata eventos de play/pause slideshow
   Core.addEventListener( document.getElementById("PLAY_ID"),  "click", WebSAGE.playSlideshow ) ;
@@ -4689,12 +4616,8 @@ if ( typeof(xPlain) == "undefined" )
   if ( typeof(SVGDoc) != "undefined" )
   if ( SVGDoc != null )
     {
-    rootnode = SVGDoc.getElementsByTagName("svg").item(0);
-    if ( rootnode != null )
-      {
-      rootnode.setAttributeNS( null, "width", ScreenViewer_SVGMaxWidth );  
-      rootnode.setAttributeNS( null, "height", ScreenViewer_SVGMaxHeight );          
-      }
+    SVGDoc.setAttributeNS( null, "width", ScreenViewer_SVGMaxWidth );  
+    SVGDoc.setAttributeNS( null, "height", ScreenViewer_SVGMaxHeight );          
   
     // evita seleção do texto em SVG  
     SVGDoc.onselectstart = new Function( "return false;" );
@@ -4724,11 +4647,11 @@ if ( typeof(xPlain) == "undefined" )
          }
       else
          {
-         lista_telas();
          WebSAGE.atalhosTela();
          }
 
-      WebSAGE.preprocessaTela();
+      if ( SVGDoc != null )
+         WebSAGE.preprocessaTela();
     }
   catch ( err )
     {
@@ -4765,17 +4688,17 @@ if ( typeof(xPlain) == "undefined" )
   });
                            
   // arraste do mouse para mover a tela
-  $(rootnode).bind('mousedown', function(event){
+  $(SVGDoc).bind('mousedown', function(event){
     if (!event.originalEvent.isTrusted && event.clientX===80 && event.clientY===20) // artificial event?
       return;
     window.MOUSEX=event.clientX;
     window.MOUSEY=event.clientY;
-    window.SVGDoc.getElementsByTagName('svg').item(0).style.cursor='move';
+    window.SVGDoc.style.cursor='move';
     });
-  $(rootnode).bind('mouseup', function(event){
+  $(SVGDoc).bind('mouseup', function(event){
     if (!event.originalEvent.isTrusted && event.clientX===80 && event.clientY===20) // artificial event?
       return;
-    window.SVGDoc.getElementsByTagName('svg').item(0).style.cursor='default';
+    window.SVGDoc.style.cursor='default';
     if ( window.MOUSEX > event.clientX ) window.WebSAGE.zoomPan(3, (window.MOUSEX - event.clientX)/30 ); else window.WebSAGE.zoomPan(5, (event.clientX - window.MOUSEX )/30 ); 
     if ( window.MOUSEY > event.clientY ) window.WebSAGE.zoomPan(1, (window.MOUSEY - event.clientY)/20 ); else window.WebSAGE.zoomPan(7, (event.clientY - window.MOUSEY )/20 );
     if ( window.drgObject )

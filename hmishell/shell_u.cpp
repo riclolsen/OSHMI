@@ -725,10 +725,10 @@ tbHist->Enabled = true;
 tbAnormais->Enabled = true;
 tbTabular->Enabled = true;
 tbCurvas->Enabled = true;
-if ( NMHTTP1->Body.Pos("'beep': 1") )
+if ( NMHTTP1->Body.Pos("'beep': 1") || NMHTTP1->Body.Pos("\"beep\": 1") )
   AtivaBeep( BEEP_NORMAL );
 else
-if ( NMHTTP1->Body.Pos("'beep': 2") )
+if ( NMHTTP1->Body.Pos("'beep': 2") || NMHTTP1->Body.Pos("\"beep\": 2") )
   AtivaBeep( BEEP_CRITICO );
 else
   SilenciaBeep();

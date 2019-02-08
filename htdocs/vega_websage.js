@@ -1,6 +1,6 @@
 "use strict";
 
-// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2019 - Ricardo L. Olsen
 
 WebSAGE.g_vega_num = 0;
 
@@ -33,12 +33,13 @@ function (inksage_labelvec, lbv, item)
         if (typeof(item.vgFormat) != "undefined")
           item.vw._model._defs.data[0].format = item.vgFormat;
         var layer = "layer1";
-        var sodipodibase = SVGDoc.querySelector("svg").getElementById("base");
+        var sodipodibase = SVGDoc.getElementById("base");
         if (sodipodibase)
           layer = sodipodibase.attributes["inkscape:current-layer"].value;
-
-        //item.vw.width(item.getAttributeNS( null, 'width' )).height(item.getAttributeNS( null, 'height' )).update();
-        svg = d3.select(SVGDoc.getElementsByTagName("svg").item(0));
+      
+        svg = d3.select(SVGDoc);
+        // remove an existing element with same name
+        svg.select("#vg_" + item.id).remove();
         if (item.parentNode.nodeName == "g")
         {
           item.vg = svg.select("#" + item.parentNode.id).append('g').
@@ -85,7 +86,7 @@ function (inksage_labelvec, lbv, item)
     item.vgId = 'vega_' + WebSAGE.g_vega_num;
     $("#VEGACHARTS").append("<div id='" + item.vgId + "'><div>");
     item.vw = new vega.View(view, {renderer: "svg"}).
-    initialize(/*document.querySelector("#vega_" + WebSAGE.g_vega_num)*/).
+    initialize().
     run();    
     item.vw.runAfter(function(){
 
@@ -95,20 +96,22 @@ function (inksage_labelvec, lbv, item)
         if (typeof(item.vgFormat) != "undefined" && typeof(item.vw._model) != "undefined" )
           item.vw._model._defs.data[0].format = item.vgFormat;
         var layer = "layer1";
-        var sodipodibase = SVGDoc.querySelector("svg").getElementById("base");
+        var sodipodibase = SVGDoc.getElementById("base");
         if (sodipodibase)
           layer = sodipodibase.attributes["inkscape:current-layer"].value;
   
-        svg = d3.select(SVGDoc.getElementsByTagName("svg").item(0));
+        svg = d3.select(SVGDoc);
+        // remove an existing element with same name
+        svg.select("#vg_" + item.id).remove();
         if (item.parentNode.nodeName == "g")
         {
           item.vg = svg.select("#" + item.parentNode.id).append('g').
-            html( svgstr /*$("#vega_" + WebSAGE.g_vega_num + " .marks")[0].childNodes[0].childNodes[0].innerHTML */);
+            html( svgstr );
         }
         else
         {
           item.vg = svg.select("#" + layer).append('g').
-            html( svgstr /*$("#vega_" + WebSAGE.g_vega_num + " .marks")[0].childNodes[0].childNodes[0].innerHTML */);
+            html( svgstr );
         }
   
         item.vg[0][0].id = "vg_" + item.id;
@@ -157,7 +160,6 @@ function (inksage_labelvec, lbv, item)
            ' translate( ' + (bb.x + bb.width/2) + ',' + (bb.y + bb.height/2) + ' ' + ') ' +
            ' scale( ' + (bb.width/200) + ',' + (bb.height/200) + ' ' + ') ' 
            );
-
     //sl[0][0].transform = item.transform;
     item.style.display = "none";
     break;
@@ -194,7 +196,7 @@ function (inksage_labelvec, lbv, item)
           item.vgFormat = spc['data'][0].format;
           spc['data'][0].format = {}; // este format faz com que se perca a marcacao PNT#...
         }
-        parsev3(spc)
+        parsev3(spc);
       }
 
       // test to see if it is a vega definition, if not get as URL
@@ -469,7 +471,6 @@ function (i)
       });
   break;
 case "#vega": // vega V2 chart, defined under a rectangle
-
   if (typeof WebSAGE.InkSage[i].parent.vw != "undefined" && 
       typeof WebSAGE.InkSage[i].parent.vgInitData != "undefined" &&
       WebSAGE.InkSage[i].parent.vgInitData != "" 
@@ -489,6 +490,8 @@ case "#vega": // vega V2 chart, defined under a rectangle
       {
         $.each(value, function (ix, vl)
         {
+        try 
+          {
           if (typeof(vl) === "string")
           {
             if (vl.indexOf("HIS#") >= 0)
@@ -547,12 +550,32 @@ case "#vega": // vega V2 chart, defined under a rectangle
             if (vl.indexOf("PNT#") >= 0)
               {
                 if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
-                  newdata[index][ix] = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
+                  {
+                    var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
+                    if ( vt !== "????" )
+                      newdata[index][ix] = vt;
+                    else
+                      newdata.splice(-1, 1);
+                  }
                 else
                   newdata.splice(-1, 1);
               }
             else
-            if (vl.indexOf("FLG#") >= 0)
+
+            if (vl.indexOf("TAG#") >= 0)
+            {
+              if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1 ) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
+                  {
+                  var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
+                  if ( vt !== "????" )
+                     newdata[index][ix] = WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1];
+                 }   
+              else
+                newdata.splice(-1, 1);
+            }
+          else
+          
+          if (vl.indexOf("FLG#") >= 0)
               {
                 if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
                   newdata[index][ix] = WebSAGE.getFlags(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1]);
@@ -594,6 +617,7 @@ case "#vega": // vega V2 chart, defined under a rectangle
                   newdata[index][ix] = WebSAGE.getSubstation(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1]);
               }
             }
+            } catch(E){};
           }
         );
       }
@@ -620,9 +644,6 @@ case "#vega": // vega V2 chart, defined under a rectangle
           WebSAGE.InkSage[i].parent.vgInitData != "" 
          )
       {
-        //WebSAGE.InkSage[i].parent.vw.change(WebSAGE.InkSage[i].parent.vgTableName[0], 
-        //                                    vega.changeset().remove( function (d) { return true; } )).run();        
-
         // copia dados iniciais para o novo
         newdata = JSON.parse(JSON.stringify(WebSAGE.InkSage[i].parent.vgInitData));
       }
@@ -635,6 +656,8 @@ case "#vega": // vega V2 chart, defined under a rectangle
         {
           $.each(value, function (ix, vl)
           {
+          try
+            {
             if (typeof(vl) === "string")
             {
               if (vl.indexOf("HIS#") >= 0)
@@ -721,10 +744,28 @@ case "#vega": // vega V2 chart, defined under a rectangle
               if (vl.indexOf("PNT#") >= 0)
                 {
                   if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
-                    newdata[index][ix] = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
+                  {
+                    var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
+                    if ( vt !== "????" )
+                      newdata[index][ix] = vt;
+                    else
+                      newdata.splice(-1, 1);
+                  }
                   else
                     newdata.splice(-1, 1);
                 }
+              else
+              if (vl.indexOf("TAG#") >= 0)
+              {
+                if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1 ) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
+                  {
+                    var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
+                    if ( vt !== "????" )
+                       newdata[index][ix] = WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1];
+                  }   
+                else
+                  newdata.splice(-1, 1);
+              }
               else
               if (vl.indexOf("FLG#") >= 0)
                 {
@@ -768,6 +809,7 @@ case "#vega": // vega V2 chart, defined under a rectangle
                     newdata[index][ix] = WebSAGE.getSubstation(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1]);
                 }
               }
+            } catch(E){}
           }
           );
         }
@@ -812,7 +854,7 @@ WebSAGE.alternate = function (period, id1, id2)
 
 WebSAGE.flipOut = function (id)
 {
-  var elem = window.SVGDoc.querySelector("svg").getElementById(id);
+  var elem = window.SVGDoc.getElementById(id);
   if (elem === null)
     return;
   if (typeof(elem.inittransform) === "undefined")
@@ -834,7 +876,7 @@ WebSAGE.flipOut = function (id)
 
 WebSAGE.flipIn = function (id)
 {
-  var elem = window.SVGDoc.querySelector("svg").getElementById(id);
+  var elem = window.SVGDoc.getElementById(id);
   if (elem === null)
     return;
   if (typeof(elem.inittransform) === "undefined")

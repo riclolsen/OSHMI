@@ -33,30 +33,30 @@
 QIec104::QIec104( QObject *parent ) :
     QObject( parent )
 {
-mEnding = false;
-mAllowConnect = true;
-SendCommands = 0;
-BDTRForcePrimary = 0;
-mLog.activateLog();
-mLog.doLogTime();
+    mEnding = false;
+    mAllowConnect = true;
+    SendCommands = 0;
+    BDTRForcePrimary = 0;
+    mLog.activateLog();
+    mLog.doLogTime();
 
-tcps = new QTcpSocket();
-tmKeepAlive = new QTimer();
+    tcps = new QTcpSocket();
+    tmKeepAlive = new QTimer();
 
-connect( tcps, SIGNAL(readyRead()), this, SLOT(slot_tcpreadytoread()) );
-connect( tcps, SIGNAL(connected()), this, SLOT(slot_tcpconnect()) );
-connect( tcps, SIGNAL(disconnected()), this, SLOT(slot_tcpdisconnect()) );
-connect( tcps, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slot_tcperror(QAbstractSocket::SocketError)),Qt::DirectConnection );
-connect( tmKeepAlive, SIGNAL(timeout()), this, SLOT(slot_keep_alive()) );
+    connect( tcps, SIGNAL(readyRead()), this, SLOT(slot_tcpreadytoread()) );
+    connect( tcps, SIGNAL(connected()), this, SLOT(slot_tcpconnect()) );
+    connect( tcps, SIGNAL(disconnected()), this, SLOT(slot_tcpdisconnect()) );
+    connect( tcps, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slot_tcperror(QAbstractSocket::SocketError)),Qt::DirectConnection );
+    connect( tmKeepAlive, SIGNAL(timeout()), this, SLOT(slot_keep_alive()) );
 
-tcps->moveToThread( &tcpThread );
-tcpThread.start( QThread::TimeCriticalPriority );
+    tcps->moveToThread( &tcpThread );
+    tcpThread.start( QThread::TimeCriticalPriority );
 }
 
 QIec104::~QIec104()
 {
-delete tmKeepAlive;
-delete tcps;
+    delete tmKeepAlive;
+    delete tcps;
 }
 
 void QIec104::dataIndication( iec_obj *obj, int numpoints )
@@ -176,30 +176,22 @@ void QIec104::commandActTermIndication( iec_obj *obj )
 
 void QIec104::terminate()
 {
-mEnding = true;
-tcps->close();
-tcpThread.quit();
-tcpThread.wait( 1000 );
-if ( tcpThread.isRunning() )
-  tcpThread.terminate();
-if ( tcpThread.isRunning() )
-  tcpThread.wait( 2000 );
+    mEnding = true;
+    tcps->close();
+    tcpThread.quit();
+    tcpThread.wait( 1000 );
+    if ( tcpThread.isRunning() )
+      tcpThread.terminate();
+    if ( tcpThread.isRunning() )
+      tcpThread.wait( 2000 );
 }
 
 void QIec104::slot_tcpreadytoread()
 {
-if ( tcps->bytesAvailable() < 6 )
-  return;
+    if (tcps->bytesAvailable() < 6)
+      tcps->waitForReadyRead(8);
 
-packetReadyTCP();
-
-int cnt = 0;
-// espera para ver se chega mais alguma coisa pela rede
-while ( (tcps->bytesAvailable() > 5) && (cnt++ < 10) )
-  {
-  tcps->waitForReadyRead( 10 );
-  packetReadyTCP();
-  }
+    packetReadyTCP();
 }
 
 void QIec104::disable_connect()
@@ -212,4 +204,8 @@ void QIec104::disable_connect()
 void QIec104::enable_connect()
 {
     mAllowConnect = true;
+}
+
+int QIec104::bytesAvailableTCP() {
+  return tcps->bytesAvailable();
 }

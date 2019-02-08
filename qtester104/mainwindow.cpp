@@ -40,8 +40,8 @@
 
 using namespace std;
 
-#define QTESTER_VERSION "v1.24"
-#define QTESTER_COPYRIGHT "Copyright © 2010-2018 Ricardo Lastra Olsen"
+#define QTESTER_VERSION "v1.25"
+#define QTESTER_COPYRIGHT "Copyright © 2010-2019 Ricardo Lastra Olsen"
 
 //-------------------------------------------------------------------------------------------------------------------------
 
@@ -82,6 +82,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     QIntValidator * validator = new QIntValidator( 0, 65535, this );
     ui->leLinkAddress->setValidator( validator );
+    QIntValidator * validator1 = new QIntValidator( 0, 65535, this );
+    ui->lePort->setValidator( validator1 );
     QIntValidator * validator2 = new QIntValidator( 0, 255, this );
     ui->leMasterAddress->setValidator( validator2 );
 
@@ -94,7 +96,10 @@ MainWindow::MainWindow(QWidget *parent)
     udps->open( QIODevice::ReadWrite );
 
     QString qs;
+    QTextStream( &qs ) << i104.getPortTCP();
+    ui->lePort->setText( qs );
     ui->leIPRemoto->setText( IPEscravo );
+    qs = "";
     QTextStream( &qs ) << i104.getSecondaryAddress();
     ui->leLinkAddress->setText( qs );
     qs = "";
@@ -122,17 +127,17 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->twPontos->clear();
     ui->twPontos->setSortingEnabled ( false );
-    ui->twPontos->setColumnCount( 7 );
+    ui->twPontos->setColumnCount( 8 );
     ui->twPontos->sortByColumn( 0 );
 
     if ( IPEscravo != "" )
       on_pbConnect_clicked();
 
     QStringList colunas;
-    colunas << "Address" << "Value" << "Type" << "Cause" << "Flags" << "Count" << "TimeTag";
+    colunas << "Address" << "CA" << "Value" << "ASDU" << "Cause" << "Flags" << "Count" << "TimeTag";
     ui->twPontos->setHorizontalHeaderLabels( colunas );
 
-    tmLogMsg->start(1000);
+    tmLogMsg->start(500);
 
     if ( BDTR_HaveDualHost() )
     {
@@ -180,17 +185,19 @@ void MainWindow::on_pbConnect_clicked()
     else
     {
         i104.setSecondaryIP( (char*)ui->leIPRemoto->text().toStdString().c_str() );
+        i104.setPortTCP( ui->lePort->text().toInt() );
         i104.setSecondaryAddress( ui->leLinkAddress->text().toInt() );
         i104.setPrimaryAddress( ui->leMasterAddress->text().toInt() );
 
         QString qs;
         ui->leIPRemoto->setText( i104.getSecondaryIP() );
-        QTextStream( &qs ) <<  ui->leLinkAddress->text().toInt();
+        QTextStream( &qs ) << ui->leLinkAddress->text().toInt();
         ui->leLinkAddress->setText( qs );
         qs="";
         QTextStream( &qs ) << ui->leMasterAddress->text().toInt();
         ui->leMasterAddress->setText( qs );
 
+        ui->lePort->setEnabled( false );
         ui->leIPRemoto->setEnabled( false );
         ui->leLinkAddress->setEnabled( false );
         ui->leMasterAddress->setEnabled( false );
@@ -199,6 +206,7 @@ void MainWindow::on_pbConnect_clicked()
         ui->lbStatus->setText( "<font color='green'>TRYING TO CONNECT!</font>" );
 
         mapPtItem_ColAddress.clear();
+        mapPtItem_ColCommonAddress.clear();
         mapPtItem_ColValue.clear();
         mapPtItem_ColType.clear();
         mapPtItem_ColCause.clear();
@@ -723,112 +731,121 @@ void MainWindow::slot_dataIndication( iec_obj *obj, int numpoints )
 
     BDTR_processPoints( obj, numpoints );
 
-    for (int i=0; i< numpoints; i++, obj++)
+    if ( ui->cbPointMap->isChecked() )
     {
-        sprintf( buf, "%06u", obj->address );
-
-        pitem = NULL;
-        pitem = mapPtItem_ColAddress[obj->address];
-        if ( pitem == NULL )
+        for (int i=0; i< numpoints; i++, obj++)
         {
+            pitem = NULL;
+            pitem = mapPtItem_ColAddress[std::make_pair(obj->ca,obj->address)];
+            if ( pitem == NULL )
+            {
+                sprintf( buf, "%06u", obj->address );
+
                 // insere
                 rw = ui->twPontos->rowCount();
                 ui->twPontos->insertRow( rw );
-                QTableWidgetItem *newItem = new QTableWidgetItem( buf );
+                QTableWidgetItem *newItem = new QTableWidgetItem(buf);
                 newItem->setTextAlignment( Qt::AlignRight | Qt::AlignVCenter);
                 ui->twPontos->setItem( rw, 0, newItem );
                 newItem->setFlags( Qt::ItemIsSelectable );
-                mapPtItem_ColAddress[obj->address] = newItem;
+                mapPtItem_ColAddress[std::make_pair(obj->ca,obj->address)] = newItem;
 
-                newItem = new QTableWidgetItem( buf );
+                newItem = new QTableWidgetItem();
                 newItem->setTextAlignment( Qt::AlignRight | Qt::AlignVCenter);
                 ui->twPontos->setItem( rw, 1, newItem );
                 newItem->setFlags( Qt::ItemIsSelectable );
-                mapPtItem_ColValue[obj->address] = newItem;
+                mapPtItem_ColCommonAddress[std::make_pair(obj->ca,obj->address)] = newItem;
 
-                newItem = new QTableWidgetItem( buf );
+                newItem = new QTableWidgetItem();
                 newItem->setTextAlignment( Qt::AlignRight | Qt::AlignVCenter);
                 ui->twPontos->setItem( rw, 2, newItem );
                 newItem->setFlags( Qt::ItemIsSelectable );
-                mapPtItem_ColType[obj->address] = newItem;
+                mapPtItem_ColValue[std::make_pair(obj->ca,obj->address)] = newItem;
 
-                newItem = new QTableWidgetItem( buf );
+                newItem = new QTableWidgetItem();
                 newItem->setTextAlignment( Qt::AlignRight | Qt::AlignVCenter);
                 ui->twPontos->setItem( rw, 3, newItem );
                 newItem->setFlags( Qt::ItemIsSelectable );
-                mapPtItem_ColCause[obj->address] = newItem;
+                mapPtItem_ColType[std::make_pair(obj->ca,obj->address)] = newItem;
 
-                newItem = new QTableWidgetItem( buf );
+                newItem = new QTableWidgetItem();
                 newItem->setTextAlignment( Qt::AlignRight | Qt::AlignVCenter);
                 ui->twPontos->setItem( rw, 4, newItem );
                 newItem->setFlags( Qt::ItemIsSelectable );
-                mapPtItem_ColFlags[obj->address] = newItem;
+                mapPtItem_ColCause[std::make_pair(obj->ca,obj->address)] = newItem;
 
-                newItem = new QTableWidgetItem( buf );
+                newItem = new QTableWidgetItem();
                 newItem->setTextAlignment( Qt::AlignRight | Qt::AlignVCenter);
                 ui->twPontos->setItem( rw, 5, newItem );
                 newItem->setFlags( Qt::ItemIsSelectable );
-                newItem->setText( "0" );
-                mapPtItem_ColCount[obj->address] = newItem;
+                mapPtItem_ColFlags[std::make_pair(obj->ca,obj->address)] = newItem;
 
-                newItem = new QTableWidgetItem( buf );
+                newItem = new QTableWidgetItem("0");
+                newItem->setTextAlignment( Qt::AlignRight | Qt::AlignVCenter);
                 ui->twPontos->setItem( rw, 6, newItem );
                 newItem->setFlags( Qt::ItemIsSelectable );
-                newItem->setText( "" );
-                mapPtItem_ColTimeTag[obj->address] = newItem;
+                mapPtItem_ColCount[std::make_pair(obj->ca,obj->address)] = newItem;
+
+                newItem = new QTableWidgetItem();
+                ui->twPontos->setItem( rw, 7, newItem );
+                newItem->setFlags( Qt::ItemIsSelectable );
+                mapPtItem_ColTimeTag[std::make_pair(obj->ca,obj->address)] = newItem;
 
                 inserted = true;
+            }
+
+            sprintf( buf, "%9.3f", obj->value );
+            mapPtItem_ColValue[std::make_pair(obj->ca,obj->address)]->setText( buf );
+            sprintf( buf, "%u", obj->ca );
+            mapPtItem_ColCommonAddress[std::make_pair(obj->ca,obj->address)]->setText( buf );
+            sprintf( buf, "%d", obj->type );
+            mapPtItem_ColType[std::make_pair(obj->ca,obj->address)]->setText( buf );
+            sprintf( buf, "%d", obj->cause );
+            mapPtItem_ColCause[std::make_pair(obj->ca,obj->address)]->setText( buf );
+            sprintf( buf, "%d", 1+mapPtItem_ColCount[std::make_pair(obj->ca,obj->address)]->text().toInt() );
+            mapPtItem_ColCount[std::make_pair(obj->ca,obj->address)]->setText( buf );
+
+            QDateTime current = QDateTime::currentDateTime();
+            sprintf(buftt, "Local: %s", current.toString("yyyy/MM/dd hh:mm:ss.zzz").toStdString().c_str());
+
+            switch (obj->type)
+              {
+              case iec104_class::M_SP_TB_1: // 30
+                  sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
+              case iec104_class::M_SP_NA_1: // 1
+                  sprintf( buf, "%s%s%s%s%s", obj->scs?"on ":"off ", obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"" );
+                  break;
+
+              case iec104_class::M_DP_TB_1: // 31
+                  sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
+              case iec104_class::M_DP_NA_1: // 3
+                  sprintf( buf, "%s%s%s%s%s", dblmsg[obj->dcs], obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"" );
+                  break;
+
+              case iec104_class::M_ST_TB_1: // 32
+                sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
+              case iec104_class::M_ST_NA_1: // 5
+                  sprintf( buf, "%s%s%s%s%s%s", obj->ov?"ov ":"", obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"", obj->t?"t ":"" );
+                  break;
+
+              case iec104_class::M_ME_TD_1: // 34
+              case iec104_class::M_ME_TE_1: // 35
+              case iec104_class::M_ME_TF_1: // 36
+                sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
+              case iec104_class::M_ME_NA_1: // 9
+              case iec104_class::M_ME_NB_1: // 11
+              case iec104_class::M_ME_NC_1: // 13
+                  sprintf( buf, "%s%s%s%s%s", obj->ov?"ov ":"", obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"" );
+                  break;
+              }
+
+            mapPtItem_ColFlags[std::make_pair(obj->ca,obj->address)]->setText( buf );
+            mapPtItem_ColTimeTag[std::make_pair(obj->ca,obj->address)]->setText( buftt );
         }
 
-        sprintf( buf, "%9.3f", obj->value );
-        mapPtItem_ColValue[obj->address]->setText( buf );
-        sprintf( buf, "%d", obj->type );
-        mapPtItem_ColType[obj->address]->setText( buf );
-        sprintf( buf, "%d", obj->cause );
-        mapPtItem_ColCause[obj->address]->setText( buf );
-        sprintf( buf, "%d", 1+mapPtItem_ColCount[obj->address]->text().toInt() );
-        mapPtItem_ColCount[obj->address]->setText( buf );
-
-        QDateTime current = QDateTime::currentDateTime();
-        sprintf(buftt, "Local: %s", current.toString("yyyy/MM/dd hh:mm:ss.zzz").toStdString().c_str());
-
-        switch (obj->type)
-          {
-          case iec104_class::M_SP_TB_1: // 30
-              sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
-          case iec104_class::M_SP_NA_1: // 1
-              sprintf( buf, "%s%s%s%s%s", obj->scs?"on ":"off ", obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"" );
-              break;
-
-          case iec104_class::M_DP_TB_1: // 31
-              sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
-          case iec104_class::M_DP_NA_1: // 3
-              sprintf( buf, "%s%s%s%s%s", dblmsg[obj->dcs], obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"" );
-              break;
-
-          case iec104_class::M_ST_TB_1: // 32
-            sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
-          case iec104_class::M_ST_NA_1: // 5
-              sprintf( buf, "%s%s%s%s%s%s", obj->ov?"ov ":"", obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"", obj->t?"t ":"" );
-              break;
-
-          case iec104_class::M_ME_TD_1: // 34
-          case iec104_class::M_ME_TE_1: // 35
-          case iec104_class::M_ME_TF_1: // 36
-            sprintf( buftt, "Field: %02d/%02d/%02d %02d:%02d:%02d.%03d %s", obj->timetag.year, obj->timetag.month, obj->timetag.mday, obj->timetag.hour, obj->timetag.min, obj->timetag.msec/1000, obj->timetag.msec%1000, obj->timetag.iv?"iv":"ok" );
-          case iec104_class::M_ME_NA_1: // 9
-          case iec104_class::M_ME_NB_1: // 11
-          case iec104_class::M_ME_NC_1: // 13
-              sprintf( buf, "%s%s%s%s%s", obj->ov?"ov ":"", obj->iv?"iv ":"", obj->bl?"bl ":"", obj->sb?"sb ":"", obj->nt?"nt ":"" );
-              break;
-          }
-
-        mapPtItem_ColFlags[obj->address]->setText( buf );
-        mapPtItem_ColTimeTag[obj->address]->setText( buftt );
+    if ( inserted )
+        ui->twPontos->sortItems ( 0 );
     }
-
-if ( inserted )
-    ui->twPontos->sortItems ( 0 );
 }
 
 void MainWindow::slot_timer_logmsg()
@@ -966,6 +983,7 @@ void MainWindow::slot_tcpdisconnect()
     if ( i104.tmKeepAlive->isActive() )
     {
         ui->pbConnect->setText( "Give up" );
+        ui->lePort->setEnabled( false );
         ui->leIPRemoto->setEnabled( false );
         ui->leLinkAddress->setEnabled( false );
         ui->leMasterAddress->setEnabled( false );
@@ -973,6 +991,7 @@ void MainWindow::slot_tcpdisconnect()
     else
     {
         ui->pbConnect->setText( "Connect" );
+        ui->lePort->setEnabled( true );
         ui->leIPRemoto->setEnabled( true );
         ui->leLinkAddress->setEnabled( true );
         ui->leMasterAddress->setEnabled( true );
@@ -1119,7 +1138,7 @@ void MainWindow::on_pbCopyClipb_clicked()
 
 void MainWindow::on_pbCopyVals_clicked()
 {
-    QString text = "Address\tValue\tType\tCause\tFlags\tCoubt\tTimeTag\n";
+    QString text = "Address\tCA\tValue\tASDU\tCause\tFlags\tCount\tTimeTag\n";
 
     for (int i=0; i<ui->twPontos->rowCount();  i++)
     {

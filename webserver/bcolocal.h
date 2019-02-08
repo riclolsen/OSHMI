@@ -9,6 +9,7 @@
 //#include <ScktComp.hpp>
 #include <map>
 #include <set>
+#include <list>
 
 using namespace std;
 
@@ -387,52 +388,52 @@ TPonto(); // construtor
 int GetDoubleState(); // returns 0=TRANSIT or analog, 1=OFF, 2=ON, 3=INV
 bool DentroBandaMortaHist(); // testa se está dentro da banda morta do histórico
 void GetModDescr( char * descr );
-char * GetEstadoOn();
-char * GetEstadoOff();
-char * GetDescricao();
-char * GetUnidade();
-char * GetAnotacao();
-char * GetEstacao();
-char * GetNome();
-char * GetModulo();
 int GetSupCmd();
 String GetTipo();
-double GetValorNormal();
-int GetEstadoAlarme();
-double GetLimSup();
-double GetLimInf();
+bool TemAlarmePersistente();
+int ComoDeveBipar();
+bool AlarmeNaoReconhecido();
+bool ValorOk();
+bool EhComandoDigital();
+inline char * GetEstadoOn(){ return EstadoOn; };
+inline char * GetEstadoOff(){ return EstadoOff; };
+inline char * GetDescricao(){ return Descricao; };
+inline char * GetUnidade(){ return Unidade; };
+inline char * GetAnotacao(){ return Anotacao; };
+inline char * GetEstacao(){ return Estacao; };
+inline char * GetNome(){ return Tag; };
+inline char * GetModulo(){ return Modulo; };
+inline double GetValorNormal(){ return ValorNormal; };
+inline int GetEstadoAlarme(){ return EstadoAlarme; };
+inline double GetLimSup(){ return LimSup; };
+inline double GetLimInf(){ return LimInf; };
+inline double GetTimeAlarm(){ return TagTempoAlarme; };
+inline int GetPriority(){ return Prioridade; };
+inline bool TemAnotacao(){ return strcmp(Anotacao,""); };
+inline bool ComandoBloqueado(){ return strcmp(Anotacao,""); };
+inline bool EhComando(){ return ( CodOrigem == CODORIGEM_COMANDO ); };
+inline bool EhEventoDigital(){ return EventoDigital; };
+inline bool EhEventoAnalogico(){ return EventoAnalogico; };
+inline bool EhDigital(){ return ( TipoAD == 'D' ); };
+inline bool EhAnalogico(){ return ( TipoAD != 'D' ); };
+inline bool EhAlarmeTemporizado(){ return AlarmeTemporizado > 0; };
+inline bool TemFormula(){ return ( Formula != 0  ); };
+inline bool AlarmeInibido(){ return AlrIn; };
+inline bool SemAlarme(){ return (AlarmeNaoRec == 0); };
+inline bool Congelado(){ return Congelamento; };
+inline bool TemCadastro(){ return strcmp(Tag,""); };
+inline bool GetAlrIn(){ return AlrIn; };
+inline unsigned int GetTemporizacaoAlarme(){ return AlarmeTemporizado; };
+void SetAnotacao( char * anot );
+void SetValorTipico( double val );
+void SetAlrIn( bool val );
 void SetTimeAlarm( double timetag );
-double GetTimeAlarm();
-int GetPriority();
 void SetLimInf( double val );
 void SetLimSup( double val );
 void SetHister( float val );
-bool TemAnotacao();
-bool ComandoBloqueado();
-bool TemAlarmePersistente();
-bool EhComando();
-bool EhEventoDigital();
-bool EhEventoAnalogico();
-bool EhDigital();
-bool EhAnalogico();
-bool EhAlarmeTemporizado();
-bool TemFormula();
-bool AlarmeInibido();
-bool AlarmeNaoReconhecido();
-bool SemAlarme();
-bool Congelado();
-bool TemCadastro();
-bool ValorOk();
-void SetAnotacao( char * anot );
-void SetValorTipico( double val );
-bool GetAlrIn();
-void SetAlrIn( bool val );
 void Alarmar();
 void AlarmAck();
-bool EhComandoDigital();
 void SetTemporizacaoAlarme(unsigned int seconds);
-unsigned int GetTemporizacaoAlarme();
-int ComoDeveBipar();
 };
 
 // Classe Banco Local, representa um banco de tempo real local
@@ -451,6 +452,8 @@ unsigned NumVariacoes; // regista o número de variações digitais
 map <int, TPonto> Pontos; // mapa para os pontos a escutar, chave de nponto
 
 public:
+list <int> lstNPontoDump;
+list <String> lstHTTPReq_OutroIHM; // fila de requisições a mandar para o outro IHM
 map <int, int> MapNPontoPorEndUTR; // mapa para achar nponto pelo endereço físico e utr
 map <String, int> MapNPontoPorTag; // mapa para encontrar nponto pelo tag
 map <String, int> DisjModulo; // mapa pelo nome do módulo para o ponto do disjuntor

@@ -104,23 +104,6 @@ g_filt_all_alarms: "TODOS_ANORMAIS",
 g_alminfo: [],
 g_filterOutList: [],
 
-// busca e executa script de um servidor
-getScript: function ( srvurl )
-{
-// substitui a chamada $.getScript que causava memory leaks
-$.ajax( { // crossDomain: true,
-          url: srvurl,
-          dataType: "text",
-          success: WebSAGE.onSuccess
-         } );
-},
-
-onSuccess: function ( data )
-{
-  eval( data );
-  data = null;
-},
-
 // função auxiliar para escrever dados na janela de comando pelo id do objeto
 cmdWriteById : function(win, id, txt)
 {    
@@ -147,13 +130,13 @@ janelaInfo : function(nponto)
     if (typeof(WebSAGE.g_win_cmd.window) == 'object') // fecha janela info
       if (WebSAGE.g_win_cmd.window) 
          WebSAGE.g_win_cmd.window.close();
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo0' );
+  getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo0' );
 },
 
 // busca dado do ponto tempo real  
 showValsInfo0 : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo1' );
+  getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo1' );
 },
 
 // Abre uma janela popup com dados sobre o ponto  
@@ -362,7 +345,7 @@ try
     WebSAGE.g_timerID=setTimeout(WebSAGE.showValsInfo2, 2000);
     }
 
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
+  getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
   }
 catch (e) {}  
 }, 
@@ -378,7 +361,7 @@ janelaComando : function(nponto)
 {
   WebSAGE.g_nponto_sup = nponto;  
   NPTO=0; CNPTO=0;
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
+  getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
 },
 
 // Mostra dados sobre o comando na respectiva janela 
@@ -467,12 +450,12 @@ setTimeout('WebSAGE.g_win_cmd.close()',500);
 
 executaComando : function(cmd_01)
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
+  getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
 },
 
 ackComando : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
+  getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
 },
 
 writeParams : function() 
@@ -491,15 +474,15 @@ writeParams : function()
   if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotação
     WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value="";
 
-  WebSAGE.getScript( WebSAGE.g_remoteServer + 
-               '?W=' + NPTO + 
-               "&LI=" + WebSAGE.g_win_cmd.document.getElementById("LIMINF").value + 
-               "&LS=" + WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value + 
-               "&HI=" + WebSAGE.g_win_cmd.document.getElementById("HISTER").value + 
-               "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked?1:0) + 
-               "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dão problema no javascript
-               "&VN=" + 0
-             );
+  getJSON( WebSAGE.g_remoteServer + 
+           '?W=' + NPTO + 
+           "&LI=" + WebSAGE.g_win_cmd.document.getElementById("LIMINF").value + 
+           "&LS=" + WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value + 
+           "&HI=" + WebSAGE.g_win_cmd.document.getElementById("HISTER").value + 
+           "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked?1:0) + 
+           "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dão problema no javascript
+           "&VN=" + 0
+         );
 },
 
 writeValor : function() 
@@ -521,10 +504,10 @@ writeValor : function()
   else      
     val = WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").checked?0:1;
   
-  WebSAGE.getScript( WebSAGE.g_remoteServer + 
-               '?X=' + NPTO + 
-               "&V=" + val  
-             );
+  getJSON( WebSAGE.g_remoteServer + 
+           '?X=' + NPTO + 
+           "&V=" + val  
+         );
 },
 
 mudaFiltro : function()
@@ -559,7 +542,7 @@ leListaSEs : function()
   // prepara função de callback que será chamada pelo script a ser devolvido pelo servidor
   WebSAGE.g_cbf_MostraSE = function() { setTimeout(WebSAGE.mostraSEs, 10); };
   // chama o servidor, executa o script devolvido
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?S=1' + "&B=WebSAGE.g_cbf_MostraSE" );
+  getScript( WebSAGE.g_remoteServer + '?S=1' + "&B=WebSAGE.g_cbf_MostraSE" );
 },
 
 // mostra lista de estações
@@ -691,10 +674,10 @@ callServer : function ()
 
         Ventoinha.pulse();
         // chama o servidor, executa o script devolvido
-        WebSAGE.getScript( WebSAGE.g_remoteServer + 
-                           '?G=' + WebSAGE.g_filtroSE + 
-                           "&M=" + WebSAGE.g_filtroMod + 
-                           "&A=2&B=cbf_F" );
+        getScript( WebSAGE.g_remoteServer + 
+                   '?G=' + WebSAGE.g_filtroSE + 
+                   "&M=" + WebSAGE.g_filtroMod + 
+                   "&A=2&B=cbf_F" );
         WebSAGE.g_pass++;
         
         WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, WebSAGE.g_timeOutRefresh );
@@ -912,7 +895,7 @@ showVals: function()
     if ( typeof(WebSAGE.g_win_cmd.window.closed) != 'undefined' )
        if ( ! WebSAGE.g_win_cmd.window.closed )
         {
-        WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
+        getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
         clearTimeout( WebSAGE.g_timerID );
         WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 100 );
         }
@@ -960,7 +943,7 @@ falhaTudo: function ()
 
 doSilenciaBeep : function ()
 {
-   WebSAGE.getScript( WebSAGE.g_remoteServer + "?Z=1" );
+   getJSON( WebSAGE.g_remoteServer + "?Z=1" );
 },      
 
 EstiloLinha: function (id, rec)
@@ -1000,15 +983,15 @@ doReconheceTudo: function (rec_apaga)
     }
 
     if ( rec_apaga==0 )
-      WebSAGE.getScript( WebSAGE.g_remoteServer +
-                  '?R=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
-                  'PS=' + WebSAGE.g_pass++ 
-                );
+      getJSON( WebSAGE.g_remoteServer +
+               '?R=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
+               'PS=' + WebSAGE.g_pass++ 
+              );
     else              
-      WebSAGE.getScript( WebSAGE.g_remoteServer +
-                  '?Q=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
-                  'PS=' + WebSAGE.g_pass++ 
-                );
+      getJSON( WebSAGE.g_remoteServer +
+               '?Q=00000&D=00/00/0000&H=00:00:00&M=000&A=0&' +
+               'PS=' + WebSAGE.g_pass++ 
+              );
 
     clearTimeout(WebSAGE.g_toutID);
 	  WebSAGE.g_toutID = setTimeout(WebSAGE.callServer, WebSAGE.g_timeOutReconhece);
@@ -1045,11 +1028,11 @@ doOnRowSelected: function ( evt )
       // somente silencia alarme
       if ( WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_FLAGS) & 0x100 )
         {
-        WebSAGE.getScript( WebSAGE.g_remoteServer +
-                    '?R=' + WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_NPONTO ) + '&' +
-                    'D=00/00/0000&H=00:00:00&M=000&A=1&' +
-                    'PS=' + WebSAGE.g_pass++ 
-                  );
+        getJSON( WebSAGE.g_remoteServer +
+                 '?R=' + WebSAGE.g_tbl.cellsx( row, WebSAGE.g_COL_NPONTO ) + '&' +
+                 'D=00/00/0000&H=00:00:00&M=000&A=1&' +
+                 'PS=' + WebSAGE.g_pass++ 
+               );
 
         // tira o L do qualificador          
         WebSAGE.g_tbl.cellsSetValue( row, WebSAGE.g_COL_QUALIF, Qualif.replace("L","") );

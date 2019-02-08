@@ -1,12 +1,11 @@
 //---------------------------------------------------------------------------
-
-// UDP JSON Protocol Driver Interface
+// Simple UDP JSON Protocol Driver Interface
 // Receive / update values (by tag, key or address)
 // Register new points
 // Send commands
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2018 - Ricardo L. Olsen
+	Copyright 2008-2019 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,8 +19,7 @@ OSHMI - Open Substation HMI
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+*/  
 
 #include <vcl.h>
 #pragma hdrstop

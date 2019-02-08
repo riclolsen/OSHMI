@@ -109,26 +109,6 @@ g_infomodid: {},
 g_infomodsubest: {},
 g_subst_list: [],
 
-// busca e executa script de um servidor
-getScript: function( srvurl, tout )
-{
-tout = tout || null;
-
-// substitui a chamada $.getScript que causava memory leaks
-$.ajax( { // crossDomain: true,
-          url: srvurl,
-          dataType: "text",
-          success: WebSAGE.onSuccess,
-		  timeout: tout
-         } );
-},
-
-onSuccess: function( data )
-{
-  eval( data );
-  data = null;
-},
-
 // função auxiliar para escrever dados na janela de comando pelo id do objeto
 cmdWriteById : function( win, id, txt )
 {    
@@ -152,13 +132,13 @@ janelaInfo : function( nponto )
     if ( typeof( WebSAGE.g_win_cmd.window ) == 'object' ) // fecha janela info
       if ( WebSAGE.g_win_cmd.window ) 
         WebSAGE.g_win_cmd.window.close();
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo0' );
+  getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo0' );
 },
 
 // busca dado do ponto tempo real  
 showValsInfo0 : function()
 {
-   WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo1' );
+  getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsInfo1' );
 },
 
 // Abre uma janela popup com dados sobre o ponto  
@@ -330,18 +310,15 @@ try
       }   
       
     // get nonblocking annotation
-    $.ajax( {
-            dataType: "json",
-            url: WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
-            success: 
+    getJSON( WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
               function(data) {
-                 if ( data[0] && data[0].hasOwnProperty('CONTENT') )
-                   WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = data[0].CONTENT;
-                 else
-                   WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = "";
-                 },
-          });  
-    Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
+                  if ( data[0] && data[0].hasOwnProperty('CONTENT') )
+                    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = data[0].CONTENT;
+                  else
+                    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = "";
+                  }
+            );  
+Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
     }
 
   // bloqueio automático de comando por presença de anotação
@@ -381,7 +358,7 @@ try
 
   WebSAGE.g_timerID = setTimeout( WebSAGE.showValsInfo2, 2000 );
 
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
+  getScript( WebSAGE.g_remoteServer + '?P=' + WebSAGE.g_nponto_sup );
   }
 catch (e) {}   
 }, 
@@ -397,7 +374,7 @@ janelaComando : function( nponto )
 {
   WebSAGE.g_nponto_sup = nponto;  
   NPTO = 0; CNPTO = 0;
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
+  getScript( WebSAGE.g_remoteServer + '?I=' + WebSAGE.g_nponto_sup + '&B=WebSAGE.showValsCmd1' );
 },
 
 // Mostra dados sobre o comando na respectiva janela 
@@ -495,7 +472,7 @@ setTimeout('WebSAGE.g_win_cmd.close()',500);
 
 executaComando : function(cmd_01)
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
+  getScript( WebSAGE.g_remoteServer + '?K=' + CNPTO + '&V=' + cmd_01 + '&T=1' );
 
   // Command log in browser's localStorage
   if (storageAvailable('localStorage')) 
@@ -513,7 +490,7 @@ executaComando : function(cmd_01)
 
 ackComando : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
+  getScript( WebSAGE.g_remoteServer + '?A=' + CNPTO );
 },
 
 writeParams : function() 
@@ -532,27 +509,24 @@ writeParams : function()
   if ( WebSAGE.g_win_cmd.document.getElementById("CBBLKCMD").checked ) // desbloqueio do comando apaga anotação
     WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value = "";
 
-  WebSAGE.getScript( WebSAGE.g_remoteServer + 
-               '?W=' + NPTO + 
-               "&LI=" + WebSAGE.g_win_cmd.document.getElementById("LIMINF").value + 
-               "&LS=" + WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value + 
-               "&HI=" + WebSAGE.g_win_cmd.document.getElementById("HISTER").value + 
-               "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked ? 1 : 0 ) + 
-               "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dão problema no javascript
-               "&VN=" + 0
-             );  
+  getJSON( WebSAGE.g_remoteServer + 
+           '?W=' + NPTO + 
+           "&LI=" + WebSAGE.g_win_cmd.document.getElementById("LIMINF").value + 
+           "&LS=" + WebSAGE.g_win_cmd.document.getElementById("LIMSUP").value + 
+           "&HI=" + WebSAGE.g_win_cmd.document.getElementById("HISTER").value + 
+           "&AI=" + (WebSAGE.g_win_cmd.document.getElementById("CBALRIN").checked ? 1 : 0 ) + 
+           "&AN=" + WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value.replace(/^\s\s*/, '').replace(/\s\s*$/, '').replace(/\n/g, "|^").replace(/'/g, "") +  // troca os \n por |^ e tira as aspas que dão problema no javascript
+           "&VN=" + 0
+         );  
 },
 
 // write non blocking annootation
 writeAnnotDoc : function()
 {
-  $.ajax( {
-          type: "POST",
-          url: WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
-          data:  { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
-          // success: success,
-          // dataType: "text"
-          } );
+  getJSON( WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
+           null,
+           { CONTENT: WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC").value }
+         );
 },
 
 writeValor : function() 
@@ -574,22 +548,22 @@ writeValor : function()
   else      
     val = WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").checked ? 0 : 1;
   
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
+  getJSON( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
 },
 
 histBusca : function()
 {
 WebSAGE.g_tbl.clearAll();
 
-WebSAGE.getScript( WebSAGE.g_eventServer + 
-             '?V=' + WebSAGE.g_nummaxevehist + 
-             '&H=' + document.getElementById("HHORAINI").value + 
-             '&D=' + document.getElementById("HDATAINI").value + 
-             '&F=' + document.getElementById("HFILTRO").value + 
-             '&G=' + WebSAGE.g_gpstime +
-             '&T=' + "YYYY-MM-DD" + 
-             '&B=WebSAGE.showVals' + 
-             '&PS=' + WebSAGE.g_pass );
+getScript( WebSAGE.g_eventServer + 
+           '?V=' + WebSAGE.g_nummaxevehist + 
+           '&H=' + document.getElementById("HHORAINI").value + 
+           '&D=' + document.getElementById("HDATAINI").value + 
+           '&F=' + document.getElementById("HFILTRO").value + 
+           '&G=' + WebSAGE.g_gpstime +
+           '&T=' + "YYYY-MM-DD" + 
+           '&B=WebSAGE.showVals' + 
+           '&PS=' + WebSAGE.g_pass );
 WebSAGE.g_pass++;
 },
 
@@ -676,14 +650,14 @@ callServer : function()
             setOpacity( document.getElementById( "imgFilter" ), 100 );
           }
 
-        WebSAGE.getScript( WebSAGE.g_eventServer + 
-                     '?E=' + WebSAGE.g_nummaxevetr + 
-                     '&A=' + agregar +
-                     '&G=' + WebSAGE.g_gpstime + 
-                     "&F=" + filtro + 
-                     "&B=cbf_F",
-                     WebSAGE.g_timeOutFalha
-					 );
+        getScript( WebSAGE.g_eventServer + 
+                   '?E=' + WebSAGE.g_nummaxevetr + 
+                   '&A=' + agregar +
+                   '&G=' + WebSAGE.g_gpstime + 
+                   "&F=" + filtro + 
+                   "&B=cbf_F",
+                   WebSAGE.g_timeOutFalha
+					       );
         WebSAGE.g_pass++;
         
         // vou testar o status do webserver para ver se houve alguma mudança 
@@ -697,7 +671,7 @@ callServer : function()
 // pega status do servidor, variável HA_ALARMES
 getServerStatus: function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?M=1&B=WebSAGE.cbf_Status' );  
+  getScript( WebSAGE.g_remoteServer + '?M=1&B=WebSAGE.cbf_Status' );  
 },
 
 cbf_Status: function()
@@ -836,23 +810,23 @@ catch (e)
 // acknowledges or quits event alarm
 ackAlarm: function( almquit, aggregate, npt, evtdate, evthour, evtmsec )
 {
-var ch = 'R'; // R = acknowledge alarm
+var ch = 'R'; // ?R= acknowledge alarm
 evtdate = evtdate || "00/00/0000";
 evthour = evthour || "00:00:00";
 evtmsec = evtmsec || 0;
 
   if ( almquit )
     {
-    ch = 'Q'; // Q = quit alarm
+    ch = 'Q'; // ?Q= quit alarm
     }
    
-  WebSAGE.getScript( WebSAGE.g_remoteServer +
-                    '?' + ch + '=' + npt + '&' +
-                    'D=' + evtdate + '&' +
-                    'H=' + evthour + '&' +
-                    'M=' + evtmsec + '&' +
-                    'A=' + aggregate + '&' +
-                    'PS=' + WebSAGE.g_pass++ );
+  getJSON( WebSAGE.g_remoteServer +
+           '?' + ch + '=' + npt + '&' +
+           'D=' + evtdate + '&' +
+           'H=' + evthour + '&' +
+           'M=' + evtmsec + '&' +
+           'A=' + aggregate + '&' +
+           'PS=' + WebSAGE.g_pass++ );
 },
 
 // Notifica quando
@@ -1153,7 +1127,7 @@ catch ( e )
       
 doSilenciaBeep : function()
 {
-  WebSAGE.getScript( WebSAGE.g_remoteServer + "?Z=1" );
+  getJSON( WebSAGE.g_remoteServer + "?Z=1" );
 },      
       
 doReconheceTudo: function( rec_apaga )
@@ -1622,7 +1596,7 @@ leListaSEs : function()
   // prepara função de callback que será chamada pelo script a ser devolvido pelo servidor
   WebSAGE.g_cbf_MostraSE = function() { setTimeout(WebSAGE.mostraSEs, 10); };
   // chama o servidor, executa o script devolvido
-  WebSAGE.getScript( WebSAGE.g_remoteServer + '?S=1' + "&B=WebSAGE.g_cbf_MostraSE" );
+  getScript( WebSAGE.g_remoteServer + '?S=1' + "&B=WebSAGE.g_cbf_MostraSE" );
 },
 
 // mostra lista de estações
@@ -1742,11 +1716,6 @@ init: function()
     $('#TBLHEAD').css('color', 'black');
     $('#TBLHEAD').css('font-family', EventsViewer_Font);
     
-    if ( location.host == "127.0.0.1" || location.host == "localhost" ) // se está acessando máquina local
-       $('#ANORM_ID').bind('click', function() { WebSAGE.getScript( WebSAGE.g_remoteServer + "?x=6" ); } ); // na máquina local o webserver abre nova janela do navegador
-    else // na máquina remota abre uma janela nova tipo popup
-       $('#ANORM_ID').bind('click', function() { window.open('tabular.html?SELMODULO=TODOS_ANORMAIS','Anormais','dependent=no,height=700,width=900,location=no,toolbar=no,directories=no,status=no,menubar=no,resizable=yes,modal=no'); } );
-       
     WebSAGE.g_tbl.setColWidth( WebSAGE.g_COL_MSEC, WebSAGE.g_gpstime * 40 );            
       
     // começa a atualizar     

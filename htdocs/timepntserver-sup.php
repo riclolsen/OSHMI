@@ -1,10 +1,10 @@
 <?PHP
 
-// OSHMI/Open Substation HMI - Copyright 2008-2018 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
 
-// ParÃ¢metros:
+// Parâmetros:
 //
-// Valores de foto ou sÃ©rie histÃ³rica:
+// Valores de foto ou série histórica:
 // &P=LISTAPONTOS &H=HORA &D=DATA &T=$DATEFMT &U=UNIXTIME &F=FUNCAO B=CALLBACK
 //
 // HORA : hora no formato hh:mm:ss
@@ -13,16 +13,17 @@
 // ou
 // UNIXTIME: unix time 
 //
-// FUNCAO : 'F'=Foto histÃ³rica, 'S'=SÃ©rie histÃ³rica desde a hora especificada atÃ© a hora corrente
-// CALLBACK : nome da funÃ§Ã£o de callback
+// FUNCAO : 'F'=Foto histórica, 'S'=Série histórica desde a hora especificada até a hora corrente
+// CALLBACK : nome da função de callback
 //
 
 // Show no errors
 error_reporting(E_ALL);
 
-header("Content-type: text/javascript; charset=UTF-8");
+header("Content-type: text/javascript; charset=ISO-8859-1");
 header("Content-Disposition: inline; filename=\"timepntserver.js\"");
-header("Cache-Control: no-store, must-revalidate");
+header("Cache-Control: no-cache");
+header("Pragma: no-cache");
     
 require_once 'timezone.php';
 // @date_default_timezone_set( date_default_timezone_get() );  // date_default_timezone_set('UTC');      
@@ -62,7 +63,7 @@ require_once("../comum/lesupsql.php");
 require_once("../comum/peardb_login.php") ;
 $db=&DBLogin("SQL_BANCOTR_CONSULTA");
 if (DB::isError($db)) 
-   die("Erro de conexÃ£o ao banco!");
+   die("Erro de conexão ao banco!");
 */
 //try 
   //{
@@ -72,7 +73,7 @@ if (DB::isError($db))
     //$dbsde->exec ( "PRAGMA locking_mode = NORMAL" );
 
     if ( $FUNCAO == "S" )
-      printf( "var hvalues = [];\n" );
+      printf( "hvalues = [];\n" );
               
     $cntpnt = 0;
     $pontos = array();
@@ -107,7 +108,7 @@ if (DB::isError($db))
           printf( "F[$pt]|=0x80;\n");
           $consulta->inclui_ponto($pt);
       }
-    $ret=$consulta->busca_foto_sup($DATA, $HORA);    // busca no histÃ³rico
+    $ret=$consulta->busca_foto_sup($DATA, $HORA);    // busca no histórico
       
     // para cada ponto, extrai conjunto de linhas
     while ( list($col_ponto,$linha) = each($ret) )

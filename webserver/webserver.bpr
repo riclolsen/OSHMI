@@ -15,13 +15,13 @@
       luasrc\lstrlib.obj luasrc\ltable.obj luasrc\ltablib.obj luasrc\ltm.obj 
       luasrc\lua.obj luasrc\lundump.obj luasrc\lvm.obj luasrc\lzio.obj 
       luasrc\print.obj luasrc\bit.obj historico_u.obj sqlite3.obj i104m_u.obj 
-      jsmn.obj json_u.obj"/>
+      jsmn.obj json_u.obj httpd_u.obj"/>
     <RESFILES value="webserver.res"/>
     <DEFFILE value=""/>
     <RESDEPEN value="$(RESFILES) webserver_u.dfm bdtr_com.dfm vedados.dfm eventos_u.dfm 
       dumpdb_u.dfm about_u.dfm simul.dfm lua_u.dfm historico_u.dfm i104m_u.dfm 
-      json_u.dfm"/>
-    <LIBFILES value=""/>
+      json_u.dfm httpd_u.dfm"/>
+    <LIBFILES value="libmicrohttp-dll.lib"/>
     <LIBRARIES value="VCLX50.lib NMFast50.lib vcldb50.lib Vclbde50.lib Indy50.lib Vcl50.lib"/>
     <SPARELIBS value="Vcl50.lib Indy50.lib Vclbde50.lib vcldb50.lib NMFast50.lib VCLX50.lib"/>
     <PACKAGES value="Vcl50.bpi Vclx50.bpi bcbsmp50.bpi Qrpt50.bpi Vcldb50.bpi Vclbde50.bpi 
@@ -59,7 +59,7 @@
 IncludeVerInfo=1
 AutoIncBuild=0
 MajorVer=5
-MinorVer=5
+MinorVer=6
 Release=0
 Build=0
 Debug=0
@@ -73,13 +73,13 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=OSHMI
 FileDescription=Webserver
-FileVersion=5.5.0.0
+FileVersion=5.6.0.0
 InternalName=Webserver
-LegalCopyright=(c) 2008-2018 Ricardo Lastra Olsen
+LegalCopyright=(c) 2008-2019 Ricardo Lastra Olsen
 LegalTrademarks=
 OriginalFilename=webserver.exe
 ProductName=OSHMI: Open Substation HMI
-ProductVersion=5.5.0.0
+ProductVersion=5.6.0.0
 Comments=
 
 [HistoryLists\hlIncludePath]

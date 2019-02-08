@@ -79,13 +79,14 @@ private slots:
     void on_pbCopyVals_clicked(); // copy values table to clipboard
 
 private:
-    std::map <int, QTableWidgetItem *> mapPtItem_ColAddress; // map of points to cells of table
-    std::map <int, QTableWidgetItem *> mapPtItem_ColValue;
-    std::map <int, QTableWidgetItem *> mapPtItem_ColType;
-    std::map <int, QTableWidgetItem *> mapPtItem_ColCause;
-    std::map <int, QTableWidgetItem *> mapPtItem_ColFlags;
-    std::map <int, QTableWidgetItem *> mapPtItem_ColCount;
-    std::map <int, QTableWidgetItem *> mapPtItem_ColTimeTag;
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColAddress; // map of points to cells of table
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColCommonAddress;
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColValue;
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColType;
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColCause;
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColFlags;
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColCount;
+    std::map <std::pair<int,int>, QTableWidgetItem *> mapPtItem_ColTimeTag;
 
     Ui::MainWindow *ui;
     QTimer *tmLogMsg; // timer to show log messages

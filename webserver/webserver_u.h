@@ -25,7 +25,6 @@ __published:	// IDE-managed Components
         TTimer *Timer2;
         TButton *btSinc;
         TTimer *Timer3;
-        TButton *btResetServer;
         TMemo *mmWeb;
         TCheckBox *cbLogar;
         TLabel *lbOutroIHM;
@@ -45,16 +44,21 @@ __published:	// IDE-managed Components
         void __fastcall FormCreate(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
         void __fastcall Timer3Timer(TObject *Sender);
-        void __fastcall btResetServerClick(TObject *Sender);
         void __fastcall IdHTTPServer1Exception(TIdPeerThread *AThread,
           Exception *AException);
 private:	// User declarations
         void logaln(String msg);
-        int cntDownNoHTTPReq; // count down time with no HTTP Requests, when reached 0 resets server 
+        int cntDownNoHTTPReq; // count down time with no HTTP Requests, when reached 0 resets server
 public:		// User declarations
         __fastcall TfmWebServ(TComponent* Owner);
         unsigned getKeyNum(String s);
 };
+
+extern String JANELA_AENCONTRAR;
+extern HWND JANELA_ENCONTRADA;
+extern int cmdNPonto;
+extern int cmdCntAck;
+extern int confCmdSimul;
 
 // 4*Timer2->Interval(10s) = 40s
 #define NOHTTPREQTIME 4

@@ -1,6 +1,6 @@
 object fmWebServ: TfmWebServ
-  Left = 698
-  Top = 399
+  Left = 1203
+  Top = 192
   Width = 592
   Height = 547
   Caption = 'fmWebServ'
@@ -45,15 +45,6 @@ object fmWebServ: TfmWebServ
     TabOrder = 0
     OnClick = btSincClick
   end
-  object btResetServer: TButton
-    Left = 400
-    Top = 8
-    Width = 75
-    Height = 25
-    Caption = 'Reset Server'
-    TabOrder = 1
-    OnClick = btResetServerClick
-  end
   object mmWeb: TMemo
     Left = 8
     Top = 72
@@ -61,7 +52,7 @@ object fmWebServ: TfmWebServ
     Height = 433
     Anchors = [akLeft, akTop, akRight, akBottom]
     ScrollBars = ssVertical
-    TabOrder = 2
+    TabOrder = 1
   end
   object cbLogar: TCheckBox
     Left = 8
@@ -69,10 +60,9 @@ object fmWebServ: TfmWebServ
     Width = 97
     Height = 17
     Caption = 'Log'
-    TabOrder = 3
+    TabOrder = 2
   end
   object IdHTTPServer1: TIdHTTPServer
-    Active = True
     Bindings = <>
     CommandHandlers = <>
     DefaultPort = 51908

@@ -3,7 +3,7 @@
 
 // Parâmetros e constantes de configuração do sistema
 
-#define VERSAO "5.3"
+#define VERSAO "5.6"
 
 extern int IEC104_PORT;
 extern int IEC104_1_SEC; // endereço secundário da utr 1
@@ -14,6 +14,7 @@ extern int T_INTEGRIDADE; // pedido de integridade
 extern int BDTR_PORTA; // porta de escuta para receber dados no protocolo BDTR
 extern int BDTR_PORTA_CMD; // porta para envio de dados (ex. comandos) ao BDTR
 extern int BDTR_GRUPO_INTEGRIDADE; // grupo a ser pedido ao BDTR na integridade
+extern int HTTP_PORTA_OLD;
 extern int HTTP_PORTA;
 extern int HTTP_PORTA_NGINX;
 extern String IP_BDTR1;
@@ -44,9 +45,11 @@ extern int ALARMA_DUPLA_TRANSICAO; // alarma ou não quando recebe evento com est
 extern String WEBSERVER_CLIENTES_REMOTOS; // Lista separada por vírgula de clientes remotos, * libera geral
 extern String WEBSERVER_SCRIPT; // Nome do script servidor de código javascript chamado de dentro do browser
 extern String SHELLAPI_SCRIPT; // Nome do script servidor de código javascript chamado do hmishell
+extern String SIMPLE_JSON; // Path to Grafana simple JSON API 
 extern String WEBSERVER_DATE_FMT; // date time format according to TDateTime::FormatString
 extern String WEBSERVER_DP_TRANSIT; // message for iec digital double 00
 extern String WEBSERVER_DP_INVALID; // message for iec digital double 11
+extern int WEBSERVER_HTTPD_MODE; // microhttpd daemon start mode (1=single thread, 2=thread per connection) 
 
 extern int HIST_RECORD;
 extern int HIST_DEADBANDFACTOR;

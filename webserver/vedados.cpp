@@ -1,9 +1,8 @@
 //---------------------------------------------------------------------------
-// VEDADOS.CPP
-// Interface para visualização de pontos e depuração.
+// User Interface to see point values.
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2018 - Ricardo L. Olsen
+	Copyright 2008-2019 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +35,7 @@ OSHMI - Open Substation HMI
 #include "historico_u.h"
 #include "i104m_u.h"
 #include "json_u.h"
+#include "httpd_u.h"
 
 // Colunas do StringGrid
 #define COL_PONTO  0
@@ -148,7 +148,7 @@ __fastcall TfmVeDados::TfmVeDados(TComponent* Owner)
     ExecExternApp( RUN_MONGOPROCPONTOS.c_str() );
     }
 
-  // se tem outra IHM tenta sincronizar os eventos
+  // if there is a redundant HMI, try to sync events
   if ( IHMRED_IP_OUTRO_IHM != "" )
     {
     String S = (String)"wget -t 1 -T 5 http://" +
@@ -158,9 +158,6 @@ __fastcall TfmVeDados::TfmVeDados(TComponent* Owner)
                (String)"/htdocs/eventsync.php -O ../db/soe_i0.sql";
     ExecExternApp( S.c_str() );
     }
-
-  // esconde botões do controle avançados
-  // ShowButtons( false );
 
   sgPontos->Cells[COL_PONTO][0] = "PointNum";
   sgPontos->Cells[COL_ENDER][0] = "Address";
@@ -184,7 +181,7 @@ void __fastcall TfmVeDados::Timer1Timer(TObject *Sender)
 {
 static unsigned int cntseg = 0;
 
-  // Mostra o estado de primário/secundário (reserva fica com a toolbar vermelha)
+  // Show primaary / secondary state (red toolbar means secondary)
   if ( fmBDTR != NULL )
     {
     if ( fmBDTR->bdtr.EhPrincipal() )
@@ -199,19 +196,19 @@ static unsigned int cntseg = 0;
       }
     }
 
-  // esconde a janela pricipal, se assim configurado
+  // Hide window if configured to do so
   if ( HIDE && fmVeDados->Visible && cntseg == 10 )
     {
     Hide();
     }
 
-  // mostra os pontos na janela principal
+  // Show points
   if ( fmVeDados->Visible )
     {
     map <int, TPonto> &PontosTR = BL.GetMapaPontos();
     map <int, TPonto>::iterator it;
     
-    // verifica o tamanho do string grid
+    // Verify string grid size
     if ( (unsigned)sgPontos->RowCount < PontosTR.size() + 2 )
       sgPontos->RowCount = PontosTR.size() + 2;
 
@@ -239,17 +236,18 @@ static unsigned int cntseg = 0;
 
       for (it = PontosTR.begin(); it!=PontosTR.end(); it++, i++)
         {
-        ponto = (*it).first; // número do ponto
-        TPonto &pto = ((*it).second); // dados do ponto
+        ponto = (*it).first; // point number (key)
+        TPonto &pto = ((*it).second); // point data
 
-        // posiciona num ponto escolhido
+        // position at the desired point
         if ( EncontraPonto && ponto >= EncontraPonto )
           {
-          sgPontos->TopRow = i; // posição no grid é a contagem atual
-          EncontraPonto = 0; // termina a procura
+          sgPontos->TopRow = i; // position in grid is current count
+          EncontraPonto = 0; // finish search
           }
 
-        // mostra estatística do ponto, se ele é visível no StringGrid
+        // show point statistics if visible
+        if( Visible )
         if ( i >= sgPontos->TopRow &&
              i <= sgPontos->TopRow + sgPontos->VisibleRowCount )
           {
@@ -305,7 +303,7 @@ static unsigned int cntseg = 0;
 
   if ( ! (cntseg % 5) )
     {
-    // ativa watchdog de software
+    // ping software watchdog (mon_proc.exe)
     String s = GetCommandLine();
     s = s + "\nContagem ";
     s = s + cntseg;
@@ -338,6 +336,7 @@ void __fastcall TfmVeDados::btSDEClick(TObject *Sender)
 void __fastcall TfmVeDados::btWebServClick(TObject *Sender)
 {
   fmWebServ->Show();
+  fmMicroHttpd->Show();
 }
 //---------------------------------------------------------------------------
 
@@ -403,7 +402,7 @@ void TfmVeDados::ShowButtons( bool ShowBt )
     btHist->Visible = ShowBt;
     btIEC104->Visible = ShowBt;
 
-    // habilita sempre o botão de simulação quando houver simulação
+    // enable simulation button when there is simulation
     btSimul->Visible = ShowBt;
     if ( SIMULACAO != SIMULMOD_NAO )
       {
@@ -442,8 +441,8 @@ void __fastcall TfmVeDados::Image2DblClick(TObject *Sender)
 
 void __fastcall TfmVeDados::btCloseClick(TObject *Sender)
 {
-  fmBDTR->FinalizandoAplicacao(); // manda mensagem ao BDTR avisando que vai cair fora
-  IHM_VaiFinalizar(); // sinaliza que está finalizando
+  fmBDTR->FinalizandoAplicacao(); // send BDTR message to register program closing
+  IHM_VaiFinalizar(); // signal finalization state
   Close();
 }
 //---------------------------------------------------------------------------
@@ -455,14 +454,14 @@ void __fastcall TfmVeDados::FormCloseQuery(TObject *Sender, bool &CanClose)
       }
     else
       {
-      // CanClose = false; // não deixa fechar o programa sem a senha
+      // CanClose = false; // do not let close without admin password
       // edtPasswd->Visible=true;
       }
 
-    fmBDTR->FinalizandoAplicacao(); // manda mensagem ao BDTR avisando que vai cair fora
-    // fmDumpdb->DumpDB(0); // faz um dump geral da base
+    fmBDTR->FinalizandoAplicacao();  // send BDTR message to register program closing
+    // fmDumpdb->DumpDB(0); // dump database
     Sleep( (DWORD)200 );
-    IHM_VaiFinalizar(); // sinaliza que está finalizando
+    IHM_VaiFinalizar(); // signal finalization state
 }
 //---------------------------------------------------------------------------
 
@@ -492,7 +491,7 @@ fmLua->Show();
 
 void __fastcall TfmVeDados::btIEC104Click(TObject *Sender)
 {
-fmBDTR->bdtr.ShowConv104BDTR(); // mostra conversor IEC104/BDTR
+fmBDTR->bdtr.ShowConv104BDTR(); // send message to show IEC104/BDTR
 fmIEC104M->Show();
 }
 //---------------------------------------------------------------------------

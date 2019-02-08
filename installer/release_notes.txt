@@ -21,13 +21,14 @@ Acknowledgements:
 
   Inkscape - https://inkscape.org
   Inkscape + SAGE - https://sourceforge.net/projects/sage-scada
-  Chromium - by "The Chromium Authors". 
-  Chromium binaries - http://chromium.woolyss.com
+  Chromium - by "The Chromium Authors"
+  Chromium x86 binaries - http://chromium.woolyss.com
   ICCP Client by Fernando Covatti - https://github.com/fcovatti/iccp
   Opendnp3 - https://www.automatak.com/opendnp3/
   Libmodbus - http://libmodbus.org/
   QT - http://www.qt.io
   Lua Language - https://www.lua.org
+  GNU Libmicrohttpd: https://www.gnu.org/software/libmicrohttpd
   The Indy Project - http://www.indyproject.org
   FIPS-180-1 compliant SHA-1 implementation by Paul Bakker http://polarssl.org
   NSIS (Nullsoft Scriptable Install System) - http://nsis.sourceforge.net/Main_Page
@@ -89,8 +90,10 @@ Screens are in "c:\oshmi\svg\".
 OSHMI configuration files are in "c:\oshmi\conf\".
 For more info about configuration please read the OSHMI Configuration Manual.
 
-By default, the system is configured to allow access only by the local machine.
+By default, the system is configured to allow HTTP access only by the local machine.
 To allow other IP addresses edit the "c:\oshmi\conf\nginx_access_control.conf" file.
+To configure safe remote client access, configure IP address access control, HTTPS, 
+  client certificates and user authentication directly in the Nginx configuration files.
 
 -------------------------------------------------------------------
 
@@ -129,12 +132,13 @@ Recommended Operating Systems:
 
 Please use an updated OS.
 
-If you encounter errors related to Windows Universal C Runtime (CRT), see:
+If you encounter errors related to Windows Universal C Runtime (CRT), update the Windows OS or see:
   https://support.microsoft.com/help/2999226/update-for-universal-c-runtime-in-windows
 
 Can also run on:
  - Linux Mint (under Wine, experimental), follow instructions from the OSHMI configuration manual.
  - Other Linux distros (no specific instructions provided).
+ - See configuration manual.
 
 Not anymore compatible Operating Systems:
  - Windows Vista 32/64 bits (require an old version of Chromium not included).
@@ -143,10 +147,9 @@ Not anymore compatible Operating Systems:
      https://sourceforge.net/projects/oshmiopensubstationhmi/files/oshmi_setup_v.3.17.exe/download
      https://sourceforge.net/projects/oshmiopensubstationhmi/files/chromium_browser_for_win_xp.zip/download
  
-User interface can be used on:
- - IOS 7+ devices.
- - Android 4.1+ devices.
- - Any device with an HTML5 browser like Chrome, Firefox, Opera or Safari.
+Client user interface can be used on:
+ - Modern IOS and Android devices.
+ - Any device with an updated HTML5 browser like Chrome/Chromium, Firefox, Opera, Edge or Safari.
 
 -------------------------------------------------------------------
 
@@ -156,13 +159,65 @@ To compile the source code on Windows you will need the following environments:
 
 Webserver, HMIShell, Mon_Proc and Sim_TR:
  - Borland C++ Builder 5.
- - Indy 9 Components - http://www.indyproject.org/download/Files/Indy9.html.
+ - Indy 9 Components (for C++ Builder 5)- http://www.indyproject.org/download/Files/Indy9.html.
 
 QTester104:
  - QT 5.9.2 or newer.
 
 DNP3 and Modbus Drivers:
  - Visual Studio Community (2015 or newer).
+
+Inkscape+SAGE:
+ - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 5.6:
+
+Webserver:
+ - Replaced Indy HTTP server with a new server based on the GNU Libmicrohttpd (DLL).
+ - Possibility of starting microhttpd daemon in single thread mode or thread per connection.
+ - Significant performance optimizations of real time data queries.
+
+Screen Viewer:
+ - Modified insertion of the SVG file in the page (from inside an <object> to direct <svg>).
+ - Changed point values queries to HTTP GET method instead of POST.
+ - SVG File loaded with fetch().
+ - Faster loading of displays with less DOM style recalculations (reflows).
+ - Vega updated to version 4.4.0.
+ - Vega-Lite updated to version 2.6.0. 
+ - No more support for older browsers like I.E. as Vega 4 requires ES6.
+ - Better error management in vega_websage.js.
+
+Events, Tabular & Screen Viewers:
+ - New functions for requesting scripts and JSON.
+
+QTester104:
+ - Updated to version 1.25.
+ - Can set TCP port in the UI.
+ - Point mapping can be set on or off by a checkbox (when disabled the performance is better).
+ - Show Common Address of ASDU in Point Map.
+ - Much improved network performance.
+
+Linux:
+ - Updated Nginx configuration file.
+
+Dynamic Excel Sheet (c:\oshmi\etc\dyn_sheet.xlsx):
+ - Updated web queries to work with new microhttpd.
+
+SQLite:
+ - Updated to version 3.27.0.
+
+Chromium:
+ - Updated to version 71.0.3578.98.
+
+PHP:
+ - Updated to version 7.3.1 x86 NTS.
+ - PHP.ini updated to production template of version 7.3.
+
+Nginx:
+ - Configured to allow bigger URL queries.
+ - Updated to version 1.15.8.
 
 -------------------------------------------------------------------
 

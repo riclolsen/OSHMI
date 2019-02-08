@@ -597,3 +597,62 @@ BrowserDetect.init();
 function roundnum(value, decimals) {
 	return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
 }
+
+// get script from server and execute it
+function getScript ( srvurl, postdata, tout )
+{
+postdata = postdata || "";
+tout = tout || null;
+
+if ( postdata != "" )
+  $.ajax({ url: srvurl,
+           dataType: "text",
+           data: postdata,
+           type: "POST",
+           timeout: tout,
+           success: function(data) { 
+             try {
+               eval(data);
+               data = null;
+             }
+             catch(E) {
+               console.log(E.message);
+             }
+           }});
+else
+  $.ajax({ url: srvurl,
+           dataType: "text",
+           timeout: tout,
+           success: function(data) { 
+              try {
+                eval(data);
+                data = null;
+              }
+              catch(E) {
+                console.log(E.message);
+              }
+           }});
+}
+
+// get JSON from server 
+function getJSON ( srvurl, onsuccess, postdata, tout )
+{
+postdata = postdata || "";
+tout = tout || null;
+onsuccess = onsuccess || null;
+
+if ( postdata != "" )
+  $.ajax({ url: srvurl,
+           dataType: "json",
+           data: postdata,
+           type: "POST",
+           success: onsuccess,
+           timeout: tout
+         });
+else
+  $.ajax({ url: srvurl,
+           dataType: "json",
+           success: onsuccess,
+           timeout: tout
+         });
+}

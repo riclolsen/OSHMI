@@ -295,7 +295,7 @@
        </font>
       </property>
       <property name="text">
-       <string>© 2010-2017 Ricardo L. Olsen</string>
+       <string>© 2010-2019 Ricardo L. Olsen</string>
       </property>
      </widget>
     </item>
@@ -309,14 +309,7 @@
     <item row="4" column="2">
      <widget class="QPushButton" name="pbCopyClipb">
       <property name="text">
-       <string>Copy Clip.Log</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="6">
-     <widget class="QPushButton" name="pbCopyVals">
-      <property name="text">
-       <string>Copy Clip.Vals</string>
+       <string>Copy Log</string>
       </property>
      </widget>
     </item>
@@ -332,6 +325,33 @@ If empty will use remote link address.</string>
      <widget class="QLabel" name="label">
       <property name="text">
        <string>ASDU Addr.</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLineEdit" name="lePort"/>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLabel" name="label_9">
+      <property name="text">
+       <string>Port</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="6">
+     <widget class="QCheckBox" name="cbPointMap">
+      <property name="text">
+       <string>Point Mapping</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="5">
+     <widget class="QPushButton" name="pbCopyVals">
+      <property name="text">
+       <string>Copy Map</string>
       </property>
      </widget>
     </item>

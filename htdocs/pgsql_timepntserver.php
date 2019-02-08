@@ -68,7 +68,7 @@ try
 
     if ( $FUNCAO == "S" )
       {
-      printf( "var hvalues = [];\n" );
+      printf( "hvalues = [];\n" );
       }
 
     $cntpnt = 0;

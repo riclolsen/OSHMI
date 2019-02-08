@@ -10253,8 +10253,8 @@
            id="path1940-1-3" />
         <g
            id="g2227-6-7"
-           inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;var bb = thisobj.getBBox();\nvar xcen = bb.x + bb.width/2;\nvar ycen = bb.y + bb.height/2;\nwindow.Animate( thisobj, 'animateTransform', {'attributeType':'xml', 'attributeName':'transform', 'type': 'rotate', 'from': '0 '+ xcen + ' ' + ycen, 'to': '360 ' + xcen + ' ' + ycen, 'repeatCount':'indefinite','dur': 4, 'calcMode':'paced' });\n\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
-           transform="translate(-182.77492,-261.91457)">
+           inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;setTimeout(function(){var bb = thisobj.getBBox();\nvar xcen = bb.x + bb.width/2;\nvar ycen = bb.y + bb.height/2;\nwindow.Animate( thisobj, 'animateTransform', {'attributeType':'xml', 'attributeName':'transform', 'type': 'rotate', 'from': '0 '+ xcen + ' ' + ycen, 'to': '360 ' + xcen + ' ' + ycen, 'repeatCount':'indefinite','dur': 4, 'calcMode':'paced' });},1000);\n\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
+           >
           <path
              sodipodi:open="true"
              sodipodi:end="1.5562942"
@@ -10337,8 +10337,8 @@
            id="path1940-1" />
         <g
            id="g2227-6"
-           inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;var bb = thisobj.getBBox();\nvar xcen = bb.x + bb.width/2;\nvar ycen = bb.y + bb.height/2;\nwindow.Animate( thisobj, 'animateTransform', {'attributeType':'xml', 'attributeName':'transform', 'type': 'rotate', 'from': '0 '+ xcen + ' ' + ycen, 'to': '360 ' + xcen + ' ' + ycen, 'repeatCount':'indefinite','dur': 5, 'calcMode':'paced' });\n\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
-           transform="translate(-182.77492,-261.91457)">
+           inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;setTimeout(function(){var bb = thisobj.getBBox();\nvar xcen = bb.x + bb.width/2;\nvar ycen = bb.y + bb.height/2;\nwindow.Animate( thisobj, 'animateTransform', {'attributeType':'xml', 'attributeName':'transform', 'type': 'rotate', 'from': '0 '+ xcen + ' ' + ycen, 'to': '360 ' + xcen + ' ' + ycen, 'repeatCount':'indefinite','dur': 4, 'calcMode':'paced' });},1000);\n\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
+           >
           <path
              sodipodi:open="true"
              sodipodi:end="1.5562942"
@@ -10421,8 +10421,8 @@
            id="path1940-1-9" />
         <g
            id="g2227-6-8"
-           inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;var bb = thisobj.getBBox();\nvar xcen = bb.x + bb.width/2;\nvar ycen = bb.y + bb.height/2;\nwindow.Animate( thisobj, 'animateTransform', {'attributeType':'xml', 'attributeName':'transform', 'type': 'rotate', 'from': '0 '+ xcen + ' ' + ycen, 'to': '360 ' + xcen + ' ' + ycen, 'repeatCount':'indefinite','dur': 3, 'calcMode':'paced' });\n\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
-           transform="translate(-182.77492,-261.91457)">
+           inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;setTimeout(function(){var bb = thisobj.getBBox();\nvar xcen = bb.x + bb.width/2;\nvar ycen = bb.y + bb.height/2;\nwindow.Animate( thisobj, 'animateTransform', {'attributeType':'xml', 'attributeName':'transform', 'type': 'rotate', 'from': '0 '+ xcen + ' ' + ycen, 'to': '360 ' + xcen + ' ' + ycen, 'repeatCount':'indefinite','dur': 4, 'calcMode':'paced' });},1000);\n\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
+           >
           <path
              sodipodi:open="true"
              sodipodi:end="1.5562942"
@@ -12521,7 +12521,7 @@
     </g>
     <g
        id="g5925"
-       inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;var s = window.Snap(window.SVGDoc.rootElement);\nvar second = s.select(\&quot;#second\&quot;);\nvar minute = s.select(\&quot;#minute\&quot;);\nvar hour = s.select(\&quot;#hour\&quot;);\n//Run animation function\nsetInterval( function () {\n//Get the current time                \n  var timeNow = new Date();\n  var hours   = timeNow.getHours();\n  var minutes = timeNow.getMinutes();\n  var seconds = timeNow.getSeconds();\n//Move second needle halfway                \n  second.transform('r' + (seconds*6-3) + ',200,200');\n//Animate the second needle the rest of the way\n  second.animate({transform: 'r' + (seconds*6) + ',200,200'}, 500, mina.elastic);\n//Move minute needle                \n  minute.transform('r' + (minutes*6) + ',200,200');\n//Only animate the minute needle when the minute changes    \n  if(seconds == 0){minute.transform('r' + (minutes*6-3) + ',200,200');\n  minute.animate({transform: 'r' + (minutes*6) + ',200,200'}, 500, mina.elastic);}\n//Allow the hour needle to move accordingly when the minutes change             \n  hour.transform('r' + ((hours*30)+(minutes/2)) + ',200,200');\n//Repeat this entire function every 1 second\n  }, 1000 );\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
+       inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;var s = window.Snap(SVGDoc);\nvar second = s.select(\&quot;#second\&quot;);\nvar minute = s.select(\&quot;#minute\&quot;);\nvar hour = s.select(\&quot;#hour\&quot;);\n//Run animation function\nsetInterval( function () {\n//Get the current time                \n  var timeNow = new Date();\n  var hours   = timeNow.getHours();\n  var minutes = timeNow.getMinutes();\n  var seconds = timeNow.getSeconds();\n//Move second needle halfway                \n  second.transform('r' + (seconds*6-3) + ',200,200');\n//Animate the second needle the rest of the way\n  second.animate({transform: 'r' + (seconds*6) + ',200,200'}, 500, mina.elastic);\n//Move minute needle                \n  minute.transform('r' + (minutes*6) + ',200,200');\n//Only animate the minute needle when the minute changes    \n  if(seconds == 0){minute.transform('r' + (minutes*6-3) + ',200,200');\n  minute.animate({transform: 'r' + (minutes*6) + ',200,200'}, 500, mina.elastic);}\n//Allow the hour needle to move accordingly when the minutes change             \n  hour.transform('r' + ((hours*30)+(minutes/2)) + ',200,200');\n//Repeat this entire function every 1 second\n  }, 1000 );\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
        transform="matrix(0.22943968,0,0,0.22926519,521.0396,-424.18638)">
       <g
          style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:50px;line-height:125%;font-family:Roboto;-inkscape-font-specification:'Roboto Light';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"

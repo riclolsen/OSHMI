@@ -48,16 +48,14 @@ OSHMI - Open Substation HMI
 #pragma link "IdTCPServer"
 #pragma resource "*.dfm"
 
+String JANELA_AENCONTRAR;
+HWND JANELA_ENCONTRADA = 0;
+
 TfmWebServ *fmWebServ;
 
 int cmdNPonto = 0;
 int cmdCntAck = 0;
 int confCmdSimul = 1;
-String JANELA_AENCONTRAR = "";
-HWND JANELA_ENCONTRADA = 0;
-
-list <int> lstNPontoDump;
-list <String> lstHTTPReq_OutroIHM; // fila de requisições a mandar para o outro IHM
 
 // order point list by id
 int sort_function( const void *a, const void *b )
@@ -128,6 +126,8 @@ __fastcall TfmWebServ::TfmWebServ(TComponent* Owner)
 {
 cntDownNoHTTPReq = NOHTTPREQTIME; 
 NMHTTP1->Port = HTTP_PORTA;
+//IdHTTPServer1->DefaultPort = HTTP_PORTA_OLD;
+// IdHTTPServer1->Active = true;
 lbOutroIHM->Caption = (String)"Other HMI IP = " + IHMRED_IP_OUTRO_IHM;
 }
 
@@ -135,6 +135,7 @@ lbOutroIHM->Caption = (String)"Other HMI IP = " + IHMRED_IP_OUTRO_IHM;
 void __fastcall TfmWebServ::IdHTTPServer1CommandGet(TIdPeerThread *AThread,
       TIdHTTPRequestInfo *ARequestInfo, TIdHTTPResponseInfo *AResponseInfo)
 {
+/*
 if (IHM_EstaFinalizando()) return;
 
 bool is_dinpg = false; // página dinâmica não vai para o cache
@@ -222,7 +223,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      // se tem outro ihm e não veio dele vou encaminhar a mensagem
      if ( IHMRED_IP_OUTRO_IHM != "" )
      if ( ARequestInfo->RemoteIP != IHMRED_IP_OUTRO_IHM )
-         lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document +"?" + ARequestInfo->UnparsedParams );
+         BL.lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document +"?" + ARequestInfo->UnparsedParams );
      break;
   case 'E': // point list
   case 'P': // point list
@@ -469,7 +470,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
 
      double valor;
      TFA_Qual qual;
-     double tagalarm = 0;
+     double tagalarm;
      bool temponto;
      int alm, tem_anot, alrin, congel, ehcomando;
      String Anot;
@@ -681,7 +682,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
 
      double valor;
      TFA_Qual qual;
-     double tagalarm = 0;
+     double tagalarm;
      bool temponto;
      int alm, tem_anot, alrin, congel, ehcomando;
      String Anot;
@@ -1139,7 +1140,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      // se tem outro ihm e não veio dele vou encaminhar a mensagem
      if ( IHMRED_IP_OUTRO_IHM != "" )
      if ( ARequestInfo->RemoteIP != IHMRED_IP_OUTRO_IHM )
-       lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
+       BL.lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
      }
      break;
 
@@ -1210,7 +1211,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      // se tem outro ihm e não veio dele vou encaminhar a mensagem
      if ( IHMRED_IP_OUTRO_IHM != "" )
      if ( ARequestInfo->RemoteIP != IHMRED_IP_OUTRO_IHM )
-       lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
+       BL.lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
      }
      break;
 
@@ -1219,7 +1220,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
      // se tem outro ihm e não veio dele vou encaminhar a mensagem
      if ( IHMRED_IP_OUTRO_IHM != "" )
      if ( ARequestInfo->RemoteIP != IHMRED_IP_OUTRO_IHM )
-         lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document +"?" + ARequestInfo->UnparsedParams );
+         BL.lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document +"?" + ARequestInfo->UnparsedParams );
      break;
 
   case 'W': // escreve valores de parâmetros no banco
@@ -1331,12 +1332,12 @@ switch ( ARequestInfo->UnparsedParams[1] )
         //  pt.SetValorNormal( ARequestInfo->Params->Strings[6].SubString(4,1).ToInt()?1:0 );
         //  } catch ( Exception &E ) { logaln( "E: 8-" + E.Message ); }
 
-        lstNPontoDump.push_back( nponto ); // vou colocar numa lista para descarregar depois
+        BL.lstNPontoDump.push_back( nponto ); // vou colocar numa lista para descarregar depois
 
         // se tem outro ihm e não veio dele vou encaminhar a mensagem
         if ( IHMRED_IP_OUTRO_IHM != "" )
         if ( ARequestInfo->RemoteIP != IHMRED_IP_OUTRO_IHM )
-            lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
+            BL.lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
         }
       }
       // break;
@@ -1453,7 +1454,7 @@ switch ( ARequestInfo->UnparsedParams[1] )
       // se tem outro ihm e não veio dele vou encaminhar a mensagem
       if ( IHMRED_IP_OUTRO_IHM != "" )
       if ( ARequestInfo->RemoteIP != IHMRED_IP_OUTRO_IHM )
-         lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
+         BL.lstHTTPReq_OutroIHM.push_back( ARequestInfo->Document + "?" + ARequestInfo->UnparsedParams );
       AResponseInfo->ContentText = BL.ConsultaInfoPonto( nponto ); // NPONTO
       }
 
@@ -1626,46 +1627,12 @@ else
 
   is_dinpg = false;
 
-/* document serving disabled: must use NGINX
-    try
-      {
-      AResponseInfo->ContentStream = new TFileStream((String)"." + ARequestInfo->Document, fmOpenRead );
-      }
-    catch ( Exception &E )
-      {
-      AResponseInfo->ContentText = "Documento inexistente: " + (String)"." + ARequestInfo->Document;
-      }
-*/
-
   AResponseInfo->ContentText = "Can't serve document: " + (String)"." + ARequestInfo->Document;
   }
 
 // Monta e escreve o HTTP Header
 if ( !AResponseInfo->HeaderHasBeenWritten )
   {
-/*
-  if ( ARequestInfo->Document.Pos(".html") || ARequestInfo->Document.Pos(".htm") )
-    AResponseInfo->ContentType = "text/html";
-  else
-  if ( ARequestInfo->Document.Pos(".css") )
-    AResponseInfo->ContentType = "text/css";
-  else
-  if ( ARequestInfo->Document.Pos(".png") )
-    AResponseInfo->ContentType = "image/png";
-  else
-  if ( ARequestInfo->Document.Pos(".jpg") || ARequestInfo->Document.Pos(".jpeg") )
-    AResponseInfo->ContentType = "image/jpeg";
-  else
-  if ( ARequestInfo->Document.Pos(".pdf") )
-    AResponseInfo->ContentType = "application/pdf";
-  else
-  if ( ARequestInfo->Document.Pos(".gif") )
-    AResponseInfo->ContentType = "image/gif";
-  else
-  if (ARequestInfo->Document.Pos(".svg"))
-    AResponseInfo->ContentType = "image/svg+xml;charset=UTF-8";
-  else
-*/
   if (ARequestInfo->Document.Pos(".js") || is_dinpg)
     AResponseInfo->ContentType = "application/x-javascript; charset=UTF-8";
   else
@@ -1710,6 +1677,7 @@ catch ( Exception &E )
   {
   logaln( "E: 12- " + ARequestInfo->Document + (String)" - " + E.Message );
   }
+*/  
 }
 
 //---------------------------------------------------------------------------
@@ -1717,7 +1685,7 @@ catch ( Exception &E )
 void __fastcall TfmWebServ::Timer2Timer(TObject *Sender)
 {
 int nponto;
-static int cntHTTPServerReset = 0;
+// static int cntHTTPServerReset = 0;
 
     if ( IHM_EstaFinalizando() )
       return;
@@ -1729,16 +1697,17 @@ static int cntHTTPServerReset = 0;
       }
 
     // esvazia fila de pontos para dump (por escrita de parametros)
-    lstNPontoDump.unique();
-    while ( !lstNPontoDump.empty() ) // enquanto houver consulta
+    BL.lstNPontoDump.unique();
+    while ( !BL.lstNPontoDump.empty() ) // enquanto houver consulta
       {
-        nponto = lstNPontoDump.front();   // pega o primeiro da fila
-        lstNPontoDump.pop_front();   // retira da fila
+        nponto = BL.lstNPontoDump.front();   // pega o primeiro da fila
+        BL.lstNPontoDump.pop_front();   // retira da fila
         fmDumpdb->DumpDB( nponto, 1 ); // faz dump  do ponto forçando mesmo que ainda não recebeu integridade
       }
 
     // monitor time without http requests to the server, after some timeout resets the server
-    // also resets the server if it is not active  
+    // also resets the server if it is not active
+    /*
     cntDownNoHTTPReq--;
     if ( cntDownNoHTTPReq <= 0 || !IdHTTPServer1->Active )
       {
@@ -1756,8 +1725,7 @@ static int cntHTTPServerReset = 0;
         cntDownNoHTTPReq = 1;
         }
       }
-
-    // logaln( (String)"I: HTTPServerActive=" + (String)(int)IdHTTPServer1->Active );
+   */
 }
 //---------------------------------------------------------------------------
 
@@ -1935,7 +1903,7 @@ void __fastcall TfmWebServ::FormCreate(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TfmWebServ::FormDestroy(TObject *Sender)
 {
-   IdHTTPServer1->Active = false;
+// IdHTTPServer1->Active = false;
 }
 //---------------------------------------------------------------------------
 
@@ -1945,11 +1913,11 @@ void __fastcall TfmWebServ::Timer3Timer(TObject *Sender)
 
   if ( IHMRED_IP_OUTRO_IHM != "" )
     {
-    if ( !lstHTTPReq_OutroIHM.empty() ) // enquanto houver consulta
+    if ( !BL.lstHTTPReq_OutroIHM.empty() ) // enquanto houver consulta
         {
          String S;
-         S = lstHTTPReq_OutroIHM.front();   // pega o primeiro da fila
-         lstHTTPReq_OutroIHM.pop_front();   // retira da fila
+         S = BL.lstHTTPReq_OutroIHM.front();   // pega o primeiro da fila
+         BL.lstHTTPReq_OutroIHM.pop_front();   // retira da fila
          try {
              NMHTTP1->Host = IHMRED_IP_OUTRO_IHM;
              NMHTTP1->Port = HTTP_PORTA;
@@ -1967,13 +1935,6 @@ void __fastcall TfmWebServ::Timer3Timer(TObject *Sender)
    else
       Timer3->Interval = 2000;
    }
-}
-//---------------------------------------------------------------------------
-
-void __fastcall TfmWebServ::btResetServerClick(TObject *Sender)
-{
-IdHTTPServer1->Active = false;
-IdHTTPServer1->Active = true;
 }
 //---------------------------------------------------------------------------
 

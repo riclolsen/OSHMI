@@ -204,6 +204,8 @@ class iec104_class
     virtual int readTCP( char * buf, int szmax ) = 0;
     // send tcp data, user provided
     virtual void sendTCP( char * data, int sz ) = 0;
+    // check bytes available in tcp connection
+    virtual int bytesAvailableTCP() = 0;
 
     // ---- virtual funcions, user defined on derived class (not mandatory)---
 

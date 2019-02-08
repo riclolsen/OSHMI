@@ -73,6 +73,7 @@ private:
     QThread tcpThread;
 
     // redefine for iec104_class
+    int bytesAvailableTCP();
     void connectTCP();
     void disconnectTCP();
     int readTCP( char * buf, int szmax );

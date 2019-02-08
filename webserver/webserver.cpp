@@ -73,6 +73,8 @@ USEUNIT("sqlite3.c");
 USEFORM("i104m_u.cpp", fmIEC104M);
 USEUNIT("jsmn.c");
 USEFORM("json_u.cpp", fmJSON);
+USELIB("libmicrohttp-dll.lib");
+USEFORM("httpd_u.cpp", fmMicroHttpd);
 //---------------------------------------------------------------------------
 extern String IP_BDTR1;
 extern String IP_BDTR2;
@@ -112,6 +114,7 @@ WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                  Application->CreateForm(__classid(TfmHist), &fmHist);
                  Application->CreateForm(__classid(TfmIEC104M), &fmIEC104M);
                  Application->CreateForm(__classid(TfmJSON), &fmJSON);
+                 Application->CreateForm(__classid(TfmMicroHttpd), &fmMicroHttpd);
                  if ( IP_BDTR1 == "" && IP_BDTR2 == "" && SIMULACAO == 0 )
                    {
                    // roda varredor IEC104, mas primeiro mata algum que já esteja rodando

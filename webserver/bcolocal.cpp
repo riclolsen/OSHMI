@@ -173,7 +173,7 @@ int TPonto::GetDoubleState()
 if ( EhDigital() )
   {
   return Qual.Byte & ESTDUP_MASCARA;
-  }      
+  }
 return 0;
 }
 
@@ -187,31 +187,6 @@ void TPonto::AlarmAck()
 {
  AlarmeNaoRec = 0;
 }
-
-char * TPonto::GetNome()
-{
-  return Tag;
-}
-
-char * TPonto::GetModulo()
-{
-  return Modulo;
-}
-
-double TPonto::GetLimSup()
-{
-  return LimSup;
-}
-
-double TPonto::GetLimInf()
-{
-  return LimInf;
-}
-
-int TPonto::GetPriority()
-{
-  return Prioridade;
-}                   
 
 bool TPonto::TemAlarmePersistente()
 {
@@ -242,11 +217,6 @@ bool TPonto::TemAlarmePersistente()
   return false;
 }
 
-double TPonto::GetTimeAlarm()
-{
-  return TagTempoAlarme;
-}
-
 void TPonto::SetTimeAlarm( double timetag )
 {
  TagTempoAlarme = timetag;
@@ -272,24 +242,9 @@ void TPonto::SetValorTipico( double val )
   ValorTipico = val;
 }
 
-bool TPonto::GetAlrIn()
-{
-  return AlrIn;
-}
-
 void TPonto::SetTemporizacaoAlarme(unsigned int seconds)
 {
 AlarmeTemporizado = seconds;
-}
-
-unsigned int TPonto::GetTemporizacaoAlarme()
-{
-return AlarmeTemporizado;
-}
-
-bool TPonto::EhAlarmeTemporizado()
-{
-return AlarmeTemporizado > 0;
 }
 
 // retorna o tipo de beep que o ponto deve acionar
@@ -357,37 +312,12 @@ if ( QualEhFalhado( Qual.Byte ) ||
 
 if ( EhDigital() &&
     ( ( Qual.Duplo ) == ESTDUP_INDETERMINADO ||
-      ( Qual.Duplo ) == ESTDUP_INVALIDO 
+      ( Qual.Duplo ) == ESTDUP_INVALIDO
     )
    )
   return false;
-  
+
 return true;
-}
-
-double TPonto::GetValorNormal()
-{
-return ValorNormal;
-}
-
-char * TPonto::GetEstadoOn()
-{
-return EstadoOn;
-}
-
-char * TPonto::GetEstadoOff()
-{
-return EstadoOff;
-}
-
-char * TPonto::GetDescricao()
-{
-return Descricao;
-}
-
-char * TPonto::GetUnidade()
-{
-return Unidade;
 }
 
 int TPonto::GetSupCmd()
@@ -398,25 +328,10 @@ else
   return PontoCmdSup;
 }
 
-int TPonto::GetEstadoAlarme()
-{
-  return EstadoAlarme;
-}
-
 void TPonto::SetAnotacao(char * anot)
 {
 strncpy( Anotacao, anot, sizeof(Anotacao) - 1 );
 Anotacao[sizeof(Anotacao) - 1] = 0;
-}
-
-char * TPonto::GetAnotacao()
-{
-return Anotacao;
-}
-
-char * TPonto::GetEstacao()
-{
-return Estacao;
 }
 
 bool TPonto::AlarmeNaoReconhecido()
@@ -431,66 +346,6 @@ if ( AlarmeTemporizado == 0 ||
   return AlarmeNaoRec;
 
 return 0;
-}
-
-bool TPonto::SemAlarme()
-{
-return (AlarmeNaoRec == 0);
-}
-
-bool TPonto::TemAnotacao()
-{
-return strcmp(Anotacao,"");
-}
-
-bool TPonto::ComandoBloqueado()
-{
-return TemAnotacao();
-}
-
-bool TPonto::TemCadastro()
-{
-return strcmp(Tag,"");
-}
-
-bool TPonto::Congelado()
-{
-return Congelamento;
-}
-
-bool TPonto::EhComando()
-{
-return ( CodOrigem == CODORIGEM_COMANDO );
-}
-
-bool TPonto::TemFormula()
-{
-return ( Formula != 0  );
-}
-
-bool TPonto::EhDigital()
-{
-return ( TipoAD == 'D' );
-}
-
-bool TPonto::EhAnalogico()
-{
-return ( !EhDigital() );
-}
-
-bool TPonto::EhEventoDigital()
-{
-return ( EventoDigital );
-}
-
-bool TPonto::EhEventoAnalogico()
-{
-return ( EventoAnalogico );
-}
-
-bool TPonto::AlarmeInibido()
-{
-return ( AlrIn );
 }
 
 bool TPonto::EhComandoDigital()
@@ -632,7 +487,7 @@ if (fp)
         endereco = nponto; // endereco==0 significa que é o endereco físico do protocolo é igual ao nponto
       }
 
-    // descarta ponto de comando sem supervisionado associado  
+    // descarta ponto de comando sem supervisionado associado
     if ( origem == CODORIGEM_COMANDO && nponto_sup<=0 )
       {
       Loga( (String)"Error in point list! Command with no related supervised point. Point number " + (String)nponto + (String)", Line " + (String)cntline );
@@ -772,7 +627,7 @@ if (fp)
            tpeq == CODTPEQ_TEMP
          )
         Pontos[nponto].BandaMortaHist = 4.0;
-      else  
+      else
       if ( strcmp( Pontos[nponto].Unidade , "A" ) == 0 ||
            tpeq == CODTPEQ_AMP
          )
@@ -1122,94 +977,6 @@ strcpy(Pontos[NPONTO_I104UTRS_OK].Estacao,"HMIX");
 strcpy(Pontos[NPONTO_I104UTRS_OK].Tag,"HMIX-I104_RTU_OK");
 strcpy(Pontos[NPONTO_MINUTO].Unidade,"RTUs");
 strcpy(Pontos[NPONTO_I104UTRS_OK].Descricao,"Number of RTUs I104");
-
-/*
-Nomes[NPONTO_SUPSCRIPT_1]="HMIXSCRIPT1_SUP";
-Tipos[NPONTO_SUPSCRIPT_1]='D';
-EstadoOff[NPONTO_SUPSCRIPT_1]="OK";
-EstadoOn[NPONTO_SUPSCRIPT_1]="ERRO";
-Pontos[NPONTO_SUPSCRIPT_1].Descricao;
-EscrevePonto(NPONTO_SUPSCRIPT_1, 1, 0x01, 1);
-
-Nomes[NPONTO_SUPSCRIPT_2]="HMIXSCRIPT2_SUP";
-Tipos[NPONTO_SUPSCRIPT_2]='D';
-EstadoOff[NPONTO_SUPSCRIPT_2]="OK";
-EstadoOn[NPONTO_SUPSCRIPT_2]="ERRO";
-Pontos[NPONTO_SUPSCRIPT_2].Descricao;
-EscrevePonto(NPONTO_SUPSCRIPT_2, 1, 0x01, 1);
-
-Nomes[NPONTO_SUPSCRIPT_3]="HMIXSCRIPT3_SUP";
-Tipos[NPONTO_SUPSCRIPT_3]='D';
-EstadoOff[NPONTO_SUPSCRIPT_3]="OK";
-EstadoOn[NPONTO_SUPSCRIPT_3]="ERRO";
-Pontos[NPONTO_SUPSCRIPT_3].Descricao;
-EscrevePonto(NPONTO_SUPSCRIPT_3, 1, 0x01, 1);
-
-Nomes[NPONTO_SUPSCRIPT_4]="HMIXSCRIPT4_SUP";
-Tipos[NPONTO_SUPSCRIPT_4]='D';
-EstadoOff[NPONTO_SUPSCRIPT_4]="OK";
-EstadoOn[NPONTO_SUPSCRIPT_4]="ERRO";
-Pontos[NPONTO_SUPSCRIPT_4].Descricao;
-EscrevePonto(NPONTO_SUPSCRIPT_4, 1, 0x01, 1);
-
-Nomes[NPONTO_SUPSCRIPT_5]="HMIXSCRIPT5_SUP";
-Tipos[NPONTO_SUPSCRIPT_5]='D';
-EstadoOff[NPONTO_SUPSCRIPT_5]="OK";
-EstadoOn[NPONTO_SUPSCRIPT_5]="ERRO";
-Pontos[NPONTO_SUPSCRIPT_5].Descricao;
-EscrevePonto(NPONTO_SUPSCRIPT_5, 1, 0x01, 1);
-
-EscrevePonto(NPONTO_CMDSCRIPT_1, 1, 0x01, 1);
-Pontos[NPONTO_CMDSCRIPT_1].TipoAD = 'D';
-Pontos[NPONTO_CMDSCRIPT_1].Endereco = NPONTO_CMDSCRIPT_1;
-strcpy(Pontos[NPONTO_CMDSCRIPT_1].Estacao,"HMIX");
-strcpy(Pontos[NPONTO_CMDSCRIPT_1].Tag,"HMIXSCRIPT1_EXEC-----K");
-strcpy(Pontos[NPONTO_CMDSCRIPT_1].EstadoOff,"");
-strcpy(Pontos[NPONTO_CMDSCRIPT_1].EstadoOn,"EXEC");
-strcpy(Pontos[NPONTO_CMDSCRIPT_1].Descricao,"Exec Script 1");
-Pontos[NPONTO_CMDSCRIPT_1].CodOrigem = CODORIGEM_COMANDO;
-
-EscrevePonto(NPONTO_CMDSCRIPT_2, 1, 0x01, 1);
-Pontos[NPONTO_CMDSCRIPT_2].TipoAD = 'D';
-Pontos[NPONTO_CMDSCRIPT_2].Endereco = NPONTO_CMDSCRIPT_2;
-strcpy(Pontos[NPONTO_CMDSCRIPT_2].Estacao,"HMIX");
-strcpy(Pontos[NPONTO_CMDSCRIPT_2].Tag,"HMIXSCRIPT2_EXEC-----K");
-strcpy(Pontos[NPONTO_CMDSCRIPT_2].EstadoOff,"");
-strcpy(Pontos[NPONTO_CMDSCRIPT_2].EstadoOn,"EXEC");
-strcpy(Pontos[NPONTO_CMDSCRIPT_2].Descricao,"Exec Script 2");
-Pontos[NPONTO_CMDSCRIPT_2].CodOrigem = CODORIGEM_COMANDO;
-
-EscrevePonto(NPONTO_CMDSCRIPT_3, 1, 0x01, 1);
-Pontos[NPONTO_CMDSCRIPT_3].TipoAD = 'D';
-Pontos[NPONTO_CMDSCRIPT_3].Endereco = NPONTO_CMDSCRIPT_3;
-strcpy(Pontos[NPONTO_CMDSCRIPT_3].Estacao,"HMIX");
-strcpy(Pontos[NPONTO_CMDSCRIPT_3].Tag,"HMIXSCRIPT3_EXEC-----K");
-strcpy(Pontos[NPONTO_CMDSCRIPT_3].EstadoOff,"");
-strcpy(Pontos[NPONTO_CMDSCRIPT_3].EstadoOn,"EXEC");
-strcpy(Pontos[NPONTO_CMDSCRIPT_3].Descricao,"Exec Script 3");
-Pontos[NPONTO_CMDSCRIPT_3].CodOrigem = CODORIGEM_COMANDO;
-
-EscrevePonto(NPONTO_CMDSCRIPT_4, 1, 0x01, 1);
-Pontos[NPONTO_CMDSCRIPT_4].TipoAD = 'D';
-Pontos[NPONTO_CMDSCRIPT_4].Endereco = NPONTO_CMDSCRIPT_4;
-strcpy(Pontos[NPONTO_CMDSCRIPT_4].Estacao,"HMIX");
-strcpy(Pontos[NPONTO_CMDSCRIPT_4].Tag,"HMIXSCRIPT4_EXEC-----K");
-strcpy(Pontos[NPONTO_CMDSCRIPT_4].EstadoOff,"");
-strcpy(Pontos[NPONTO_CMDSCRIPT_4].EstadoOn,"EXEC");
-strcpy(Pontos[NPONTO_CMDSCRIPT_4].Descricao,"Exec Script 4");
-Pontos[NPONTO_CMDSCRIPT_4].CodOrigem = CODORIGEM_COMANDO;
-
-EscrevePonto(NPONTO_CMDSCRIPT_5, 1, 0x01, 1);
-Pontos[NPONTO_CMDSCRIPT_5].TipoAD = 'D';
-Pontos[NPONTO_CMDSCRIPT_5].Endereco = NPONTO_CMDSCRIPT_5;
-strcpy(Pontos[NPONTO_CMDSCRIPT_5].Estacao,"HMIX");
-strcpy(Pontos[NPONTO_CMDSCRIPT_5].Tag,"HMIXSCRIPT5_EXEC-----K");
-strcpy(Pontos[NPONTO_CMDSCRIPT_5].EstadoOff,"");
-strcpy(Pontos[NPONTO_CMDSCRIPT_5].EstadoOn,"EXEC");
-strcpy(Pontos[NPONTO_CMDSCRIPT_5].Descricao,"Exec Script 5");
-Pontos[NPONTO_CMDSCRIPT_5].CodOrigem = CODORIGEM_COMANDO;
-*/
-
 }
 
 TBancoLocal::~TBancoLocal()

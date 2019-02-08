@@ -31,6 +31,7 @@ int T_INTEGRIDADE = 5 * 60;
 int BDTR_PORTA = 65280;
 int BDTR_PORTA_CMD = 65281;
 int BDTR_GRUPO_INTEGRIDADE = 0;
+int HTTP_PORTA_OLD = 51907;
 int HTTP_PORTA = 51908;
 int HTTP_PORTA_NGINX = 51909;
 String IP_BDTR1 = "127.0.0.1";
@@ -61,10 +62,12 @@ int ALARMA_DUPLA_TRANSICAO = 0;
 String WEBSERVER_CLIENTES_REMOTOS = "";
 String WEBSERVER_SCRIPT = "pntserver.rjs";
 String SHELLAPI_SCRIPT = "shellapi.rjs";
+String SIMPLEJSON_PATH = "/simplejson/";
 // date time format according to TDateTime::FormatString
 String WEBSERVER_DATE_FMT = "yy/mm/dd hh:nn:ss";
 String WEBSERVER_DP_TRANSIT = "TRANSIT"; // message for iec digital double 00
 String WEBSERVER_DP_INVALID = "INVALID"; // message for iec digital double 11
+int WEBSERVER_HTTPD_MODE = 1; // microhttpd daemon start mode (1=single thread, 2=thread per connection)
 
 String VISOR_EVENTOS;
 String VISOR_TABULAR;
@@ -154,6 +157,7 @@ WEBSERVER_CLIENTES_REMOTOS = pIni->ReadString( "WEBSERVER", "REMOTE_CLIENTS", WE
 // adiciona a própria máquina e o ihm redundante à lista de clientes, vou autorizar as requisições HTTP por esta lista
 WEBSERVER_CLIENTES_REMOTOS = WEBSERVER_CLIENTES_REMOTOS + ",127.0.0.1," + IHMRED_IP_OUTRO_IHM;
 ALARMA_DUPLA_TRANSICAO = pIni->ReadInteger( "WEBSERVER", "DOUBLE_TRANSITION_ALARM", ALARMA_DUPLA_TRANSICAO );
+WEBSERVER_HTTPD_MODE = pIni->ReadInteger( "WEBSERVER", "HTTPD_MODE", WEBSERVER_HTTPD_MODE );
 
 HIST_RECORD = pIni->ReadInteger( "HIST", "RECORD", HIST_RECORD );
 HIST_DEADBANDFACTOR = pIni->ReadInteger( "HIST", "DEADBAND_FACTOR", HIST_DEADBANDFACTOR );
