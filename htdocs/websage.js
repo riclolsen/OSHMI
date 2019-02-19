@@ -35,12 +35,12 @@
 
 
 // Variáveis providas pelo webserver | Server provide values
-var L = [];  // lista de eventos | Event list
+var L = []; // lista de eventos | Event list
 var V = []; // valores dos pontos | Point values
 var F = []; // flags dos pontos | Point quality flags
 var T = []; // tags de tempo de alarme dos pontos | Alarm time tags 
 var TAGS = []; // tags (ids) dos pontos | point tag names
-var NPTS = []; // número de ponto pelo tag | point numbers by tags names
+var NPTS = {}; // número de ponto pelo tag | point numbers by tags names
 var SUBS = []; // subestações | subtations
 var BAYS = []; // módulo do pontos | bay of point
 var DCRS = []; // descrição dos pontos | point description
@@ -54,6 +54,7 @@ var Sha1Ana = ''; // hash dos valores analogicos (para detectar mudanças) | Has
 var Sha1Dig = ''; // hash dos valores digitais (para detectar mudanças) | Hash of digital values for change detection
 var LIMSUPS = []; // Analog superior limits for points
 var LIMINFS = []; // Analog inferior limits for points
+var INVTAGS = {}; // list of invalid tags
 
 var HA_ALARMES_ANT = 0; // estado anterior da variável HA_ALARMES | last state of HA_ALARMES variable
 var NUM_VAR_ANT = 0; // estado anterior da variável NUM_VAR | last state of NUM_VAR variable
@@ -236,6 +237,10 @@ function histdata( i, pnt )
 
 var WebSAGE =
 {
+RemoveAnimate: RemoveAnimate,
+Animate: Animate,
+ShowHideTranslate: ShowHideTranslate,
+LoadImage: LoadImage,
 g_remoteServer : PNTServer,
 g_timePntServer : TimePNTServer,
 g_docAnnotationServer: DocAnnotationServer,
@@ -276,6 +281,7 @@ g_sha1ant_dig : "",
 g_hidetoolbar: 0,
 g_timeOutPreview: 1500, // tempo para mostrar preview de tela linkada
 g_timerPreviewID: 0,  // timer para mostrar preview de tela linkada
+g_retnok: "????", // return value when value can not be obtained
 
 // tamanhos para zoom/pan
 g_zpX: 0, 
@@ -293,10 +299,8 @@ g_timeshift: 0, // control calls for historic data plot
 g_idprefixes:[], // id prefixes to aggregate to TAGs when TAG in form $$#1_POINT_TAG (set from script or passed to by URL parameter IDPREFIX1, IDPREFIX2,...)
 
 // Passa ao servidor uma lista de pontos cujos valores devem ser retornados
-// o retorno vem na variável global V que é um objeto que tem propriedades PNTnumero com o valor do ponto
-// Ex: V['PNT8056'] ou V.PNT8056
-// A lista de pontos é obtida dos DIV com ID=PNTnumero neste documento, ex: ID=PNT8056
-// var par='';
+// o retorno vem na variável global V que é um array com chave numero do ponto com o valor do ponto
+// Ex: V[8056]
 lstpnt : '',
 
 InkSage: [],
@@ -985,7 +989,7 @@ try
     }
 
   // bloqueio automático de comando por presença de anotação
-  if ( CNPTO != 0 )
+  if ( CNPTO != 0 && WebSAGE.g_win_cmd.document.getElementById("ANOTACAO") !== null )
     {
     if ( WebSAGE.g_win_cmd.document.getElementById("ANOTACAO").value != "" )
       {
@@ -1409,15 +1413,26 @@ timerBlinkDraw : function()
   WebSAGE.g_blinkcnt++;
 },
 
+// make SVG element with an invalid tag invisible
+processInvalidTagInElement( tag, obj )
+{
+  if (!INVTAGS.hasOwnProperty(tag))
+	{
+	console.log("Invalid tag: " + tag + (obj? " Object ID:" + obj.id : "") );
+	INVTAGS[tag] = 0;
+	}
+  if ( obj && obj.style.visibility !== "collapse" )		  
+	obj.style.visibility = "collapse";
+},
+
 // retorna o valor do ponto, se houver, interpreta tags tipo !ALMnnnnn e !TMPnnnnn
 valorTagueado: function ( tag, obj )
 { 
-  var retnok = "????";
   var t,n,f;
 
   if ( tag == "" || typeof( tag ) === 'undefined' )
     { 
-      return retnok; 
+      return WebSAGE.g_retnok; 
     }
 
   t = parseInt( tag ); 
@@ -1426,27 +1441,39 @@ valorTagueado: function ( tag, obj )
     { // tag is a number
       if ( typeof( V[t] ) === 'undefined' )
         {
-          return retnok; 
+          WebSAGE.processInvalidTagInElement( tag, obj );
+          return WebSAGE.g_retnok; 
         }
       else 
         {
+          if ( obj && obj.style.visibility === "collapse" )		  
+        	obj.style.visibility = "inherit";
           return V[t]; 
         }
     }
 
-  // tag is not a number
+  // tag is not a number, trim it
+  tag = tag.trim();
 
   // test if tag corresponds to a number
   if ( typeof( NPTS[tag] ) !== 'undefined' )
     { // yes: convert to number and return
+     if ( obj && obj.style.visibility === "collapse" )		  
+      	obj.style.visibility = "inherit";
       return V[ NPTS[tag] ];
     }  
+
+  if ( obj && obj.style.visibility === "collapse" )		  
+   	obj.style.visibility = "inherit";
 
   // try to use alphab. tag directly
   if ( typeof( V[tag] ) !== 'undefined' )
     { // yes: return it
       return V[ tag ];
     }  
+
+  if ( tag.indexOf("#") == 0 || tag.indexOf("%") == 0 ) // special code or indirection 
+    return WebSAGE.g_retnok;
     
   f = WebSAGE.getFlags(t);  
 
@@ -1539,11 +1566,11 @@ valorTagueado: function ( tag, obj )
         }
       if ( (f & 0x03) === 0x00 )
         {
-        return retnok;   
+        return WebSAGE.g_retnok;   
         }
       if ( (f & 0x03) === 0x03 )
         { 
-        return retnok;
+        return WebSAGE.g_retnok;
         }
     }
 
@@ -1633,34 +1660,29 @@ valorTagueado: function ( tag, obj )
         }
       catch( err )
         {
-        // avoid showing error from almiframe not yet criated
-        if ( typeof(document.getElementById('almiframe').contentWindow.WebSAGE) !== 'undefined' )
-          { // Show erro in place of date (on top right corner)
-          $('#SP_STATUS').text( err.name + ": " + err.message + " [3]" ); 
-          document.getElementById("SP_STATUS").title = err.stack;
-          return retnok;
-          }
+        WebSAGE.processInvalidTagInElement( tag, obj );
+        return WebSAGE.g_retnok;
         }
     }
 
-  return retnok;
+  WebSAGE.processInvalidTagInElement( tag, obj );
+  return WebSAGE.g_retnok;
 },
 
 // imprime valor do ponto formatado padrão printf extendido, com código para setas direcionais
 interpretaFormatoC: function( fmt, tag, obj )
 {
 var valr;
-var tptag = 0;
 
 valr = WebSAGE.valorTagueado( tag, obj );
 
-if ( valr === "????" )
+if ( valr === WebSAGE.g_retnok )
   { 
     return valr; 
   }
  
 // se não tiver formato definido, retorna padrão
-if ( typeof( fmt ) == 'undefined' || fmt.indexOf("%") < 0 )
+if ( typeof( fmt ) == 'undefined' )
   {
   if ( isNaN( parseFloat( valr ) ) )  
     { 
@@ -1736,6 +1758,12 @@ if ( Flg & 0x20 )
   fmt = fmt.replace( 'f', 'f' + v );
   }
 
+if ( fmt.indexOf("%") < 0 ) // no % then use d3 formatting
+  {
+  var fa = fmt.split("`");
+  fa[0] = fa[0].replace( '~', '%' );
+  return d3.format( fa[0] )( valr ) + (fa.length > 1 ? fa[1] : "");  
+  }
 return printf( fmt, valr );
 },
 
@@ -2238,39 +2266,36 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
            }
          break;
       case "get":
-         if ( inksage_labelvec[lbv].parent.childNodes[0].textContent.indexOf("%") >= 0 ) // guarda formato C, se houver
-           { 
-           inksage_labelvec[lbv].formatoC = inksage_labelvec[lbv].parent.childNodes[0].textContent; 
+            if ( inksage_labelvec[lbv].parent.firstElementChild.textContent.indexOf("|") >= 0 ) // guarda mensagens OFF|ON|FAILED
+              {
+              inksage_labelvec[lbv].txtOFFON = inksage_labelvec[lbv].parent.firstElementChild.textContent.split("|");
+              }             
+            else  
+              { 
+              inksage_labelvec[lbv].formatoC = inksage_labelvec[lbv].parent.firstElementChild.textContent; 
 
-           pnt = inksage_labelvec[lbv].tag;
-           if ( isNaN(parseInt(pnt)) )
-             {
-             setTimeout( function(){
-               var p = NPTS[pnt];
-               // show the plot preview on mouseover, after a time to get point definitions
-               WebSAGE.setPreview( item, "trend.html?NPONTO=" + p + "&HIDECTRLS=1", 610, 340 );
-               }, 6000 );
-             }
-           else
-             // show the plot preview on mouseover
-             WebSAGE.setPreview( item, "trend.html?NPONTO=" + pnt + "&HIDECTRLS=1", 610, 340 );
+              pnt = inksage_labelvec[lbv].tag;
+              if ( isNaN(parseInt(pnt)) )
+                {
+                setTimeout( function(){
+                  var p = NPTS[pnt];
+                  // show the plot preview on mouseover, after a time to get point definitions
+                  WebSAGE.setPreview( item, "trend.html?NPONTO=" + p + "&HIDECTRLS=1", 610, 340 );
+                  }, 6000 );
+                }
+              else
+                // show the plot preview on mouseover
+                WebSAGE.setPreview( item, "trend.html?NPONTO=" + pnt + "&HIDECTRLS=1", 610, 340 );
 
-           var animation = document.createElementNS( 'http://www.w3.org/2000/svg', 'animate' );
-           animation.setAttributeNS( null, 'attributeName', 'text-decoration' ); 
-           animation.setAttributeNS( null, 'attributeType', 'XML' ); 
-           animation.setAttributeNS( null, 'values', '' ); // 'line-through;overline;overline;line-through;overline;overline'
-           animation.setAttributeNS( null, 'dur', '1.7s' );
-           // animation.setAttributeNS( null, 'begin', 'DOMSubtreeModified' );
-           item.appendChild( animation );
-           item.changeAnim = animation;
-           }
-         else
-           {
-           if ( inksage_labelvec[lbv].parent.childNodes[0].textContent.indexOf("|") >= 0 ) // guarda mensagens OFF|ON|FAILED
-             {
-             inksage_labelvec[lbv].txtOFFON = inksage_labelvec[lbv].parent.childNodes[0].textContent.split("|");
-             }             
-           }  
+              var animation = document.createElementNS( 'http://www.w3.org/2000/svg', 'animate' );
+              animation.setAttributeNS( null, 'attributeName', 'text-decoration' ); 
+              animation.setAttributeNS( null, 'attributeType', 'XML' ); 
+              animation.setAttributeNS( null, 'values', '' ); // 'line-through;overline;overline;line-through;overline;overline'
+              animation.setAttributeNS( null, 'dur', '1.7s' );
+              // animation.setAttributeNS( null, 'begin', 'DOMSubtreeModified' );
+              item.appendChild( animation );
+              item.changeAnim = animation;
+              }
          break;
       case "color":
          if ( item.style !== null )
@@ -2653,7 +2678,7 @@ preprocessaTela: function()
 
     for ( i = 0; i < nohs.length; i++ )
       {
-      if ( nohs[i].nodeName != "g" )  // grupos já foram processados no início
+      if ( nohs[i].nodeName != "g" && nohs[i].nodeName != "text" )  // grupos já foram processados no início
         { 
           try {
           WebSAGE.le_inkscapeSAGETags( nohs[i] ); 
@@ -2858,7 +2883,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
       WebSAGE.visibEtiq( tag );      
       } 
 
-    if ( vt != "????" || WebSAGE.InkSage[i].attr === "color" || WebSAGE.InkSage[i].attr === "set" )
+    if ( vt != WebSAGE.g_retnok || WebSAGE.InkSage[i].attr === "color" || WebSAGE.InkSage[i].attr === "set" )
       {  
       switch ( WebSAGE.InkSage[i].attr )
          {
@@ -3006,7 +3031,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
               {
               val = WebSAGE.interpretaFormatoC( WebSAGE.InkSage[i].formatoC, tag, WebSAGE.InkSage[i].parent );
               }
-            if ( val != WebSAGE.InkSage[i].parent.childNodes[0].textContent ) // value changed?
+            if ( val != WebSAGE.InkSage[i].parent.firstElementChild.textContent ) // value changed?
               { 
                 if ( WebSAGE.InkSage[i].parent.changeAnim != undefined )
                 if ( WebSAGE.InkSage[i].lastVal != undefined )
@@ -3022,7 +3047,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                     }
                   }
 
-                WebSAGE.InkSage[i].parent.childNodes[0].textContent = val;
+                WebSAGE.InkSage[i].parent.firstElementChild.textContent = val;
                 if ( typeof WebSAGE.InkSage[i].parent.changeAnim !== 'undefined' && typeof WebSAGE.InkSage[i].parent.changeAnim.beginElement === "function" )
                   {
                   WebSAGE.InkSage[i].parent.changeAnim.endElement();
@@ -3057,7 +3082,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
 
               if ( typeof(WebSAGE.getFlags(tag)) === 'undefined' )
                 { 
-                  if ( vt === "????" )
+                  if ( vt === WebSAGE.g_retnok )
                     {
                       ft = 0x80 | 0x20; // analog failed
                     }
@@ -3072,7 +3097,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                 }
               digital = ( ft & 0x20 ) === 0;
              
-              if ( vt !== "????" )
+              if ( vt !== WebSAGE.g_retnok )
                 {  
                   ch = WebSAGE.InkSage[i].list[j].data;
                   if ( digital )
@@ -3664,7 +3689,7 @@ visibEtiq : function ( ponto )
       // if ( isNaN(parseInt(ponto)) )
       //   p = NPTS[ponto];
       // setTimeout( 
-      //   'SVGDoc.getElementById(\"' + eid + '").childNodes[0].textContent=ANOTS[' + p + '].replace(/\\|\\^/g, "\\n");',130
+      //   'SVGDoc.getElementById(\"' + eid + '").firstElementChild.textContent=ANOTS[' + p + '].replace(/\\|\\^/g, "\\n");',130
       //   5000);
     }   
     else
@@ -3676,7 +3701,7 @@ visibEtiq : function ( ponto )
         eletq.setAttributeNS( null, 'fill', ScreenViewer_TagInhAlmFillColor );
         eletq.setAttributeNS( null, 'opacity', '0.5');
         eletq.setAttributeNS( null, 'display', 'block');  // mostra etiqueta
-        eletq.childNodes[0].textContent = "";
+        eletq.firstElementChild.textContent = "";
         }
     }
     else
@@ -3684,7 +3709,7 @@ visibEtiq : function ( ponto )
       if ( eletq.getAttributeNS( null, 'display') !== 'none' )
         { 
         eletq.setAttributeNS( null, 'display', 'none' );  // esconde etiqueta
-        eletq.childNodes[0].textContent = "";
+        eletq.firstElementChild.textContent = "";
         }
     }
   }  
@@ -4214,18 +4239,22 @@ setupTimeMachine: function()
 TraduzCor: function( cor )
 {
   var num;
-  if ( cor.substr(0,5) == "-cor-" )
+  if ( cor.substr(0,5) == "-cor-" || cor.substr(0,5) == "-clr-" )
   switch ( cor )
     {
+    case "-clr-bgd":
     case "-cor-bgd":
       cor = VisorTelas_BackgroundSVG;
       break;
+    case "-clr-tbr":
     case "-cor-tbr":
       cor = ScreenViewer_ToolbarColor;
       break;
+    case "-clr-almini":
     case "-cor-almini":
       cor = VisorTelas_CorAlarmeInibido;
       break;
+    case "-clr-failed":
     case "-cor-medfal":
       cor = VisorTelas_Medidas_Cor_Falha;
       break;
@@ -4275,7 +4304,7 @@ makeDraggable: function( obj )
     obj.style.cursor='move';
     obj.drgDragging = true;
     window.drgObject = obj;
-    var p = SVGDoc.documentElement.createSVGPoint();
+    var p = SVGDoc.createSVGPoint();
     p.x = event.clientX;
     p.y = event.clientY;
     var m = obj.parentNode.getScreenCTM();
@@ -4293,7 +4322,7 @@ makeDraggable: function( obj )
     
   $(obj).bind('mousemove', function(event){
     if ( obj.drgDragging === true ) {
-      var p = SVGDoc.documentElement.createSVGPoint();
+      var p = SVGDoc.createSVGPoint();
       p.x = event.clientX;
       p.y = event.clientY;
       
@@ -4389,7 +4418,7 @@ init: function()
         WebSAGE.setaCorFundo( VisorTelas_BackgroundSVG );
       
       if ( SVGDoc != null )
-        SVGSnap = Snap(SVGDoc); // obtain Snap surface      
+        WebSAGE.SVGSnap = SVGSnap = Snap(SVGDoc); // obtain Snap surface      
     }
   catch( exception ) 
     {
@@ -4718,3 +4747,4 @@ var $V = WebSAGE.getValue;
 var $F = WebSAGE.getFlags;
 var $T = WebSAGE.getTime;
 var $W = WebSAGE;
+$W.TranslateColor = $W.TraduzCor;

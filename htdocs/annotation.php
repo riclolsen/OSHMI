@@ -12,12 +12,13 @@
 
 // insert into notes (ERASED, OPENED, POINTNUM, CONTENT, TSCREATE, TSERASE) values (0,0,11388,"teste nota",0,0);
 
-// Show no errors
-error_reporting(0);
-
 header("Content-type: application/json");
 header("Content-Disposition: inline; filename=\"annotation.json\"");
 header("Cache-Control: no-store, must-revalidate");
+header('Access-Control-Allow-Origin: *');
+
+// Show no errors
+error_reporting(0);
     
 require_once 'timezone.php';
 

@@ -163,6 +163,10 @@ switch (mime)
     MHD_add_response_header (response, "Content-Type", "text/plain");
     break;
   }
+
+if ( WEBSERVER_CORS_ORIGIN != "" ) //  add a CORS header to responses if desired
+  MHD_add_response_header (response, "Access-Control-Allow-Origin", WEBSERVER_CORS_ORIGIN.c_str());
+
 int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
 MHD_destroy_response(response);
 return ret;
@@ -280,7 +284,7 @@ int TfmMicroHttpd::ahc_HandleCommandRequest(void * cls,
     return MHD_YES;
     }
 
-String sResp = "{\"error\": \"none\"}";
+String sResp;
 String sPonto;
 String sVal;
 String sRealIp;
@@ -300,7 +304,7 @@ const char * realip = MHD_lookup_connection_value (connection, MHD_HEADER_KIND, 
 if ( realip != NULL )
   sRealIp = realip;
 
- int cnponto = 0, val = 0, tipo, ret = 0;
+ int cnponto = 0, val = 0, ret = 0;
  double fval = 0;
  bool found = false;
  TPonto pt;
@@ -343,7 +347,7 @@ if ( realip != NULL )
        }
      else
        {
-       if ( IP_BDTR1 == "" ) // se não tem bdtr, manda pelo 104
+       if ( IP_BDTR1 == "" ) // se não tem bdtr, manda pelo i104m
          {
          // manda o comando para o protocolo (varredor iec104m)
          if ( pt.EhComandoDigital() )
@@ -373,7 +377,7 @@ if ( realip != NULL )
            Loga( (String)"Command Sent(BDTR): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
            }
          }
-             
+
        if (UDP_JSON_PORT_CMD != 0)
          {
          if ( pt.EhComandoDigital() )
@@ -431,14 +435,20 @@ if ( paramval != NULL )
   sPonto = paramval;
 
 if ( sPonto == "" )
-  return MHD_YES;
+  {
+  sResp = "ComandoAck='Invalid command!';";
+  return mhd_EnqueueResponse(connection, sResp.c_str(), MIME_JAVASCRIPT);
+  }
 
  int cnponto, falha, cmd, cnt;
  double hora;
 
  cnponto = atoi(sPonto.c_str());
  if ( cnponto == 0 )
-   return MHD_YES;
+   {
+   sResp = "ComandoAck='Command not found!';";
+   return mhd_EnqueueResponse(connection, sResp.c_str(), MIME_JAVASCRIPT);
+   }
 
  cnt = BL.GetAckCmd( cnponto, &falha, &cmd, &hora );
 
@@ -652,6 +662,10 @@ if ( paramval != NULL )
 const MHD_ConnectionInfo* info = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 const sockaddr* client_addr = (info ? info->client_addr : NULL);
 char * client_ip = inet_ntoa( ((sockaddr_in *)client_addr)->sin_addr );
+String sRealIp;
+const char * realip = MHD_lookup_connection_value (connection, MHD_HEADER_KIND, "X-Real-IP");
+if ( realip != NULL )
+  sRealIp = realip;
 
 nponto = atoi(sPonto.c_str());
 if ( nponto == 0 )
@@ -711,6 +725,7 @@ if ( found )
       // register log for alarm inhibited (when changed)
       if ( pt.GetAlrIn() != alrin )
         Loga( (String)"IP=" + (String)client_ip +
+              (String)", RealIP=" + sRealIp +
               (String)", user=" + (String)BL.getUserName() +
                (String)", point=" + (String)nponto +
               (String)", id=" + (String)pt.GetNome() +
@@ -748,6 +763,7 @@ if ( found )
     if ( strcmp(pt.GetAnotacao(), anot.c_str() ) )
       { // mudou a anotação: loga
       Loga( (String)"IP=" + (String)client_ip +
+            (String)", RealIP=" + sRealIp +
             (String)", user=" + (String)BL.getUserName() +
             (String)", point=" + (String)nponto +
             (String)", id=" + (String)pt.GetNome(),
@@ -800,6 +816,7 @@ int TfmMicroHttpd::ahc_HandleAckRequest(void * cls,
 String sResp = "{\"error\": \"none\"}";
 String sPonto;
 String sData;
+String sDataOrig;
 String sAgrega;
 String sHMS;
 String sMsec;
@@ -825,7 +842,10 @@ int Remove = 0;
 
  paramval = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "D");
  if ( paramval != NULL )
+   {
    sData = paramval;
+   sDataOrig = sData;
+   }
 
  paramval = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "H");
  if ( paramval != NULL )
@@ -872,7 +892,7 @@ int Remove = 0;
    }
   }
   catch ( Exception &E )
-    { logln( "E: AckRequest " + E.Message ); }
+    { logln( "Exception: AckRequest " + E.Message ); }
 
  if ( yy < 100 )
    yy = yy + 2000;
@@ -917,11 +937,11 @@ int Remove = 0;
  if ( IHMRED_IP_OUTRO_IHM != "" )
  if ( (String)client_ip != IHMRED_IP_OUTRO_IHM )
    BL.lstHTTPReq_OutroIHM.push_back( (String)url +
-                                     (String)"?R=" + (String)nponto +
-                                     (String)"&D=" + sData +
-                                     (String)"&H=" + sHMS +
-                                     (String)"&M=" + sMsec +
-                                     (String)"&A=" + sAgrega
+                                     (String)(Remove?"?Q=":"?R=") + (String)nponto +
+                                     (String)"&D=" + (String)sDataOrig +
+                                     (String)"&H=" + (String)sHMS +
+                                     (String)"&M=" + (String)sMsec +
+                                     (String)"&A=" + (String)sAgrega
                                     );
 
 return mhd_EnqueueResponse(connection, sResp.c_str(), MIME_JSON);

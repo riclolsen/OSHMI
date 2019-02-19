@@ -24,12 +24,13 @@
 // DATEFMT : deprecated parameter, not needed anymore
 // CALLBACK : nome da função de callback
 
-// Show no errors
-error_reporting(0);
-
 header("Content-type: text/javascript; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"eventserver.js\"");
 header("Cache-Control: no-store, must-revalidate");
+header('Access-Control-Allow-Origin: *');
+
+// Show no errors
+error_reporting(0);
     
 require_once 'timezone.php';
 
@@ -134,6 +135,7 @@ try {
     $nponto = 0;
 
     $dbsde = new PDO( 'sqlite:../db/soe.sl3' );
+    $dbsde->setAttribute(PDO::ATTR_TIMEOUT, 3);
     $dbsde->exec ( "PRAGMA synchronous = NORMAL" );
     $dbsde->exec ( "PRAGMA journal_mode = WAL" );
     $dbsde->exec ( "PRAGMA locking_mode = NORMAL" );

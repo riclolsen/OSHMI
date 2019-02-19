@@ -11,15 +11,16 @@ function get_fcontent( $url,  $javascript_loop = 0, $timeout = 15 ) {
     $ch = curl_init();
     curl_setopt( $ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; rv:1.7.3) Gecko/20041001 Firefox/0.10.1" );
     curl_setopt( $ch, CURLOPT_URL, $url );
-    curl_setopt( $ch, CURLOPT_COOKIEJAR, $cookie );
+	curl_setopt( $ch, CURLOPT_HTTPHEADER, array('Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'), 'Origin: *');
     curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-    curl_setopt( $ch, CURLOPT_ENCODING, "" );
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
     curl_setopt( $ch, CURLOPT_AUTOREFERER, true );
     curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );    # required for https urls
+    curl_setopt( $ch, CURLOPT_MAXREDIRS, 10 ); 
+    curl_setopt( $ch, CURLOPT_ENCODING, "" );
     curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, $timeout );
     curl_setopt( $ch, CURLOPT_TIMEOUT, $timeout );
-    curl_setopt( $ch, CURLOPT_MAXREDIRS, 10 );
+    curl_setopt( $ch, CURLOPT_COOKIEJAR, $cookie );
     $content = curl_exec( $ch );
     $response = curl_getinfo( $ch );
     curl_close ( $ch );
@@ -47,18 +48,21 @@ if ( stripos($url, "file:") === 0 )
   die();
 $lurl=get_fcontent($url);
 $content = $lurl[0];
-// $content = file_get_contents(urldecode($_GET["URL"]));
 $type = $_GET["TYPE"];
-
-foreach ($lurl[1] as $value) {
-    if (preg_match('/^Content-Type:/i', $value)) {
+$ct = "";
+foreach ($lurl[1] as $key=>$value) {
+    if (strtolower($key) == 'content_type') {
         // Successful match
-        header($value,true);  
+        $ct = 'Content-Type: '.$value;  
     }
 }
 
 if ($type!="")    
   header('Content-Type: '.$type, true);
+else
+  header($ct, true);
+  
+header('Access-Control-Allow-Origin: *', true);
 
 echo mb_convert_encoding($content, 'UTF-8', mb_detect_encoding($content, 'UTF-8, ISO-8859-1', true));
 

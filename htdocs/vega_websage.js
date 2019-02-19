@@ -4,6 +4,18 @@
 
 WebSAGE.g_vega_num = 0;
 
+WebSAGE.TranslateColorsVega = function( spec )
+{
+  return spec.replace(/-clr-([0-9]+)/g, 
+    function (match) { 
+      var num = parseInt( match.substr( 5,3 ), 10 );
+      num = num>0 ? num - 1 : 0;
+      if ( num in ScreenViewer_ColorTable )
+        return ScreenViewer_ColorTable[num];
+      return "gray";
+    });
+}
+
 WebSAGE.SetIniExtended =
 function (inksage_labelvec, lbv, item)
 {
@@ -11,7 +23,7 @@ function (inksage_labelvec, lbv, item)
 
   // For Vega Specification 2
   function parse(spec)
-  {
+  { 
     if ( typeof(spec.data[0].name) != "undefined" )
       item.vgTableName[0] = spec.data[0].name;
     else
@@ -20,7 +32,6 @@ function (inksage_labelvec, lbv, item)
         function (error, chart)
       {
         var svg;
-
         WebSAGE.g_vega_num++;
         item.vgId = 'vega_' + WebSAGE.g_vega_num;
         $("#VEGACHARTS").append("<div id='" + item.vgId + "'><div>");
@@ -178,6 +189,7 @@ function (inksage_labelvec, lbv, item)
       function procvegalite(data)
       {
         var spc;
+        data = WebSAGE.TranslateColorsVega(data);        
         if (typeof(data) === 'object')
           {
             spc = vl.compile(data).spec;
@@ -231,7 +243,7 @@ function (inksage_labelvec, lbv, item)
 
       if ( inksage_labelvec[lbv].prompt.indexOf("{") == 0 )
        {
-       var spc = JSON.parse(inksage_labelvec[lbv].prompt);
+       var spc = JSON.parse(WebSAGE.TranslateColorsVega(inksage_labelvec[lbv].prompt));
        parse(spc);
        }
       else
@@ -242,7 +254,7 @@ function (inksage_labelvec, lbv, item)
           if (typeof(data) === 'object')
             spc = data;
           else
-            spc = JSON.parse(data);
+            spc = JSON.parse(WebSAGE.TranslateColorsVega(data));
           parse(spc);
         }
       );
@@ -261,7 +273,7 @@ function (inksage_labelvec, lbv, item)
         if (typeof(data) === 'object')
           spc = data;
         else
-          spc = JSON.parse(data);
+          spc = JSON.parse(WebSAGE.TranslateColorsVega(data));
         parse(spc);
         
         if ( spc.data.length > 0 )
@@ -275,7 +287,7 @@ function (inksage_labelvec, lbv, item)
             {
             item.vw.data( spc.data[0].name ).remove( function (d) { return true; } );
             if ( typeof(data) === "string" )
-              item.vw.data( spc.data[0].name ).insert(JSON.parse(data));
+              item.vw.data( spc.data[0].name ).insert(JSON.parse(WebSAGE.TranslateColorsVega(data)));
             else
               item.vw.data( spc.data[0].name ).insert(data);
             item.vw.update();
@@ -295,7 +307,7 @@ function (inksage_labelvec, lbv, item)
             {
             item.vw.data( spc.data[1].name ).remove( function (d) { return true; } );
             if ( typeof(data) === "string" )
-              item.vw.data( spc.data[0].name ).insert(JSON.parse(data));
+              item.vw.data( spc.data[0].name ).insert(JSON.parse(WebSAGE.TranslateColorsVega(data)));
             else
               item.vw.data( spc.data[0].name ).insert(data);
             item.vw.update();
@@ -335,7 +347,7 @@ function (inksage_labelvec, lbv, item)
 
       if ( inksage_labelvec[lbv].prompt.indexOf("{") == 0 )
        {
-        var spc = JSON.parse(inksage_labelvec[lbv].prompt);
+        var spc = JSON.parse(WebSAGE.TranslateColorsVega(inksage_labelvec[lbv].prompt));
         spc['width'] = spc['width'] || 100;
         spc['height'] = spc['height'] || 100;
         parsev3(spc);
@@ -348,7 +360,7 @@ function (inksage_labelvec, lbv, item)
           if (typeof(data) === 'object')
             spc = data;
           else
-            spc = JSON.parse(data);
+            spc = JSON.parse(WebSAGE.TranslateColorsVega(data));
           spc['width'] = spc['width'] || 100;
           spc['height'] = spc['height'] || 100;
           parsev3(spc);
@@ -552,7 +564,7 @@ case "#vega": // vega V2 chart, defined under a rectangle
                 if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
                   {
                     var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
-                    if ( vt !== "????" )
+                    if ( vt !== WebSAGE.g_retnok )
                       newdata[index][ix] = vt;
                     else
                       newdata.splice(-1, 1);
@@ -567,7 +579,7 @@ case "#vega": // vega V2 chart, defined under a rectangle
               if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1 ) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
                   {
                   var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
-                  if ( vt !== "????" )
+                  if ( vt !== WebSAGE.g_retnok )
                      newdata[index][ix] = WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1];
                  }   
               else
@@ -617,8 +629,8 @@ case "#vega": // vega V2 chart, defined under a rectangle
                   newdata[index][ix] = WebSAGE.getSubstation(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1]);
               }
             }
-            } catch(E){};
-          }
+          } catch(E){};
+        }
         );
       }
       );
@@ -746,7 +758,7 @@ case "#vega": // vega V2 chart, defined under a rectangle
                   if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
                   {
                     var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
-                    if ( vt !== "????" )
+                    if ( vt !== WebSAGE.g_retnok )
                       newdata[index][ix] = vt;
                     else
                       newdata.splice(-1, 1);
@@ -760,7 +772,7 @@ case "#vega": // vega V2 chart, defined under a rectangle
                 if (WebSAGE.InkSage[i].parent.pnts.length > vl.split("#")[1] - 1 ) // testa se existem mais pontos no arquivo json que ponto linkados em SAGE/source
                   {
                     var vt = WebSAGE.valorTagueado(WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1], WebSAGE.InkSage[i].parent);
-                    if ( vt !== "????" )
+                    if ( vt !== WebSAGE.g_retnok )
                        newdata[index][ix] = WebSAGE.InkSage[i].parent.pnts[vl.split("#")[1] - 1];
                   }   
                 else

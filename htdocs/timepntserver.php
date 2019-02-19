@@ -17,12 +17,13 @@
 // CALLBACK : nome da função de callback
 //
 
-// Show no errors
-// error_reporting(0);
-
 header("Content-type: text/javascript; charset=UTF-8");
 header("Content-Disposition: inline; filename=\"timepntserver.js\"");
 header("Cache-Control: no-store, must-revalidate");
+header('Access-Control-Allow-Origin: *');
+
+// Show no errors
+// error_reporting(0);
     
 require_once 'timezone.php';
 // @date_default_timezone_set( date_default_timezone_get() );

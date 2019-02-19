@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.5.6"
-!define VERSION_ "5.6.0.0"
+!define VERSION "v.6.0"
+!define VERSION_ "6.0.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -507,6 +507,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateShortCut "$DESKTOP\OSHMI\Inkscape SAGE.lnk"               "$INSTDIR\inkscape\inkscape.exe"
 ; CreateShortCut "$DESKTOP\OSHMI\Config Files - PSPad.lnk"        "$PROGRAMFILES\PSPad Editor\pspad.exe" "$INSTDIR\conf\hmi.ini $INSTDIR\conf\hmishell.ini $INSTDIR\svg\screen_list.js $INSTDIR\conf\config_viewers.js $INSTDIR\conf\mon_proc.ini $INSTDIR\conf\qtester104.ini $INSTDIR\conf\point_list.txt $INSTDIR\conf\point_calc.txt $INSTDIR\conf\nginx_access_control.conf $INSTDIR\conf\nginx_https.conf $INSTDIR\conf\nginx_http.conf"
   CreateShortCut "$DESKTOP\OSHMI\Config Files - Notepad++.lnk"    "$PROGRAMFILES\Notepad++\notepad++.exe" "$INSTDIR\conf\hmi.ini $INSTDIR\conf\hmishell.ini $INSTDIR\svg\screen_list.js $INSTDIR\conf\config_viewers.js $INSTDIR\conf\mon_proc.ini $INSTDIR\conf\qtester104.ini $INSTDIR\conf\point_list.txt $INSTDIR\conf\point_calc.txt $INSTDIR\conf\nginx_https.conf $INSTDIR\conf\nginx_http.conf "
+  CreateShortCut "$DESKTOP\OSHMI\Nginx and PHP Start.lnk"         "$INSTDIR\nginx_php\start_nginx_php.bat"
 
 ; apaga o cache do chrome
   Delete "$INSTDIR\browser-data\Default\Cache\*.*"

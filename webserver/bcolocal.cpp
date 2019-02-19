@@ -1112,7 +1112,7 @@ it=Pontos.find(nponto);
 if (it==Pontos.end())
   return false; // erro ponto não encontrado
 
-while (((*it).second).Acessando);
+if (((*it).second).Acessando) Sleep(20);
 ((*it).second).Acessando=true;
 valor=((*it).second).Valor;
 qual=((*it).second).Qual;
@@ -1161,7 +1161,10 @@ if ( ((*it).second).Formula != 0 )
 if ( calculo == 0 )
   return 0;
 
-while (((*it).second).Acessando);
+try
+{
+
+if (((*it).second).Acessando) Sleep(20);
 ((*it).second).Acessando = true;
 
 if ( ((*it).second).Qual.Tipo == TIPO_DIGITAL )
@@ -1540,7 +1543,27 @@ if ( !((*it).second).EventoDigital )
       }
     }
   }
-  
+}
+catch (Exception &E)
+  {
+    ((*it).second).Valor = 0; // avoid problems with malformed fp value
+    ((*it).second).sValor = 0;
+    ((*it).second).Acessando = 0;
+    ((*it).second).Qual.Falha = 1;
+
+    Loga( E.Message + (String)" | Exception for point: " + (String)nponto);
+    // dump double float bytes
+    unsigned char * pch = (unsigned char *)(&valor);
+    Loga( (String)(unsigned int)*pch + (String)" " +
+          (String)(unsigned int)*(pch+1) + (String)" " +
+          (String)(unsigned int)*(pch+2) + (String)" " +
+          (String)(unsigned int)*(pch+3) + (String)" " +
+          (String)(unsigned int)*(pch+4) + (String)" " +
+          (String)(unsigned int)*(pch+5) + (String)" " +
+          (String)(unsigned int)*(pch+6) + (String)" " +
+          (String)(unsigned int)*(pch+7) );
+  }
+
 return 0; // ok
 }
 
@@ -1634,7 +1657,7 @@ if ( nponto == 0 )
   {
   for ( it = Pontos.begin(); it != Pontos.end(); it++ )
     {
-    while( ((*it).second).Acessando );
+    if (((*it).second).Acessando) Sleep(20);
     ((*it).second).Acessando = true;
     ((*it).second).AlarmAck();
     // zera a hora do último alarme
@@ -1653,7 +1676,7 @@ else
     return 1; // ponto não encontrado
     }
 
-  while ( ((*it).second).Acessando );
+  if (((*it).second).Acessando) Sleep(20);
   ((*it).second).Acessando = true;
   ((*it).second).AlarmAck();
 
@@ -2107,7 +2130,7 @@ int bp;
 
     if ( ! ((*it).second).Qual.Falha ) 
       { // sem falha
-      while(((*it).second).Acessando);
+      if (((*it).second).Acessando) Sleep(20);
       ((*it).second).Acessando=true;
       // timeout
       if ( ((*it).second).TagTempo + ((*it).second).Timeout < dt.CurrentDateTime() )
@@ -2766,11 +2789,18 @@ try
           return -5;
       }
 
-  this->EscrevePonto( nponto, val, qual.Byte, 0 , 1, temtag, causa == 3 || causa == 11 || causa == 12 );
+  EscrevePonto( nponto, val, qual.Byte, 0 , 1, temtag, causa == 3 || causa == 11 || causa == 12 );
   }
 catch ( Exception &E )
   {
-  Loga( E.Message + (String)" | Exception on value for point: " + (String)nponto + (String)" type: " + tipo );
+  if (tipo == 13 || tipo == 36)
+    {
+    pt.Valor = 0;
+    pt.sValor = 0;
+    }
+  pt.Qual.Falha = 0;
+  Loga( E.Message + (String)" | Exception for point: " + (String)nponto + (String)" type: " + tipo);
+  return -4;
   }
 
 fmVeDados->PulseI104(); // pulse IEC 104 LED

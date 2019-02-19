@@ -335,7 +335,7 @@ void __fastcall TfmVeDados::btSDEClick(TObject *Sender)
 
 void __fastcall TfmVeDados::btWebServClick(TObject *Sender)
 {
-  fmWebServ->Show();
+  // fmWebServ->Show();
   fmMicroHttpd->Show();
 }
 //---------------------------------------------------------------------------

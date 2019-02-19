@@ -46,8 +46,8 @@ int PONTO_OPERACAO = 0;
 // Protocol driver JSON UDP interface
 int UDP_JSON_PORT = 9100;
 int UDP_JSON_PORT_CMD = 9101;
-String UDP_JSON_ENDPOINT1;
-String UDP_JSON_ENDPOINT2;
+String UDP_JSON_ENDPOINT1 = "127.0.0.1";
+String UDP_JSON_ENDPOINT2 = "";
 
 String IHMRED_IP_OUTRO_IHM = "";
 int IHMRED_ACERTO_HORA = 0;
@@ -67,6 +67,7 @@ String SIMPLEJSON_PATH = "/simplejson/";
 String WEBSERVER_DATE_FMT = "yy/mm/dd hh:nn:ss";
 String WEBSERVER_DP_TRANSIT = "TRANSIT"; // message for iec digital double 00
 String WEBSERVER_DP_INVALID = "INVALID"; // message for iec digital double 11
+String WEBSERVER_CORS_ORIGIN = "*"; // for the http header Access-Control-Allow-Origin
 int WEBSERVER_HTTPD_MODE = 1; // microhttpd daemon start mode (1=single thread, 2=thread per connection)
 
 String VISOR_EVENTOS;
@@ -148,7 +149,7 @@ IHMRED_PERIODO_ENVIO_ACERTO_HORA = pIni->ReadInteger( "REDUNDANCY", "SEND_TIME_P
 UDP_JSON_PORT = pIni->ReadInteger( "JSON", "UDP_JSON_PORT", UDP_JSON_PORT );
 UDP_JSON_PORT_CMD = pIni->ReadInteger( "JSON", "UDP_JSON_PORT_CMD", UDP_JSON_PORT_CMD );
 UDP_JSON_ENDPOINT1 = pIni->ReadString( "JSON", "UDP_JSON_ENDPOINT1", "127.0.0.1" );
-UDP_JSON_ENDPOINT2 = pIni->ReadString( "JSON", "UDP_JSON_ENDPOINT2", "IHMRED_IP_OUTRO_IHM" );
+UDP_JSON_ENDPOINT2 = pIni->ReadString( "JSON", "UDP_JSON_ENDPOINT2", IHMRED_IP_OUTRO_IHM );
 
 NUMMAX_ALARMES = pIni->ReadInteger( "WEBSERVER", "MAX_EVENTS", NUMMAX_ALARMES );
 PRIORIDADE_PANICO = pIni->ReadInteger( "WEBSERVER", "PANIC_PRIORITY", PRIORIDADE_PANICO );
@@ -157,6 +158,7 @@ WEBSERVER_CLIENTES_REMOTOS = pIni->ReadString( "WEBSERVER", "REMOTE_CLIENTS", WE
 // adiciona a própria máquina e o ihm redundante à lista de clientes, vou autorizar as requisições HTTP por esta lista
 WEBSERVER_CLIENTES_REMOTOS = WEBSERVER_CLIENTES_REMOTOS + ",127.0.0.1," + IHMRED_IP_OUTRO_IHM;
 ALARMA_DUPLA_TRANSICAO = pIni->ReadInteger( "WEBSERVER", "DOUBLE_TRANSITION_ALARM", ALARMA_DUPLA_TRANSICAO );
+WEBSERVER_CORS_ORIGIN = pIni->ReadString( "WEBSERVER", "WEBSERVER_CORS_ORIGIN", WEBSERVER_CORS_ORIGIN );
 WEBSERVER_HTTPD_MODE = pIni->ReadInteger( "WEBSERVER", "HTTPD_MODE", WEBSERVER_HTTPD_MODE );
 
 HIST_RECORD = pIni->ReadInteger( "HIST", "RECORD", HIST_RECORD );

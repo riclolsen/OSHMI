@@ -85,7 +85,7 @@ To simulate a command, click on a breaker and push the "Command" button then cho
   an action like "open" or "close" and push the action button.
 To stop the system click on the "Stop_All" icon in the OSHMI folder.
 To edit and create new SVG screens, use the customized Inkscape+SAGE 
-  (shortucut in the OSHMI folder). 
+  (shortcut in the OSHMI folder). 
 Screens are in "c:\oshmi\svg\".
 OSHMI configuration files are in "c:\oshmi\conf\".
 For more info about configuration please read the OSHMI Configuration Manual.
@@ -104,8 +104,8 @@ We respect and intend to comply with the branding policy of the Inkscape Project
   https://inkscape.org/en/about/branding/
 In our view, the modifications introduced are not substantial and do not intend 
   to create a competitive product.
-The modifications introduced are meant only to allow the use of the sotware as a 
-  SCADA Synoptics Editor.
+The modifications introduced are meant only to allow the use of the software as a 
+  SCADA Synoptic Editor.
 We respect the GPL license of the upstream work by making the source code of the 
   modifications to the original Inkscape and SAGE code available at:
 
@@ -150,6 +150,8 @@ Not anymore compatible Operating Systems:
 Client user interface can be used on:
  - Modern IOS and Android devices.
  - Any device with an updated HTML5 browser like Chrome/Chromium, Firefox, Opera, Edge or Safari.
+ - Edge currently does not support SVG SMIL animations.
+ - Internet Explorer is not supported.
 
 -------------------------------------------------------------------
 
@@ -172,41 +174,64 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
-Notes for version 5.6:
+Notes for version 6.0:
+
+This release introduces many performance optimizations under the hood.
+Some scripted displays may break due to changes in the the way the SVG file is now attached to the page.
+The example displays were updated, if you are updating OSHMI over a previous version
+please copy them (*.svg) from the config_templates folder to SVG folder.
+
+Data Client Mode:
+ - Now OSHMI can be configured as a data client to access an OSHMI server, the client requests only realtime data. 
+   In this mode the local installation must have all SVG files.
+   This mode makes possible extremely low bandwidth communications with the remote server.
+   This is ideal for satellite, GPRS and other applications that require very low bandwidth comms.
+   Data can be encrypted (using https/client certificates) and compressed by the Nginx remote server.
+   The old Client Mode that requests everything to the server is still available.
 
 Webserver:
  - Replaced Indy HTTP server with a new server based on the GNU Libmicrohttpd (DLL).
  - Possibility of starting microhttpd daemon in single thread mode or thread per connection.
+ - Added http header "Access-Control-Allow-Origin" for CORS. Default origin is "*".
  - Significant performance optimizations of real time data queries.
+ - Fixed JSON command sent to invalid secondary address (redundant mode only).
+ - Fixed problem when received malformed float value.
 
 Screen Viewer:
  - Modified insertion of the SVG file in the page (from inside an <object> to direct <svg>).
  - Changed point values queries to HTTP GET method instead of POST.
- - SVG File loaded with fetch().
+ - SVG file loaded with fetch().
  - Faster loading of displays with less DOM style recalculations (reflows).
+ - Fixed redundant processing of SAGE/XSAC tags for SVG TEXT elements.
+ - Make Animate, RemoveAnimate, ShowHideTranslate and ShowImage functions available through WebSAGE/$W object.
  - Vega updated to version 4.4.0.
  - Vega-Lite updated to version 2.6.0. 
  - No more support for older browsers like I.E. as Vega 4 requires ES6.
  - Better error management in vega_websage.js.
+ - Elements linked to invalid or unavailable tags are now made invisible and it is logged to the 
+   console the tag and element id.
+ - D3JS number formatting support for "Get" directive.
+ - Color templates shortcuts (-clr-nnn) available also for Vega visualization specifications.
 
 Events, Tabular & Screen Viewers:
  - New functions for requesting scripts and JSON.
+ - Defined a PDO timeout of 3s for query of events in SQLite table.
 
 QTester104:
  - Updated to version 1.25.
  - Can set TCP port in the UI.
  - Point mapping can be set on or off by a checkbox (when disabled the performance is better).
  - Show Common Address of ASDU in Point Map.
- - Much improved network performance.
+ - Much improved TCP/IP performance.
 
 Linux:
- - Updated Nginx configuration file.
+ - Updated Nginx configuration files.
 
 Dynamic Excel Sheet (c:\oshmi\etc\dyn_sheet.xlsx):
  - Updated web queries to work with new microhttpd.
 
 SQLite:
- - Updated to version 3.27.0.
+ - Updated to version 3.27.1.
 
 Chromium:
  - Updated to version 71.0.3578.98.
@@ -216,8 +241,14 @@ PHP:
  - PHP.ini updated to production template of version 7.3.
 
 Nginx:
+ - Configured with upstream directive with keepalive for PHP FAST-CGI and the realtime webserver.
+ - Configured with tcp_nodelay, tcp_nopush and sendfile (all on for linux, all off for windows).
  - Configured to allow bigger URL queries.
  - Updated to version 1.15.8.
+ - Configure timeout of 10s for PHP scripts.
+
+Uninstaller:
+ - Fixed unnecessary confirmation message for removal of IEC104 log service.
 
 -------------------------------------------------------------------
 
@@ -375,7 +406,7 @@ Screen Viewer:
  - Correction of some specific historical graphic plot type.
  - Support for (current) round time period for Vega 3 historical plot.
  - New markup for "get" attribute for digital points (OFF|ON) messages.
- - Fixed problem with center of rotatation (for "rotate" attribute).
+ - Fixed problem with center of rotation (for "rotate" attribute).
  - Fixed problem with positioning of radar charts.
  - !EVAL expressions now have access to the SVG DOM reference (thisobj) for the 
    container of the markup object.
@@ -407,7 +438,7 @@ HMIShell:
 
 Linux: 
  - New scripts for running on Linux.
- - Referece Linux distribuition is now Mint 19.0 XFCE 32bits.
+ - Reference Linux distribution is now Mint 19.0 XFCE 32bits.
  - QTester104 v.1.23 natively compiled.
  - Script to beep for alarms out of Wine.
 
@@ -442,7 +473,7 @@ Other:
  - Included utility convert-config-to-utf8.bat to convert old config files 
    encoded as ISO8859-1 (Latin1) to UTF8.
  - Fixed problem with quotes in annotations.
- - Improvments to OData and JSON exporters for SQLite.
+ - Improvements to OData and JSON exporters for SQLite.
  - New OData and JSON exporters for PostgreSQL.
  - More precise scripts to stop OSHMI process.
  - Included binaries for 'iconv' command line tool that can convert text files
@@ -473,7 +504,7 @@ HMI Shell:
 
 Config:
  - Updated nginx_http.conf and nginx_https.conf in the conf_templates folder.
- - Old conf\nginx_http.conf overwritten and backuped to conf\nginx_http.conf.bak.
+ - Old conf\nginx_http.conf overwritten and backup to conf\nginx_http.conf.bak.
 
 Chromium:
  - Updated to version 66.0.3359.117.
@@ -545,7 +576,7 @@ Notes for version 4.11:
 
 Events Viewer:
  - Better sorting of events order when field timetags are disabled.
- - Signficantly optimized queries when events are not aggregated.
+ - Significantly optimized queries when events are not aggregated.
 
 Screen Viewer:
  - Fixed qualifier flags treatment for some rare cases.

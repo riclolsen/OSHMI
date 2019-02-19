@@ -49,16 +49,20 @@ if ( stripos($url, "file:") === 0 )
   die();
 $lurl=get_fcontent($url);
 $content = $lurl[0];
-$type = "application/json";
-foreach ($lurl[1] as $value) {
-    if (preg_match('/^Content-Type:/i', $value)) {
+$ct = "";
+foreach ($lurl[1] as $key=>$value) {
+    if (strtolower($key) == 'content_type') {
         // Successful match
-        header($value,true);  
+        $ct = 'Content-Type: '.$value;  
     }
 }
 
 if ($type!="")    
   header('Content-Type: '.$type, true);
+else
+  header($ct, true);
+  
+header('Access-Control-Allow-Origin: *', true);
 
 $jsonct = json_decode ( $content, true );
 $rws = $jsonct["rows"];

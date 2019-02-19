@@ -3,6 +3,7 @@
 
 header('content-type: application/x-javascript; charset=UTF-8');
 header("Cache-Control: no-store, must-revalidate");
+header('Access-Control-Allow-Origin: *');
 
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);

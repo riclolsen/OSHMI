@@ -350,6 +350,7 @@ while ( sqlite3_step( res ) == SQLITE_ROW )
   if ( pto.NPonto >= NPONTO_SIST_MIN && pto.NPonto <= NPONTO_SIST_MAX )
     continue;
 
+  if (pto.Acessando) Sleep(20);
   pto.Acessando = true;
 
   try

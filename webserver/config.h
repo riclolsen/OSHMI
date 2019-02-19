@@ -3,7 +3,7 @@
 
 // Parâmetros e constantes de configuração do sistema
 
-#define VERSAO "5.6"
+#define VERSAO "6.0"
 
 extern int IEC104_PORT;
 extern int IEC104_1_SEC; // endereço secundário da utr 1
@@ -49,6 +49,7 @@ extern String SIMPLE_JSON; // Path to Grafana simple JSON API
 extern String WEBSERVER_DATE_FMT; // date time format according to TDateTime::FormatString
 extern String WEBSERVER_DP_TRANSIT; // message for iec digital double 00
 extern String WEBSERVER_DP_INVALID; // message for iec digital double 11
+extern String WEBSERVER_CORS_ORIGIN; // for the http header Access-Control-Allow-Origin
 extern int WEBSERVER_HTTPD_MODE; // microhttpd daemon start mode (1=single thread, 2=thread per connection) 
 
 extern int HIST_RECORD;

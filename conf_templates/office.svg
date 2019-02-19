@@ -13,7 +13,7 @@
    xml:space="preserve"
    version="1.1"
    id="svg2"
-   inkscape:version="0.91 r13865"
+   inkscape:version="0.92.3 (cc100de, 2018-03-31, custom)"
    onload="var src; if (document.documentURI) src = document.documentURI; else if (this.getSrc) src = this.getSrc(); else src = document.location.href + ''; try {parent.preload.load(src);}catch(e) {}"
    sodipodi:docname="office.svg"><sodipodi:namedview
    pagecolor="#ffffff"
@@ -25,14 +25,14 @@
    inkscape:pageopacity="0"
    inkscape:pageshadow="2"
    inkscape:window-width="2560"
-   inkscape:window-height="1417"
+   inkscape:window-height="1377"
    id="namedview5712"
    showgrid="false"
-   inkscape:zoom="3.608"
-   inkscape:cx="653.8266"
-   inkscape:cy="1087.2528"
+   inkscape:zoom="1.804"
+   inkscape:cx="632.62622"
+   inkscape:cy="1072.8043"
    inkscape:window-x="-8"
-   inkscape:window-y="760"
+   inkscape:window-y="-8"
    inkscape:window-maximized="1"
    inkscape:current-layer="svg2" /><metadata
    id="metadata8"><rdf:RDF><cc:Work
@@ -5134,26 +5134,28 @@
    d="m 467.8834,437.41394 32.50875,2.22125 0,-21.03 -32.50875,18.80875"
    inkscape:connector-curvature="0" /><text
    xml:space="preserve"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.87545204px;line-height:125%;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="15.676363"
    y="727.76556"
-   id="text5714"
-   sodipodi:linespacing="125%"><tspan
+   id="text5714"><tspan
      sodipodi:role="line"
      id="tspan5716"
      x="15.676363"
-     y="727.76556">https://www.freepik.com/free-vector/modern-isometric-3d-office-interior-design_1361491.htm </tspan><tspan
+     y="727.76556"
+     style="font-size:7.87545204px;line-height:1.25">https://www.freepik.com/free-vector/modern-isometric-3d-office-interior-design_1361491.htm </tspan><tspan
      sodipodi:role="line"
      x="15.676363"
      y="737.60986"
-     id="tspan14251">Designed by Freepik</tspan></text>
+     id="tspan14251"
+     style="font-size:7.87545204px;line-height:1.25">Designed by Freepik</tspan></text>
+
 
 
 
 
 <g
    id="g5925"
-   inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;var s = window.Snap(window.SVGDoc.rootElement);\nvar second = s.select(\&quot;#second\&quot;);\nvar minute = s.select(\&quot;#minute\&quot;);\nvar hour = s.select(\&quot;#hour\&quot;);\n//Run animation function\nsetInterval( function () {\n//Get the current time                \n  var timeNow = new Date();\n  var hours   = timeNow.getHours();\n  var minutes = timeNow.getMinutes();\n  var seconds = timeNow.getSeconds();\n//Move second needle halfway                \n  second.transform('r' + (seconds*6-3) + ',200,200');\n//Animate the second needle the rest of the way\n  second.animate({transform: 'r' + (seconds*6) + ',200,200'}, 500, mina.elastic);\n//Move minute needle                \n  minute.transform('r' + (minutes*6) + ',200,200');\n//Only animate the minute needle when the minute changes    \n  if(seconds == 0){minute.transform('r' + (minutes*6-3) + ',200,200');\n  minute.animate({transform: 'r' + (minutes*6) + ',200,200'}, 500, mina.elastic);}\n//Allow the hour needle to move accordingly when the minutes change             \n  hour.transform('r' + ((hours*30)+(minutes/2)) + ',200,200');\n//Repeat this entire function every 1 second\n  }, 1000 );\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
+   inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;set&quot;,&quot;prompt&quot;:&quot;&quot;,&quot;src&quot;:&quot;var s = $W.SVGSnap;\nvar second = s.select(\&quot;#second\&quot;);\nvar minute = s.select(\&quot;#minute\&quot;);\nvar hour = s.select(\&quot;#hour\&quot;);\n//Run animation function\nsetInterval( function () {\n//Get the current time                \n  var timeNow = new Date();\n  var hours   = timeNow.getHours();\n  var minutes = timeNow.getMinutes();\n  var seconds = timeNow.getSeconds();\n//Move second needle halfway                \n  second.transform('r' + (seconds*6-3) + ',200,200');\n//Animate the second needle the rest of the way\n  second.animate({transform: 'r' + (seconds*6) + ',200,200'}, 500, mina.elastic);\n//Move minute needle                \n  minute.transform('r' + (minutes*6) + ',200,200');\n//Only animate the minute needle when the minute changes    \n  if(seconds == 0){minute.transform('r' + (minutes*6-3) + ',200,200');\n  minute.animate({transform: 'r' + (minutes*6) + ',200,200'}, 500, mina.elastic);}\n//Allow the hour needle to move accordingly when the minutes change             \n  hour.transform('r' + ((hours*30)+(minutes/2)) + ',200,200');\n//Repeat this entire function every 1 second\n  }, 1000 );\n&quot;,&quot;tag&quot;:&quot;#exec&quot;,&quot;type&quot;:&quot;Data&quot;}"
    transform="matrix(0.09929371,-0.03806369,-0.00388871,0.11536176,391.37172,136.64864)"><g
      style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:50px;line-height:125%;font-family:Roboto;-inkscape-font-specification:'Roboto Light';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
      id="text8280"><path
@@ -5566,19 +5568,20 @@
    height="172.3844"
    x="794.40973"
    y="547.76801"
-   inkscape:label="{&quot;attr&quot;:&quot;bar&quot;,&quot;max&quot;:20,&quot;min&quot;:0,&quot;tag&quot;:&quot;!EVAL 20-(V[5816]/5).toFixed(0)&quot;},{&quot;attr&quot;:&quot;popup&quot;,&quot;height&quot;:400,&quot;src&quot;:&quot;block&quot;,&quot;width&quot;:500,&quot;x&quot;:100,&quot;y&quot;:100}" /><text
+   inkscape:label="{&quot;attr&quot;:&quot;bar&quot;,&quot;max&quot;:20,&quot;min&quot;:0,&quot;tag&quot;:&quot;!EVAL 20-($V(5816)/5).toFixed(0)&quot;},{&quot;attr&quot;:&quot;popup&quot;,&quot;height&quot;:400,&quot;src&quot;:&quot;block&quot;,&quot;width&quot;:500,&quot;x&quot;:100,&quot;y&quot;:100}" /><text
    xml:space="preserve"
-   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:8.24965477px;line-height:125%;font-family:Verdana;-inkscape-font-specification:'Verdana Bold';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
+   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Verdana;-inkscape-font-specification:'Verdana Bold';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"
    x="810.34253"
    y="729.11749"
    id="text4480"
-   sodipodi:linespacing="125%"
    inkscape:label="{&quot;align&quot;:&quot;Right&quot;,&quot;attr&quot;:&quot;get&quot;,&quot;tag&quot;:&quot;5816&quot;,&quot;type&quot;:&quot;Good&quot;}"
    transform="scale(0.99655412,1.0034578)"><tspan
      sodipodi:role="line"
      id="tspan4482"
      x="810.34253"
-     y="729.11749">%2.0f A</tspan></text>
+     y="729.11749"
+     style="font-size:8.24965477px;line-height:1.25">%2.0f A</tspan></text>
+
 
 
   <path

@@ -293,126 +293,131 @@ if (  WEBSERVER_CLIENTES_REMOTOS[1] != '*' &&
   return;
   }
 
-int bytesread = AData->Read( buffer, sizeof(buffer) );
 
-if ( pmsgsup->signature == MSGSUP_SIG )
-  {
-  msg_valid = true;
-  cntPackt++;
-  int v = BL.EscreveIEC(
-                 pmsgsup->endereco,
-                 pmsgsup->tipo,
-                 pmsgsup->info,
-                 pmsgsup->taminfo,
-                 pmsgsup->prim,
-                 pmsgsup->sec,
-                 pmsgsup->causa );
+try
+{
+  int bytesread = AData->Read( buffer, sizeof(buffer) );
 
-  if ( cbLog->Checked )
-     {
-     logaln( (String)"> From:" + ABinding->PeerIP );
-     logaln( (String)"> Type:" + (String)pmsgsup->tipo +
-             (String)" Address:" + (String)pmsgsup->endereco +
-             (String)" Sec:" + (String)pmsgsup->sec +
-             (String)" Cause:" + (String)pmsgsup->causa +
-             (String)" WrDB:" + (String)v
-           );
-     }
-  }
-else
-if ( pmsgsupsq->signature == MSGSUPSQ_SIG )
-  {
-  int incinfo;
-  switch( pmsgsupsq->tipo )
+  if ( pmsgsup->signature == MSGSUP_SIG )
     {
-      case 1:  // simples sem tag
-      case 3:  // duplo sem tag
-        incinfo = 4 + 1;
-        break;
-      case 2:  // simples com tag
-      case 4:  // duplo com tag
-        incinfo = 4 + 1 + 3;
-        break;
-      case 30: // simples com tag longa
-      case 31: // duplo com tag longa
-        incinfo = 4 + 1 + 7;
-        break;
-      case 5:
-        incinfo = 4 + 2;
-        break;
-      case 9:  // normalized
-      case 11: // scaled
-        incinfo = 4 + 3;
-        break;
-      case 34: // normalized c/ tag
-      case 35: // scaled c/ tag
-        incinfo = 4 + 3 + 7;
-        break;
-      case 13: // ponto flutuante
-        incinfo = 4 + 5;
-        break;
-      case 36: // ponto flutuante c/ tag
-        incinfo = 4 + 5 + 7;
-        break;
-      case 15:
-        incinfo = 4 + 5;
-        break;
-      default:
-        cntPacktDisc++;
-        return;
-    }
-
-  msg_valid = true;
-  cntPackt++;
-
-  if ( cbLog->Checked )
-     {
-     logaln( (String)"> Type:" + (String)pmsgsupsq->tipo +
-             (String)" Points:" + (String)pmsgsupsq->numpoints +
-             (String)" Sec:" + (String)pmsgsupsq->sec +
-             (String)" Cause:" + (String)pmsgsupsq->causa +
-             (String)" Inc:" + (String)incinfo
-           );
-     }
-
-  s = "";
-  for ( unsigned int i = 0; i < pmsgsupsq->numpoints; i++ )
-    {
-    unsigned int addr = *(unsigned int *) ( ((unsigned char *)pmsgsupsq->info) + (i * incinfo) );
-    void * pinfo = ((unsigned char *)pmsgsupsq->info) + (4 + i * incinfo);
-
-    // test malformed packet with more supposed info than bytes read
-    if ( (i * incinfo) > (bytesread - sizeof(unsigned int) * 7) )
-      {
-      cntPacktDisc++;
-      return;
-      }
-
+    msg_valid = true;
+    cntPackt++;
     int v = BL.EscreveIEC(
-                   addr,
-                   pmsgsupsq->tipo,
-                   pinfo,
-                   pmsgsupsq->taminfo,
-                   pmsgsupsq->prim,
-                   pmsgsupsq->sec,
-                   pmsgsupsq->causa );
+                   pmsgsup->endereco,
+                   pmsgsup->tipo,
+                   pmsgsup->info,
+                   pmsgsup->taminfo,
+                   pmsgsup->prim,
+                   pmsgsup->sec,
+                   pmsgsup->causa );
 
     if ( cbLog->Checked )
+       {
+       logaln( (String)"> From:" + ABinding->PeerIP );
+       logaln( (String)"> Type:" + (String)pmsgsup->tipo +
+               (String)" Address:" + (String)pmsgsup->endereco +
+               (String)" Sec:" + (String)pmsgsup->sec +
+               (String)" Cause:" + (String)pmsgsup->causa +
+               (String)" WrDB:" + (String)v
+             );
+       }
+    }
+  else
+  if ( pmsgsupsq->signature == MSGSUPSQ_SIG )
+    {
+    int incinfo;
+    switch( pmsgsupsq->tipo )
       {
-      s = s + (String)" " + (String)addr;
-      if ( pmsgsupsq->tipo == 1 || pmsgsupsq->tipo == 3 || pmsgsupsq->tipo == 30 || pmsgsupsq->tipo == 31 )
-         s = s + (String)"/" + (String)*((unsigned char *)pinfo);
-      if ( pmsgsupsq->tipo == 13 )
-         s = s + (String)"/" + (String)*((float *)pinfo);
-      s = s + (String)"/" + (String)v;
+        case 1:  // simples sem tag
+        case 3:  // duplo sem tag
+          incinfo = 4 + 1;
+          break;
+        case 2:  // simples com tag
+        case 4:  // duplo com tag
+          incinfo = 4 + 1 + 3;
+          break;
+        case 30: // simples com tag longa
+        case 31: // duplo com tag longa
+          incinfo = 4 + 1 + 7;
+          break;
+        case 5:
+          incinfo = 4 + 2;
+          break;
+        case 9:  // normalized
+        case 11: // scaled
+          incinfo = 4 + 3;
+          break;
+        case 34: // normalized c/ tag
+        case 35: // scaled c/ tag
+          incinfo = 4 + 3 + 7;
+          break;
+        case 13: // ponto flutuante
+          incinfo = 4 + 5;
+          break;
+        case 36: // ponto flutuante c/ tag
+          incinfo = 4 + 5 + 7;
+          break;
+        case 15:
+          incinfo = 4 + 5;
+          break;
+        default:
+          cntPacktDisc++;
+          return;
       }
 
+    msg_valid = true;
+    cntPackt++;
+
+    if ( cbLog->Checked )
+       {
+       logaln( (String)"> Type:" + (String)pmsgsupsq->tipo +
+               (String)" Points:" + (String)pmsgsupsq->numpoints +
+               (String)" Sec:" + (String)pmsgsupsq->sec +
+               (String)" Cause:" + (String)pmsgsupsq->causa +
+               (String)" Inc:" + (String)incinfo
+             );
+       }
+
+    s = "";
+    for ( unsigned int i = 0; i < pmsgsupsq->numpoints; i++ )
+      {
+      unsigned int addr = *(unsigned int *) ( ((unsigned char *)pmsgsupsq->info) + (i * incinfo) );
+      void * pinfo = ((unsigned char *)pmsgsupsq->info) + (4 + i * incinfo);
+
+      // test malformed packet with more supposed info than bytes read
+      if ( (i * incinfo) > (bytesread - sizeof(unsigned int) * 7) )
+        {
+        cntPacktDisc++;
+        return;
+        }
+
+      int v = BL.EscreveIEC(
+                     addr,
+                     pmsgsupsq->tipo,
+                     pinfo,
+                     pmsgsupsq->taminfo,
+                     pmsgsupsq->prim,
+                     pmsgsupsq->sec,
+                     pmsgsupsq->causa );
+
+      if ( cbLog->Checked )
+        {
+        s = s + (String)" " + (String)addr;
+        if ( pmsgsupsq->tipo == 1 || pmsgsupsq->tipo == 3 || pmsgsupsq->tipo == 30 || pmsgsupsq->tipo == 31 )
+           s = s + (String)"/" + (String)*((unsigned char *)pinfo);
+        if ( pmsgsupsq->tipo == 13 )
+           s = s + (String)"/" + (String)*((float *)pinfo);
+        s = s + (String)"/" + (String)v;
+        }
+
+      }
+    if ( cbLog->Checked )
+      {
+      logaln( s );
+      } 
     }
-  if ( cbLog->Checked )
-    {
-    logaln( s );
-    } 
-  }
+}
+catch( Exception &E ){ return; };
 
 if ( msg_valid )
   {

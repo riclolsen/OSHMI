@@ -24,14 +24,15 @@
 // DATEFMT : deprecated parameter, not needed anymore
 // CALLBACK : nome da função de callback
 
+header("Content-type: text/javascript; charset=UTF-8");
+header("Content-Disposition: inline; filename=\"eventserver.js\"");
+header("Cache-Control: no-store, must-revalidate");
+header('Access-Control-Allow-Origin: *');
+
 // Show no errors
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
-
-header("Content-type: text/javascript; charset=UTF-8");
-header("Content-Disposition: inline; filename=\"eventserver.js\"");
-header("Cache-Control: no-store, must-revalidate");
     
 require_once 'timezone.php';
 

@@ -17,7 +17,7 @@ c:\oshmi\bin\nssm remove OSHMI_iec104 confirm
 c:\oshmi\bin\nssm remove OSHMI_dnp3 confirm
 c:\oshmi\bin\nssm remove OSHMI_modbus confirm
 c:\oshmi\bin\nssm remove OSHMI_iccp confirm
-c:\oshmi\bin\nssm remove OSHMI_iec104_log
+c:\oshmi\bin\nssm remove OSHMI_iec104_log confirm
 
 rem Reactivate mon_proc (mon_proc runs the processes interactively with a logged user)
 rem This mode is best for configuration and debugging
