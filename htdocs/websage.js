@@ -163,21 +163,25 @@ function Animate( elem, animtype, params )
     }
 }
 
-function ShowHideTranslate( id, xd, yd )
+function ShowHideTranslate( idorobj, xd, yd )
 {
 var obj, svgdoc;  
 
 xd=xd||0;
 yd=yd||0;
 
-svgdoc = document.getElementById("svgdiv").children[0];
+svgdoc = document.getElementById("svgdiv").firstElementChild;
 
 if ( svgdoc === null )
    {
      return; 
    }
 
-obj = svgdoc.getElementById( id ); 
+if (typeof idorobj === "object")      
+  obj = idorobj;
+else 
+  obj = svgdoc.getElementById( idorobj ); 
+
 if ( obj === null )
    {
      return; 
@@ -624,11 +628,14 @@ acrescentaPontoLista : function( tag )
 {
 tag = tag.trim();
 
+if( tag.indexOf('#') === 0 || tag.indexOf('%') === 0 || tag == "")
+  return 0;
+
 /*
 if ( tag.indexOf('ALM') === 0 || 
      tag.indexOf('TMP') === 0 )
   { 
-    tag = tag.substr( 3 );
+    tag = tag.substr( 3 ).trim();
   }
 else  
 */  
@@ -639,20 +646,20 @@ if ( tag.indexOf('!ALM') === 0 ||
      tag.indexOf('!TAG') === 0 ||
      tag.indexOf('!DCR') === 0 )
   {
-    tag = tag.substr( 4 );  
+    tag = tag.substr( 4 ).trim();  
   }
 else
 if ( tag.indexOf('!SLIM') === 0 ||
      tag.indexOf('!ILIM') === 0 ||
      tag.indexOf('!STON') === 0 )  
   {
-    tag = tag.substr( 5 );
+    tag = tag.substr( 5 ).trim();
   }
 else
 if ( tag.indexOf('!STOFF') === 0 ||
      tag.indexOf('!STVAL') === 0 )   
   {
-    tag = tag.substr( 6 );  
+    tag = tag.substr( 6 ).trim();  
   }
 
 if ( isNaN( parseInt(tag) )  )
@@ -663,13 +670,8 @@ if ( isNaN( parseInt(tag) )  )
     }
   else
     {
-    var code = tag.charCodeAt(0);
-    if ( ((code >= 65) && (code <= 90)) || ((code >= 97) && (code <= 122)) ) 
-      {
-      // it is a letter: ok it can be a id
-      }
-    else
-      return 0; // it can't be an id
+    if ( tag.indexOf('!') === 0) // must not begin with a '!' or '#'
+      return 0;
     }
   }
 
@@ -1508,7 +1510,7 @@ valorTagueado: function ( tag, obj )
          t = NPTS[t];
       if ( typeof( TAGS[t] ) === 'undefined' )
         {
-          return 0; 
+          return ""; 
         }
       return TAGS[t];      
     }
@@ -1520,7 +1522,7 @@ valorTagueado: function ( tag, obj )
          t = NPTS[t];
       if ( typeof( DCRS[t] ) === 'undefined' )
         {
-          return 0; 
+          return ""; 
         }
       return DCRS[t];      
     }
@@ -1566,11 +1568,11 @@ valorTagueado: function ( tag, obj )
         }
       if ( (f & 0x03) === 0x00 )
         {
-        return WebSAGE.g_retnok;   
+        return "";   
         }
       if ( (f & 0x03) === 0x03 )
         { 
-        return WebSAGE.g_retnok;
+        return "";
         }
     }
 
@@ -2159,7 +2161,13 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
             case "#exec": // exec a script one time
                try 
                  {
-                 eval( 'var thisobj=window.SVGDoc.getElementById("' + item.id + '"); ' + inksage_labelvec[lbv].src );
+                  function evalprot(src) 
+                    {
+                    // create a context to protect some vars from being changed by the eval code
+                    var lbv = null;
+                    return eval(src);
+                    }
+                 evalprot('var thisobj=document.getElementById("' + item.id + '"); ' + inksage_labelvec[lbv].src );                   
                  }
                catch( err )
                  {
@@ -2893,7 +2901,13 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                case "#exec_on_update": // exec a script every time data changed
                  try 
                    {
-                   eval( 'var thisobj=window.SVGDoc.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + WebSAGE.InkSage[i].src );
+                   function evalprot(src) 
+                     { 
+                     // create a context to protect some vars from being changed by the eval code
+                     var i, j, val, vt, mudou_dig, mudou_ana = null;
+                     return eval(src);
+                     }
+                   evalprot( 'var thisobj=document.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + WebSAGE.InkSage[i].src );
                    }
                  catch( err )
                    {
@@ -3206,7 +3220,15 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                   WebSAGE.InkSage[i].parent.style.stroke = WebSAGE.InkSage[i].initstroke;
                   try 
                     {
-                      eval( 'var thisobj=window.SVGDoc.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + script );
+                      function evalprot(src, iloop) 
+                        {
+                        // create a context to protect some vars from being changed by the eval code
+                        var i = iloop;
+                        var j, val, vt, mudou_dig, mudou_ana = null;
+                        var script, ch, fill, stroke, attrib, attribval, tag = null;                        
+                        return eval(src);
+                        }
+                      evalprot( 'var thisobj=window.SVGDoc.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + script, i );
                     }                  
                   catch ( err ) 
                     { 
@@ -3315,7 +3337,14 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                    }
                 if ( pini !== -1 )
                    {
-                    ev = eval( tc.substring( pini + 5 , pend ) );
+                    function evalprot(src) 
+                      {
+                      // create a context to protect some vars from being changed by the eval code
+                      var i, j, val, vt, mudou_dig, mudou_ana = null;
+                      var pini, pend, ev, tc = null;
+                      return eval(src);
+                      }                    
+                    ev = evalprot( tc.substring( pini + 5 , pend ) );                     
                     if ( Number( ev ) !== NaN )
                       {
                       ev = printf( "%1.3f", ev );

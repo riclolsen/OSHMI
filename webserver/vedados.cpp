@@ -154,7 +154,7 @@ __fastcall TfmVeDados::TfmVeDados(TComponent* Owner)
     String S = (String)"wget -t 1 -T 5 http://" +
                IHMRED_IP_OUTRO_IHM +
                (String)":" +
-               (String)HTTP_PORTA_NGINX +
+               (String)IHMRED_HTTP_PORT +
                (String)"/htdocs/eventsync.php -O ../db/soe_i0.sql";
     ExecExternApp( S.c_str() );
     }

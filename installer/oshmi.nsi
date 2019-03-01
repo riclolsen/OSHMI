@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.0"
-!define VERSION_ "6.0.0.0"
+!define VERSION "v.6.1"
+!define VERSION_ "6.1.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -196,7 +196,12 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateDirectory "$INSTDIR\fonts"
   CreateDirectory "$INSTDIR\linux"
   CreateDirectory "$INSTDIR\linux\nginx"
-  CreateDirectory "$INSTDIR\linux\nginx\sites-available"
+  CreateDirectory "$INSTDIR\linux\nginx\conf"
+  CreateDirectory "$INSTDIR\linux\nginx\conf\sites-available"
+  CreateDirectory "$INSTDIR\linux\php"
+  CreateDirectory "$INSTDIR\linux\php\7.2"
+  CreateDirectory "$INSTDIR\linux\php\7.2\fpm"  
+  
   CreateDirectory "$INSTDIR\logs"
   CreateDirectory "$INSTDIR\nginx_php"
   CreateDirectory "$INSTDIR\scripts"
@@ -235,8 +240,12 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\linux
   File /a "..\linux\*.*"
   File /a "..\linux\QTester104"
-  SetOutPath $INSTDIR\linux\nginx\sites-available
-  File /a "..\linux\nginx\sites-available\default"
+  SetOutPath $INSTDIR\linux\nginx\conf
+  File /a "..\linux\nginx\conf\nginx.conf"
+  SetOutPath $INSTDIR\linux\nginx\conf\sites-available
+  File /a "..\linux\nginx\conf\sites-available\default"
+  SetOutPath $INSTDIR\linux\php\7.2\fpm
+  File /a "..\linux\php\7.2\fpm\php.ini"
 
   SetOutPath $INSTDIR\db\db_cold
   File /a "..\db\db_cold\*.*"

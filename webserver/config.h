@@ -3,7 +3,7 @@
 
 // Parâmetros e constantes de configuração do sistema
 
-#define VERSAO "6.0"
+#define VERSAO "6.1"
 
 extern int IEC104_PORT;
 extern int IEC104_1_SEC; // endereço secundário da utr 1
@@ -35,6 +35,7 @@ extern String UDP_JSON_ENDPOINT2;
 extern String IHMRED_IP_OUTRO_IHM;
 extern int IHMRED_ACERTO_HORA;
 extern int IHMRED_PERIODO_ENVIO_ACERTO_HORA ;
+extern int IHMRED_HTTP_PORT;
 
 extern int PRIORIDADE_PANICO; // Valor da prioridade para mostrar eventos no modo pânico (agrega=2)
 extern int NUMMAX_ALARMES;
