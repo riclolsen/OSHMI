@@ -135,7 +135,7 @@ try {
     $nponto = 0;
 
     $dbsde = new PDO( 'sqlite:../db/soe.sl3' );
-    $dbsde->setAttribute(PDO::ATTR_TIMEOUT, 3);
+    $dbsde->setAttribute(PDO::ATTR_TIMEOUT, 8);
     $dbsde->exec ( "PRAGMA synchronous = NORMAL" );
     $dbsde->exec ( "PRAGMA journal_mode = WAL" );
     $dbsde->exec ( "PRAGMA locking_mode = NORMAL" );

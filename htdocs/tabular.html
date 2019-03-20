@@ -638,6 +638,97 @@ if ( se != "" )
    setTimeout( WebSAGE.mudaFiltro, 10 );
   }
 
+// Filters saved in localStorage
+var almFilter={};
+if (storageAvailable('localStorage')) 
+{
+var storedData = localStorage.getItem("almFilter");
+  if (storedData) {
+  almFilter = JSON.parse(storedData);  
+  } 
+}   
+ 
+// create missing substation filters inside a div
+for (var se in Lista)
+  { 
+  if (Lista[se] == "") 
+    continue;
+  var ytop = 2;
+  if ( document.getElementById( "DIV_" + Lista[se] ) === null )
+  $( "#DIV_SUBSTALMFILT" ).prepend(
+  "<div id='DIV_" + Lista[se] + "' " +
+      " onclick='WebSAGE.g_alminfo[&quot;" + Lista[se] + "&quot;].filterout = ! WebSAGE.g_alminfo[&quot;" + Lista[se] + "&quot;].filterout;WebSAGE.applyTableStyle();'" +
+      " style='position:relative;float:left;text-align:center;margin-bottom:7px;margin-left:3px;top:" + ytop + "px;" + 
+      "cursor:pointer;box-shadow: 1px 1px 1px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid #777;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
+    Lista[se] + 
+    "<br>" + 
+    "<span id='SP_" + Lista[se] +  "_ACK" +
+        "' style='float:right;-webkit-filter:contrast(.7);text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;background-color:silver;border-color:silver;'>" + 
+    "0</span>" + 
+    "<span id='SP_" + Lista[se] + "_NACK" +
+        "' style='float:right;text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;background-color:silver;border-color:silver;'>" + 
+    "0</span>" + 
+  "</div>" );
+
+  if ( typeof( WebSAGE.g_alminfo[ Lista[se] ] ) === 'undefined' )
+    {
+    WebSAGE.g_alminfo[ Lista[se] ] =  { countnack: 0, 
+                                        countack: 0, 
+                                        filterout: false, 
+                                        minpriorack: 10, 
+                                        minpriornack: 10, 
+                                        is_subst: true };
+    }      
+
+  if( WebSAGE.isAlarmsViewer() )
+  if ( Lista[se] in almFilter ) 
+    {
+      WebSAGE.g_alminfo[ Lista[se] ].filterout = almFilter[Lista[se]];
+    }
+  }
+
+if ( WebSAGE.isAlarmsViewer() )
+  {
+    var xleft = 230;
+    var ytop = 5;
+    for ( var priority in [0,1,2,3,4,5,7,8,9] ) 
+    {
+      if ( document.getElementById( "DIV_" + priority ) === null && priority <= 3 )
+        {
+          $( "body" ).append(
+            "<div id='DIV_" + priority + "' " +
+               " onclick='WebSAGE.g_alminfo[&quot;" + priority + "&quot;].filterout = ! WebSAGE.g_alminfo[&quot;" + priority + "&quot;].filterout;WebSAGE.applyTableStyle();'" +
+               " style='position:absolute;float:left;text-align:center;top:" + ytop + "px;" + 
+                        "left:" + ( xleft + priority * 58 ) + "px;" + 
+                       "cursor:pointer;box-shadow: 1px 1px 1px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid #777;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
+              priority + 
+              "<br>" + 
+              "<span id='SP_" + priority +  "_ACK" +
+                  "' style='float:right;-webkit-filter:contrast(.7);text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;background-color:silver;border-color:silver;'>" + 
+              "0</span>" + 
+              "<span id='SP_" + priority + "_NACK" +
+                  "' style='float:right;text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;background-color:silver;border-color:silver;'>" + 
+              "0</span>" + 
+            "</div>" );
+        }
+
+      if ( priority in almFilter ) 
+        {
+          WebSAGE.g_alminfo[ priority ].filterout = almFilter[priority];
+        }
+    }
+    WebSAGE.applyTableStyle();
+
+    // sort divs in name (id) order
+    var main = document.getElementById( 'DIV_SUBSTALMFILT' );
+    if (main !== null)
+    [].map.call( main.children, Object ).sort( function ( a, b ) {
+        return ((a.id > b.id)? 1 : -1);
+    }).forEach( function ( elem ) {
+        main.appendChild( elem );
+    });
+  }
+
 // document.getElementById("SELSE").onChange=WebSAGE.mudaSE; 
 },
 
@@ -750,12 +841,16 @@ callServer : function()
 
 applyTableStyle: function()
 {
+var almFilter={};
+
 // assemble the filterout list
 WebSAGE.g_filterOutList = [];
 for ( var substorpri in WebSAGE.g_alminfo ) 
    {
      if ( WebSAGE.g_alminfo.hasOwnProperty(substorpri) ) 
         {
+        almFilter[substorpri] = WebSAGE.g_alminfo[substorpri].filterout;
+
         if ( WebSAGE.isAlarmsViewer() )
            {
            if (  WebSAGE.g_alminfo[substorpri].filterout )
@@ -770,6 +865,9 @@ for ( var substorpri in WebSAGE.g_alminfo )
            }
         }
    }
+
+if (storageAvailable('localStorage'))
+  localStorage.setItem("almFilter",  JSON.stringify(almFilter));
 
 // reapply line styles
 for( var i = 0; i < L.length; i++ )
@@ -931,20 +1029,62 @@ showVals: function()
           }            
 
         // container to put in per substation filters
-        if ( document.getElementById( "DIV_SUBSTALMFILT" ) === null )
-           $( "body" ).append("<div id='DIV_SUBSTALMFILT' style='overflow:auto;top:42px;left:0;width:100%;height:35px;position:absolute;text-align:center;'><div>");
+        if ( document.getElementById( "DIV_SUBSTALMFILT" ) === null ) {
+           $( "body" ).append("<div id='DIV_SUBSTALMFILT' style='background-color:#bbb;overflow:auto;top:42px;left:0;width:100%;height:35px;position:absolute;text-align:center;'>"+
+                              "<div id='ZZABC1' style='clear:left;padding-top:5px;padding-bottom:2px;'>" +
+                              "<input id='ZZCB_SELECTALL' type='button' value='Select All'>&nbsp;&nbsp;" +
+                              "<input id='ZZCB_UNSELECTALL' type='button' value='Unselect All'>" +
+                              "</div>" +
+                              "</div>");
+           document.getElementById("ZZCB_SELECTALL").value = Msg.SelectAll;
+           document.getElementById("ZZCB_UNSELECTALL").value = Msg.UnselectAll;
+           document.getElementById("ZZCB_SELECTALL").
+                    addEventListener("click", 
+                    function(event) { 
+                      for ( var sorp in WebSAGE.g_alminfo )
+                        {
+                        if (WebSAGE.g_alminfo[sorp].is_subst)
+                          {
+                            WebSAGE.g_alminfo[sorp].filterout=true;
+                          }
+                        }
+                        WebSAGE.applyTableStyle();
+                    });
+           document.getElementById("ZZCB_UNSELECTALL").
+                    addEventListener("click", 
+                    function(event) { 
+                      for ( var sorp in WebSAGE.g_alminfo )
+                        {
+                        if (WebSAGE.g_alminfo[sorp].is_subst)
+                          {
+                            WebSAGE.g_alminfo[sorp].filterout=false;
+                          }
+                        }
+                        WebSAGE.applyTableStyle();
+                    });
+           document.getElementById("DIV_SUBSTALMFILT").
+                    addEventListener("mouseover", 
+                    function(event) { 
+                      document.getElementById("DIV_SUBSTALMFILT").style.height=""; 
+                    });
+           document.getElementById("DIV_SUBSTALMFILT").
+                    addEventListener("mouseout", 
+                    function(event) { 
+                      document.getElementById("DIV_SUBSTALMFILT").style.height="35px"; 
+                    });
+           }
 
         if ( document.getElementById( "DIV_" + substorpri ) === null )
           { // create priority and substation alm boxes
           if ( WebSAGE.g_alminfo[substorpri].is_subst )
             { // create substation filters inside a div
-            ytop=0;
-            $( "#DIV_SUBSTALMFILT" ).append(
+            ytop=2;
+            $( "#DIV_SUBSTALMFILT" ).prepend(
             "<div id='DIV_" + substorpri + "' " +
                " onclick='WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout = ! WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout;WebSAGE.applyTableStyle();'" +
                " style='position:relative;float:left;text-align:center;margin-bottom:7px;margin-left:3px;top:" + ytop + "px;" + 
                        // "left:" + ( xleft + ( WebSAGE.g_alminfo[substorpri].is_subst ? cntsb : cntpr ) * 58 ) + "px;" + 
-                       "cursor:pointer;box-shadow: 2px 2px 2px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid black;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
+                       "cursor:pointer;box-shadow: 1px 1px 1px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid #777;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
               substorpri + 
               "<br>" + 
               "<span id='SP_" + substorpri +  "_ACK" +
@@ -955,29 +1095,25 @@ showVals: function()
               "</span>" + 
             "</div>" );
             }
-          else
-            { // create priority filters directly over the body
+            else
+            {
+            ytop = 5;
             $( "body" ).append(
-            "<div id='DIV_" + substorpri + "' " +
+               "<div id='DIV_" + substorpri + "' " +
                " onclick='WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout = ! WebSAGE.g_alminfo[&quot;" + substorpri + "&quot;].filterout;WebSAGE.applyTableStyle();'" +
                " style='position:absolute;float:left;text-align:center;top:" + ytop + "px;" + 
-                        "left:" + ( xleft + ( WebSAGE.g_alminfo[substorpri].is_subst ? cntsb : cntpr ) * 58 ) + "px;" + 
-                       "cursor:pointer;box-shadow: 2px 2px 2px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid black;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
+                        "left:" + ( xleft + substorpri * 58 ) + "px;" + 
+                       "cursor:pointer;box-shadow: 1px 1px 1px #666666;background-color:white;width:48px;height:20px;border-radius:4px;border:1px solid #777;padding-top:2px;padding-left:2px;padding-right:2px;line-height:80%;font-size:15px;font-family:trebuchet ms,tahoma,helvetica,arial'>"+ 
               substorpri + 
               "<br>" + 
               "<span id='SP_" + substorpri +  "_ACK" +
-                  "' style='float:right;-webkit-filter:contrast(.7);text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;'>" + 
-              "</span>" + 
+                  "' style='float:right;-webkit-filter:contrast(.7);text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;background-color:silver;border-color:silver;'>" + 
+              "0</span>" + 
               "<span id='SP_" + substorpri + "_NACK" +
-                  "' style='float:right;text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;'>" + 
-              "</span>" + 
-            "</div>" );
+                  "' style='float:right;text-align:center;font-size:12px;border-radius:15px;border:2px solid;margin:1px;background-color:silver;border-color:silver;'>" + 
+              "0</span>" + 
+              "</div>" );              
             }
-          }
-        else
-          {
-          if ( ! WebSAGE.g_alminfo[substorpri].is_subst ) // reposition priority alm boxes
-             document.getElementById( "DIV_" + substorpri ).style.left =  ( xleft + cntpr * 58 ) + "px";
           }
           
         // update alarm boxes state/counts  
@@ -1117,13 +1253,23 @@ try
               if ( pri === 0 )
                 {
                 stl = 'color: ' + ColorOfPriority[ pri ] + ';';
-                stl += 'font-weight: bold;';
                 }
               else  
                 {
                 stl = 'color: ' + TabularViewer_AlmTxtColor + ';';
                 }                
           }
+
+      if ( pri === 0 )
+          {
+          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.fontWeight = "bold";
+          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.fontWeight = "bold";
+          }
+        else 
+          {
+          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DESCR].style.fontWeight = "inherit";
+          WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_EVENTO].style.fontWeight = "inherit";
+          }		
 
       if ( WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("L") != -1 ||
            WebSAGE.g_tbl.cellsx( id, WebSAGE.g_COL_QUALIF ).indexOf("P") != -1
@@ -1180,7 +1326,10 @@ try
           }
 */
       WebSAGE.g_tbl.setRowTextStyle( id, stl );
-      
+
+      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_DATA].style.fontSize = "smaller";
+      WebSAGE.g_tbl.rows[id+1].cells[WebSAGE.g_COL_QUALIF].style.fontSize = "smaller";
+
       if ( WebSAGE.isAlarmsViewer() )
         {
         // differentiate the substation name
@@ -1292,7 +1441,10 @@ mostraTodosAnormais: function()
   document.getElementById("OPC_CMDANORM").style.display = "none";
   document.getElementById("OPC_FILTROS").style.display = "none";
   
-  document.getElementById("IMGTABULAR").style.display = "none";
+  // document.getElementById("IMGTABULAR").style.display = "none";
+  $('#IMGTABULAR').attr('src', Imgs["ANORM_ID"] );
+  $('#IMGTABULAR').attr('title', "" );
+  
   document.getElementById("imgReconheceTudo").style.display = "";
 },
 

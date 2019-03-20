@@ -4,7 +4,7 @@
 var Msg =
 {
 NomeProduto: 'OSHMI',
-VersaoProduto: '6.1',
+VersaoProduto: '6.2',
 
 NomeVisorTelas:       'Visor de Telas',
 NomeVisorEventos:     'Visor de Eventos',
@@ -68,6 +68,8 @@ SELSE:         'Escolha a subestação',
 SELMOD:        'Escolha o módulo para filtrar',
 Filtro:        'Filtra pelo ID', 
 TabNomesColunas: 'NPonto,ID,Subest.,Descr.,Est/Val Atual,Flg,Cmd,Qualif.,Nor,Hora Alarme',
+SelectAll:     'Marcar Todos',
+UnselectAll:   'Desmarcar Todos',
 
 // dlginfo.html
 TENDTXT:     '>Acompanhar medida',

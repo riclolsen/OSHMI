@@ -37,13 +37,15 @@ if ( $write && isset( $p_CONTENT ) )
   {
   $p_CONTENT = trim($p_CONTENT);
 
-  // Forward request to redendant HMI if exists
+  // Forward request to redundant HMI if exists
   $otherhmiip="";
   $port=51909;
   // Parse with sections
   $ini_array = parse_ini_file("../conf/hmi.ini", true);
   if ( $ini_array["REDUNDANCY"]["OTHER_HMI_IP"] != "" )
     $otherhmiip = $ini_array["REDUNDANCY"]["OTHER_HMI_IP"];
+  if ( $ini_array["REDUNDANCY"]["HTTP_PORT"] != "" )
+    $port = $ini_array["REDUNDANCY"]["HTTP_PORT"];
   if ( $otherhmiip != "" )
   if ( $_SERVER['REMOTE_ADDR'] != $otherhmiip )
     {

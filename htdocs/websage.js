@@ -480,6 +480,7 @@ var i, t, elOptNew, elSel, titu, pos, nohs, textolink, tmp, idtela;
 
             // seleciona tela aberta no combo box
             WebSAGE.g_seltela.selectedIndex = i;
+            break;
         }
     }
  
@@ -2597,15 +2598,59 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
          break;               
       case "script":
          for ( i = 0; i < inksage_labelvec[lbv].list.length; i++ )
-           { 
-           item.setAttributeNS( null, "on" + inksage_labelvec[lbv].list[i].evt, "thisobj=evt.currentTarget;" + inksage_labelvec[lbv].list[i].param ); 
-           if ( inksage_labelvec[lbv].list[i].evt.indexOf("mouse") >= 0 )
-           if ( typeof(item.blockPopup) == "undefined" )
-           if ( item.style !== null )
-               item.style.cursor = "pointer";
-           }
-         break;               
-      case "text":
+          { 
+          switch (inksage_labelvec[lbv].list[i].evt)  
+            {
+            case "mouseup":
+            case "mousedown":
+            case "mouseover":
+            case "mouseout":
+            case "mousemove":
+            case "keydown":
+              item.setAttributeNS( null, "on" + inksage_labelvec[lbv].list[i].evt, "thisobj=evt.currentTarget;" + inksage_labelvec[lbv].list[i].param ); 
+              if ( inksage_labelvec[lbv].list[i].evt.indexOf("mouse") >= 0 )
+              if ( typeof(item.blockPopup) == "undefined" )
+              if ( item.style !== null )
+                  item.style.cursor = "pointer";
+              break;
+            case "exec_once":
+              try 
+              {
+                function evalprot(src) 
+                  {
+                  // create a context to protect some vars from being changed by the eval code
+                  var lbv = null;
+                  var i = null;
+                  return eval(src);
+                  }
+              evalprot('var thisobj=document.getElementById("' + item.id + '"); ' + inksage_labelvec[lbv].list[i].param );                   
+              }
+            catch( err )
+              {
+              $('#SP_STATUS').text( err.name + ": " + err.message + " [8]" ); 
+              document.getElementById("SP_STATUS").title = err.stack;
+              }
+              break;
+            case "exec_on_update":
+              break;
+            case "vega":
+            case "vega-lite":
+            case "vega4":
+              inksage_labelvec[lbv].tag = "#" + inksage_labelvec[lbv].list[i].evt;
+              inksage_labelvec[lbv].src = inksage_labelvec[lbv].list[i].param.split('\n')[0];
+              inksage_labelvec[lbv].prompt = inksage_labelvec[lbv].list[i].param.substring(inksage_labelvec[lbv].list[i].param.indexOf("\n") + 1);
+              WebSAGE.SetIniExtended( inksage_labelvec, lbv, item );
+              break;
+            case "vega-json":
+            case "vega4-json":
+              inksage_labelvec[lbv].tag = "#" + inksage_labelvec[lbv].list[i].evt;
+              inksage_labelvec[lbv].prompt = inksage_labelvec[lbv].list[i].param;
+              WebSAGE.SetIniExtended( inksage_labelvec, lbv, item );
+              break;
+          }
+       }
+      break;               
+ case "text":
          break;
       case "clone": 
          break;
@@ -2665,9 +2710,9 @@ preprocessaTela: function()
     tmp = SVGDoc.getElementsByTagName( "image" );
     for ( i = 0; i < tmp.length; i++ ) 
       { nohs.push( tmp.item(i) ); }
-    tmp = SVGDoc.getElementsByTagName( "g" );
-    for ( i = 0; i < tmp.length; i++ ) 
-      { nohs.push( tmp.item(i) ); }
+//    tmp = SVGDoc.getElementsByTagName( "g" );
+//    for ( i = 0; i < tmp.length; i++ ) 
+//      { nohs.push( tmp.item(i) ); }
     tmp = SVGDoc.getElementsByTagName( "circle" );
     for ( i = 0; i < tmp.length; i++ ) 
       { nohs.push( tmp.item(i) ); }
@@ -2891,7 +2936,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
       WebSAGE.visibEtiq( tag );      
       } 
 
-    if ( vt != WebSAGE.g_retnok || WebSAGE.InkSage[i].attr === "color" || WebSAGE.InkSage[i].attr === "set" )
+    if ( vt != WebSAGE.g_retnok || WebSAGE.InkSage[i].attr === "color" || WebSAGE.InkSage[i].attr === "set" || WebSAGE.InkSage[i].attr === "script" )
       {  
       switch ( WebSAGE.InkSage[i].attr )
          {
@@ -2957,10 +3002,10 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                   WebSAGE.InkSage[i].valores[tag].push( vt );
                   WebSAGE.InkSage[i].datas[tag].push( d.getTime() );
 				  
-				  if ( WebSAGE.InkSage[i].parent.hasOwnProperty("_bbox") )
-					  bb = WebSAGE.InkSage[i].parent._bbox;
-				  else  
-                      bb = WebSAGE.InkSage[i].parent.getBBox();
+                  if ( WebSAGE.InkSage[i].parent.hasOwnProperty("_bbox") )
+                    bb = WebSAGE.InkSage[i].parent._bbox;
+                  else  
+                    bb = WebSAGE.InkSage[i].parent.getBBox();
 				  
                   bb.left = bb.x;
                   bb.right = bb.x + bb.width;
@@ -3423,6 +3468,39 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
             break;    
          case "clone":
             break;       
+         case "script":
+            for ( j = 0; j < WebSAGE.InkSage[i].list.length; j++ )
+              { 
+              switch (WebSAGE.InkSage[i].list[j].evt)  
+                {
+                case "exec_on_update": // execute a script every time data is updated
+                    try 
+                    {
+                    function evalprot(src) 
+                      { 
+                      // create a context to protect some vars from being changed by the eval code
+                      var i, j, val, vt, mudou_dig, mudou_ana = null;
+                      return eval(src);
+                      }
+                    }
+                  catch( err )
+                    {
+                    $('#SP_STATUS').text( err.name + ": " + err.message + " [8]" ); 
+                    document.getElementById("SP_STATUS").title = err.stack;
+                    }
+                  break;
+                case "vega":
+                case "vega-lite":
+                case "vega-json":
+                case "vega4":
+                case "vega4-json":
+                  WebSAGE.SetExeExtended(i);
+                  break;
+                default:
+                  break;
+               }
+              }
+            break;               
          default:
             break;
          }
