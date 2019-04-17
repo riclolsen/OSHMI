@@ -599,10 +599,12 @@ function roundnum(value, decimals) {
 }
 
 // get script from server and execute it
-function getScript ( srvurl, postdata, tout )
+function getScript ( srvurl, postdata, tout, retries )
 {
 postdata = postdata || "";
 tout = tout || null;
+if (retries === undefined)
+  retries = 1;
 
 if ( postdata != "" )
   $.ajax({ url: srvurl,
@@ -618,7 +620,15 @@ if ( postdata != "" )
              catch(E) {
                console.log(E.message);
              }
-           }});
+           },
+           error: function(jqXHR, textStatus) { 
+             console.log(srvurl + " " + textStatus);
+             if ( retries > 0 ){
+               console.log("Retrying...");
+               getScript( srvurl, postdata, tout, retries - 1 );
+             }
+           }
+          });
 else
   $.ajax({ url: srvurl,
            dataType: "text",
@@ -631,15 +641,25 @@ else
               catch(E) {
                 console.log(E.message);
               }
-           }});
+            },
+            error: function(jqXHR, textStatus) { 
+                console.log(srvurl + " " + textStatus);
+                if ( retries > 0 ){
+                  console.log("Retrying...");
+                  getScript( srvurl, postdata, tout, retries - 1 );
+                }
+              }
+           });
 }
 
 // get JSON from server 
-function getJSON ( srvurl, onsuccess, postdata, tout )
+function getJSON ( srvurl, onsuccess, postdata, tout, retries )
 {
 postdata = postdata || "";
 tout = tout || null;
 onsuccess = onsuccess || null;
+if (retries === undefined)
+  retries = 1;
 
 if ( postdata != "" )
   $.ajax({ url: srvurl,
@@ -647,12 +667,26 @@ if ( postdata != "" )
            data: postdata,
            type: "POST",
            success: onsuccess,
-           timeout: tout
+           timeout: tout,
+           error: function(jqXHR, textStatus) { 
+                console.log(srvurl + " " + textStatus);
+                if ( retries > 0 ){
+                  console.log("Retrying...");
+                  getJSON ( srvurl, onsuccess, postdata, tout, retries - 1 )
+                }
+              }
          });
 else
   $.ajax({ url: srvurl,
            dataType: "json",
            success: onsuccess,
-           timeout: tout
+           timeout: tout,
+           error: function(jqXHR, textStatus) { 
+                console.log(srvurl + " " + textStatus);
+                if ( retries > 0 ){
+                  console.log("Retrying...");
+                  getJSON ( srvurl, onsuccess, postdata, tout, retries - 1 )
+                }
+              }
          });
 }

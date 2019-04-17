@@ -529,7 +529,7 @@ try {
   if ( paramval != NULL )
     V = paramval;
 
-  paramval = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "F");
+  paramval = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "FL");
   if ( paramval != NULL )
     F = paramval;
 
@@ -607,7 +607,7 @@ try {
     BL.lstHTTPReq_OutroIHM.push_back( (String)url +
                                       (String)"?X=" + nponto +
                                       (String)"&V=" + V +
-                                      (String)"&F=" + F
+                                      (String)"&FL=" + F
                                      );
 
 sResp = BL.ConsultaInfoPonto( nponto ); // NPONTO

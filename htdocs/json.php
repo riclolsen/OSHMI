@@ -4,7 +4,16 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
+
 require_once 'timezone.php';
+
+header("Content-Type: application/json; charset=utf-8");
+header("Cache-Control: no-store, must-revalidate");
+header("Access-Control-Allow-Origin: *");
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+  die();
+}
 
 // Parameters
 // FILTER = Tag or point key filter, can be a comma separated list or can be used * in tag to filter
@@ -59,15 +68,14 @@ if ( isset($_GET['DATEFORMAT']) )
     }
   }  
 
-header("Content-Type: application/json; charset=utf-8");
-
 // Instancia o objeto PDO
 $pdo = new PDO( 'sqlite:../db/hist.sl3' );
-$pdo->exec ( "PRAGMA synchronous = OFF" );
-$pdo->exec ( "PRAGMA journal_mode = WAL" );
-$pdo->exec ( "PRAGMA locking_mode = NORMAL" );
-$pdo->exec ( "PRAGMA cache_size = 5000" );
-$pdo->exec ( "PRAGMA temp_store = MEMORY" );
+$pdo->exec ( "PRAGMA query_only=TRUE" );
+$pdo->exec ( "PRAGMA synchronous=OFF" );
+$pdo->exec ( "PRAGMA journal_mode=WAL" );
+//$pdo->exec ( "PRAGMA locking_mode=NORMAL" );
+//$pdo->exec ( "PRAGMA cache_size=5000" );
+$pdo->exec ( "PRAGMA temp_store=MEMORY" );
 $pdo->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
 
 // define para que o PDO lance exceçoes caso ocorra erros

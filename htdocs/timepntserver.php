@@ -67,11 +67,12 @@ if ( $FUNCAO == "F" )
 try 
   {
     $dbhist = new PDO( 'sqlite:../db/hist.sl3' );
-    $dbhist->exec ( "PRAGMA synchronous = NORMAL" );
-    $dbhist->exec ( "PRAGMA journal_mode = WAL" );
-    $dbhist->exec ( "PRAGMA locking_mode = NORMAL" );
-    $dbhist->exec ( "PRAGMA cache_size = 5000" );
-    $dbhist->exec ( "PRAGMA temp_store = MEMORY" );
+    $dbhist->exec ( "PRAGMA query_only=TRUE" );
+    $dbhist->exec ( "PRAGMA synchronous=OFF" );
+    $dbhist->exec ( "PRAGMA journal_mode=WAL" );
+    //$dbhist->exec ( "PRAGMA locking_mode=NORMAL" );
+    //$dbhist->exec ( "PRAGMA cache_size=5000" );
+    $dbhist->exec ( "PRAGMA temp_store=MEMORY" );
     $dbhist->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
     //$dbhist->exec ( "PRAGMA mmap_size=268435456" );
 

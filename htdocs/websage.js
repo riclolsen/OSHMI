@@ -1343,7 +1343,7 @@ writeValor : function()
       val = WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").checked ? 0 : 1; 
     }
 
-  getJSON( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
+  getScript( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
 },
 
 timerBlink : function()
@@ -1808,14 +1808,14 @@ pegaTagClone : function ( item , lb )
                     pattern = WebSAGE.InkSage[k].map[l].substring( 0, poseq );
                     // position of the % in the cloned tag (may be %n or like !SLIM%n)
                     poscloned = lb.list[j].tag.indexOf("%");
-                    if ( pattern === lb.list[j].tag.substring( poscloned ) )
+                    if ( pattern === lb.list[j].tag.substring( poscloned, poscloned + pattern.length ) )
                       { // substitutes %n by the point number
+                        lb.list[j].tag = lb.list[j].tag.substring(0, poscloned) + WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) + lb.list[j].tag.substring( poscloned + pattern.length);
                         lb.tag = lb.list[j].tag;
-                        lb.list[j].tag = lb.list[j].tag.substring(0, poscloned) + WebSAGE.InkSage[k].map[l].substring( poseq + 1 );
                         WebSAGE.InkSage[k].tag = lb.list[j].tag;
-                        break;
+                        WebSAGE.acrescentaPontoLista( WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) );
                       }
-                    } 
+                    }                     
                   break;
                 }
               }
@@ -1847,11 +1847,11 @@ pegaTagClone : function ( item , lb )
                 pattern = WebSAGE.InkSage[k].map[l].substring( 0, poseq );
                 // position of the % in the cloned tag (may be %n or like !SLIM%n)
                 poscloned = lb.tag.indexOf("%");
-                if ( pattern === lb.tag.substring( poscloned ) )
+                if ( pattern === lb.tag.substring( poscloned, poscloned + pattern.length ) )
                   { // substitutes %n by the point number
-                    lb.tag = lb.tag.substring(0, poscloned) + WebSAGE.InkSage[k].map[l].substring( poseq + 1 );
+                    lb.tag = lb.tag.substring(0, poscloned) + WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) + lb.tag.substring( poscloned + pattern.length ) ;
                     item.temPaiGrupo = 1;
-                    break;
+                    WebSAGE.acrescentaPontoLista( WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) );
                   }
                 } 
               break;
@@ -1882,12 +1882,12 @@ pegaTagClone : function ( item , lb )
                 pattern = WebSAGE.InkSage[k].map[l].substring( 0, poseq );
                 // position of the % in the cloned tag (may be %n or like !SLIM%n)
                 poscloned = lb.src.indexOf("%");
-                if ( pattern === lb.src.substring( poscloned ) )
+                if ( pattern === lb.src.substring( poscloned, poscloned + pattern.length ) )
                   { // substitutes %n by the point number
-                    lb.tag = lb.src.substring(0, poscloned) + WebSAGE.InkSage[k].map[l].substring( poseq + 1 );
+                    lb.tag = lb.src.substring(0, poscloned) + WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) + lb.src.substring( poscloned + pattern.length );
                     lb.src = lb.tag;
                     item.temPaiGrupo = 1;
-                    break;
+                    WebSAGE.acrescentaPontoLista( WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) );
                   }
                 } 
               break;
@@ -1928,7 +1928,7 @@ pegaTagClone : function ( item , lb )
                                              WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) + 
                                              lb.param[j].substring( poscloned + pattern.length );
                               item.temPaiGrupo = 1;
-                              break;
+                              WebSAGE.acrescentaPontoLista( WebSAGE.InkSage[k].map[l].substring( poseq + 1 ) );
                             }
                           } 
                         break;

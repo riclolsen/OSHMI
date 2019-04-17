@@ -30,8 +30,10 @@ header("Cache-Control: no-store, must-revalidate");
 header('Access-Control-Allow-Origin: *');
 
 // Show no errors
-error_reporting(0);
-    
+//ini_set('display_errors', 1);
+//ini_set('display_startup_errors', 1);
+//error_reporting(E_ALL);
+
 require_once 'timezone.php';
 
 // internationalization messages
@@ -126,7 +128,7 @@ $ORG_CARGAINIC = 0x08; // Ponto nunca atualizado
 $ORG_MANUAL = 0x0C; // ponto de origem manual
 $ORG_MASCARA = 0x0C; // mascara de origem 
 
-echo "WSCons=1;L=[];\n";
+echo "WSCons=1;\n";
 
 try {
     $lstpnt = array();
@@ -134,15 +136,20 @@ try {
     $sderows = array();
     $nponto = 0;
 
-    $dbsde = new PDO( 'sqlite:../db/soe.sl3' );
-    $dbsde->setAttribute(PDO::ATTR_TIMEOUT, 8);
-    $dbsde->exec ( "PRAGMA synchronous = NORMAL" );
-    $dbsde->exec ( "PRAGMA journal_mode = WAL" );
-    $dbsde->exec ( "PRAGMA locking_mode = NORMAL" );
-    $dbsde->exec ( "PRAGMA cache_size = 5000" );
-    $dbsde->exec ( "PRAGMA temp_store = MEMORY" );
+    $dbsde = new PDO( 'sqlite:../db/soe.sl3','','', [
+      PDO::ATTR_TIMEOUT => 5,
+      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+     ] );
+    $dbsde->exec ( "PRAGMA query_only=TRUE" );
+    $dbsde->exec ( "PRAGMA synchronous=OFF" );
+    $dbsde->exec ( "PRAGMA journal_mode=WAL" );
+    //$dbsde->exec ( "PRAGMA locking_mode=NORMAL" );
+    //$dbsde->exec ( "PRAGMA cache_size=5000" );
+    $dbsde->exec ( "PRAGMA temp_store=MEMORY" );
     //$dbsde->exec ( "PRAGMA mmap_size=268435456" );
     $dbsde->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
+
+    echo "L=[];\n";
 
     $filtclause = "";
     $FILTRODATAHORA = "";
@@ -339,6 +346,8 @@ catch( PDOException $e )
     {
     // echo "Erro: ".$e->getMessage();
     // print_r($dbsde->errorInfo());
+    $erro = $dbsde->errorCode();
+    echo "console.log('$erro');\n";
     }
 
 echo "WSCons=2;\n";

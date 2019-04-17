@@ -4,6 +4,7 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 header("Cache-Control: no-store, must-revalidate");
+header("Access-Control-Allow-Origin: *");
 
 require_once 'timezone.php';
 
@@ -109,11 +110,12 @@ echo "\n";
 
 // Instancia o objeto PDO
 $pdo = new PDO( 'sqlite:../db/hist.sl3' );
-$pdo->exec ( "PRAGMA synchronous = OFF" );
-$pdo->exec ( "PRAGMA journal_mode = WAL" );
-$pdo->exec ( "PRAGMA locking_mode = NORMAL" );
-$pdo->exec ( "PRAGMA cache_size = 5000" );
-$pdo->exec ( "PRAGMA temp_store = MEMORY" );
+$pdo->exec ( "PRAGMA query_only=TRUE" );
+$pdo->exec ( "PRAGMA synchronous=OFF" );
+$pdo->exec ( "PRAGMA journal_mode=WAL" );
+//$pdo->exec ( "PRAGMA locking_mode=NORMAL" );
+//$pdo->exec ( "PRAGMA cache_size=5000" );
+$pdo->exec ( "PRAGMA temp_store=MEMORY" );
 $pdo->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
 
 

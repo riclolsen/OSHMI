@@ -266,8 +266,7 @@ function (inksage_labelvec, lbv, item)
       item.vgTableName = [];
       item.style.display = 'none'; // hide the rectangle
 
-      $.get(inksage_labelvec[lbv].prompt + "?" + new Date().getTime(),
-        function (data)
+      function vega2json(data)
       {
         var spc;
         if (typeof(data) === 'object')
@@ -314,10 +313,13 @@ function (inksage_labelvec, lbv, item)
             item.vg.html($("#" + item.vgId + " .vega")[0].childNodes[0].childNodes[0].innerHTML);
             });
           }, spc.data[1].update_period*1000 );        
-        } 
-        
+        }         
       }
-      );
+
+      if ( inksage_labelvec[lbv].prompt.indexOf("{") == 0 )
+        vega2json(inksage_labelvec[lbv].prompt);
+      else
+        $.get( inksage_labelvec[lbv].prompt + "?" + new Date().getTime(), vega2json );
     }
     break;
 
@@ -375,8 +377,7 @@ function (inksage_labelvec, lbv, item)
       item.vgTableName = [];
       item.style.display = 'none'; // hide the rectangle
 
-      $.get(inksage_labelvec[lbv].prompt + "?" + new Date().getTime(),
-        function (data)
+      function vega4json(data)
       {
         var spc;
         if (typeof(data) === 'object')
@@ -441,10 +442,13 @@ function (inksage_labelvec, lbv, item)
               }); 
             });
           }, spc.data[1].update_period*1000 );        
-        } 
-        
+        }   
       }
-      );
+
+      if ( inksage_labelvec[lbv].prompt.indexOf("{") == 0 )
+        vega4json(inksage_labelvec[lbv].prompt);
+      else
+        $.get(inksage_labelvec[lbv].prompt + "?" + new Date().getTime(), vega4json);
     }
     break;
   }

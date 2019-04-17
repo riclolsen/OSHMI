@@ -40,8 +40,10 @@
 
 using namespace std;
 
-#define QTESTER_VERSION "v1.25"
+#define QTESTER_VERSION "v1.26"
 #define QTESTER_COPYRIGHT "Copyright © 2010-2019 Ricardo Lastra Olsen"
+#define CURDIRINIFILENAME "/qtester104.ini"
+#define CONFDIRINIFILENAME "../conf/qtester104.ini"
 
 //-------------------------------------------------------------------------------------------------------------------------
 
@@ -51,8 +53,20 @@ MainWindow::MainWindow(QWidget *parent)
     BDTR_Logar = 1;
     i104.mLog.deactivateLog();
 
+    // look for the ini file in the application dir, if not found use the conf dir
+    QString ininame = QCoreApplication::applicationDirPath() + CURDIRINIFILENAME;
+    if (!QFile(ininame).exists())
+    {
+      ininame = CONFDIRINIFILENAME;
+    }
+
+    if ( QCoreApplication::arguments().count() > 1 )
+    {
+      ininame = QCoreApplication::arguments().at(1);
+    }
+
     // busca configuracoes no arquivo ini
-    QSettings settings( "../conf/qtester104.ini", QSettings::IniFormat );
+    QSettings settings( ininame, QSettings::IniFormat );
 
     i104.setPrimaryAddress( settings.value( "IEC104/PRIMARY_ADDRESS", 1 ).toInt() );
     i104.BDTRForcePrimary = settings.value( "BDTR/FORCE_PRIMARY", 0 ).toInt();

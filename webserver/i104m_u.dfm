@@ -1,6 +1,6 @@
 object fmIEC104M: TfmIEC104M
-  Left = 1169
-  Top = 846
+  Left = 552
+  Top = 312
   Width = 612
   Height = 452
   Caption = 'fmIEC104M'

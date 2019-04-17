@@ -13,37 +13,43 @@ sudo apt-get remove apache2
 #for QT dev
 sudo apt-get install qt5-default qtcreator g++ qtdeclarative5-dev cmake build-essential libx11-xcb-dev libglu1-mesa-dev libxrender-dev libasyncns0
 
-Install wine 3.xx
-wget -nc https://dl.winehq.org/wine-builds/Release.key
-sudo apt-key add Release.key
-sudo apt-add-repository https://dl.winehq.org/wine-builds/ubuntu/
+Install wine 4.xx
+
+# if linux is 64bits add i386
+# sudo dpkg --add-architecture i386 
+
+wget -qO - https://dl.winehq.org/wine-builds/winehq.key | sudo apt-key add -
 sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'
 sudo apt-get update
-sudo apt-get install --install-recommends winehq-stable
+sudo apt install --install-recommends winehq-stable
+
+# if linux is 64bits add 32bit wine prefix
+# rm -rf $HOME/.wine
+# WINEPREFIX="$HOME/.wine" WINEARCH=win32 wine wineboot
 
 # winetrick antigo não consegue pegar fontes extras 
 wget  https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks
 chmod +x winetricks 
 winetricks corefonts consolas lucida tahoma pptfonts
+winetricks wmi
 
-
-# install OHSMI as "operador"
+# install OHSMI as "operator"
 wine oshmi..setup.exe
-chmod +x winetricks 
+
+# XFCE
 Gerenciador de Energia | Tela (desmarcar "Manipula gerenciamento de ...") | Gerenciador de Energia | Segurança (escolher Nunca "Automaticamente bloquear a sessão", desmarcar "Bloquear a tela quando..."
 
 
 ln -s .wine/drive_c/oshmi/ oshmi
 cd oshmi
 mv nginx_php nginx_php
-sudo usermod -a -G ceee www-data.win
+sudo usermod -a -G operator www-data.win
 mv browser browser.win
 mv browser-data browser-data.win
 
-#operator = usuário onde está WINE/OSHMI (sem isto não consegue ler eventos)
+#operator = user where WINE/OSHMI is installed
 sudo usermod -a -G operator www-data
 sudo usermod -a -G oshmi www-data
-
 
 cd ../linux
 # removes stuff that are not needed to run on linux
@@ -52,7 +58,7 @@ rm -rf ../bin/mon_proc.exe
 rm -rf ../nginx_php
 
 
-sudo nano /etc/php/7.0/fpm/pool.d/www.conf
+sudo nano /etc/php/7.2/fpm/pool.d/www.conf
 listen.allowed.clients=127.0.0.1,IP_IHM1,IP_IHM2
 
 sudo nano /etc/nginx/sites-enabled/default 
@@ -140,16 +146,15 @@ server {
 
 #cria grupo oshmi
 sudo groupadd oshmi
-sudo useradd operador
-sudo usermod -G oshmi operador
-sudo usermod -G oshmi ceee
+sudo useradd operator
+sudo usermod -G oshmi operator
 cd .wine
 sudo chown -R :oshmi *.*
 sudo chmod -R g+w *.*
-cd /home/operador
-sudo ln -s /home/ceee/.wine /home/operador/.wine
-sudo ln -s /home/ceee/.wine/drive_c/oshmi /home/operador/oshmi
+cd /home/operator
 
-
-
+# instructions to to install mongodb 4
+https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
+# instructions to to install wine 4
+https://computingforgeeks.com/how-to-install-wine-4-on-ubuntu-18-04-linux-mint-19/
 

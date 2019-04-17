@@ -28,7 +28,7 @@
         // Iterate over the JSON object
         for (var i = 0, len = resp.length; i < len; i++) {
             
-            var dt = new Date(resp[i].TIMESTAMP * 1000);
+            var dt = new Date(resp[i].timestamp * 1000);
             var dateString =
               dt.getFullYear() + "/" +
               ("0" + (dt.getMonth()+1)).slice(-2) + "/" +
@@ -39,11 +39,11 @@
               // + "." + ("00" + dt.getUTCMilliseconds()).slice(-3);
 
             tableData.push({
-                "tag": resp[i].TAG,
-                "point_key": resp[i].POINT_KEY,
-                "value": resp[i].VALUE,
-                "status": resp[i].STATUS,
-                "failed": resp[i].FAILED,
+                "tag": resp[i].tag,
+                "point_key": resp[i].point_key,
+                "value": resp[i].value,
+                "status": resp[i].status,
+                "failed": resp[i].failed,
                 "timestamp": dateString
             });
         }

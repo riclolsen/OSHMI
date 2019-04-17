@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.2"
-!define VERSION_ "6.2.0.0"
+!define VERSION "v.6.4"
+!define VERSION_ "6.4.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -45,8 +45,8 @@ OutFile "oshmi_setup_${VERSION}.exe"
 VIProductVersion ${VERSION_}
 VIAddVersionKey ProductName "OSHMI (Open Substation HMI)"
 VIAddVersionKey Comments "SCADA HMI Software"
-VIAddVersionKey CompanyName ""
-VIAddVersionKey LegalCopyright "Copyright 2008-2018 Ricardo L.Olsen"
+VIAddVersionKey CompanyName "Ricardo Olsen"
+VIAddVersionKey LegalCopyright "Copyright 2008-2019 Ricardo L. Olsen"
 VIAddVersionKey FileDescription "OSHMI Installer"
 VIAddVersionKey FileVersion ${VERSION}
 VIAddVersionKey ProductVersion ${VERSION}
@@ -208,6 +208,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateDirectory "$INSTDIR\svg"
   CreateDirectory "$INSTDIR\grafana"
   CreateDirectory "$INSTDIR\PostgreSQL"
+  CreateDirectory "$INSTDIR\PowerBI"
 
   SetOutPath $INSTDIR
 
@@ -319,6 +320,7 @@ Section "" ; empty string makes it hidden, so would starting with -
 ; File /a "..\htdocs\simulator.html"
 ; File /a "..\htdocs\wdc-simulator.js"
 ; File /a "..\htdocs\vis.css"
+  File /a "..\htdocs\tagfind.php"
   File /a "..\htdocs\tableau_wdc.php"
   File /a "..\htdocs\tableau_wdc.js"
   File /a "..\htdocs\dialogstyle.css"
@@ -391,6 +393,9 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\PostgreSQL
   File /a /r "..\PostgreSQL\install.txt"  
   File /a /r "..\PostgreSQL\postgresql_start.bat"  
+
+  SetOutPath $INSTDIR\PowerBI
+  File /a /r "..\PowerBI\powerbi-oshmi-demo.pbix"  
   
   ; backup old (possibly incompatible) files to allow for the new ones to be overwritten
   Rename "$INSTDIR\conf\nginx_http.conf" "$INSTDIR\conf\nginx_http.pre_${VERSION}.conf.bak"

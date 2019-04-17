@@ -1,6 +1,6 @@
 object AboutForm: TAboutForm
-  Left = 203
-  Top = 240
+  Left = 559
+  Top = 262
   Width = 330
   Height = 435
   Caption = 'About OSHMI - Webserver'

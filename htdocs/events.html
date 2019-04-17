@@ -548,7 +548,7 @@ writeValor : function()
   else      
     val = WebSAGE.g_win_cmd.document.getElementById("rbNovoValor").checked ? 0 : 1;
   
-  getJSON( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
+  getScript( WebSAGE.g_remoteServer + '?X=' + NPTO + "&V=" + val );
 },
 
 histBusca : function()

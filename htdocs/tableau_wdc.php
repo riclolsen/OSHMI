@@ -8,7 +8,7 @@
     <link href="lib/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <script src="lib/jquery-2.1.1.js"></script>
     <script src="lib/bootstrap.min.js" crossorigin="anonymous"></script>
-    <script src="lib/tableauwdc-2.2.latest.js" type="text/javascript"></script>
+    <script src="lib/tableauwdc-2.3.js" type="text/javascript"></script>
     <script src="tableau_wdc.js" type="text/javascript"></script>
     <script src="lib/ui-1.9.2/jquery.ui.core.js"></script>
     <script src="lib/ui-1.9.2/jquery.ui.datepicker.js"></script>

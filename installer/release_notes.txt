@@ -174,6 +174,60 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.4:
+
+Screen Viewer:
+ - Vega JSON scripts can be directly embedded in the screen file.
+ - Fixed use of variables shortcuts (%n, %m, ...) in !EVAL expressions.
+ - Vega updated to version 5.3.5.
+ - Vega-lite updated to version 3.1.0.
+ - Current value in faceplate highlighted in cyan.
+
+Screen, Tabular and Events Viewers, webserver.exe:
+ - Fixed manual value imposing for redundant HMI.
+
+Power BI integration:
+ - Added Power BI example file for integration with OSHMI using the OData Protocol.
+
+Tableau integration:
+ - Added missing php file that find tags for Tableau web data connector.
+ - Fixed data retrieval problem in Tableau web data connector. 
+ - Tableau WDC API lib updated to version 2.3.
+
+OData and JSON data exporters:
+ - Added CORS headers.
+ - Added query_only SQLite pragma.
+
+PHP:
+ - Updated to version 7.3.4 x86 NTS.
+
+SQLite:
+ - Updated to version 3.28.0.
+
+Other:
+ - Better scripts to stop processes.
+
+-------------------------------------------------------------------
+
+Notes for version 6.3:
+
+Events Viewer:
+ - Better timeout handling for SQLite SOE table.
+ - One automatic retry for AJAX queries.
+
+Webserver.exe:
+ - Repositioned I104M window that was opening out of the screen bounds.
+
+QTester104.ini:
+ - Updated to version 1.26.
+ - The ini file (qtester104.ini) is now first looked for in the same executable directory, 
+   if not found look in the "../conf" dir or the file name can be passed via a command line argument.
+
+Linux:
+ - Update install instructions for Linux installation.
+
+-------------------------------------------------------------------
+
 Notes for version 6.2:
 
 Screen Editor:
