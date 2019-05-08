@@ -292,7 +292,7 @@ static void isac_notebook_new(SPWidget *spw)
 	}
 	else if (SP_IS_FLOWTEXT(item) || SP_IS_TEXT(item))
 	{
-		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to TEXT type objects
+		//gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to TEXT type objects
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_color_init(GTK_OBJECT(spw)), color_lbl);
 		//gtk_notebook_append_page(GTK_NOTEBOOK(nb),isac_menu_function_init(GTK_OBJECT(spw)), function_lbl);
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_get_init(GTK_OBJECT(spw)), get_lbl);
@@ -321,7 +321,7 @@ static void isac_notebook_new(SPWidget *spw)
 	else if (SP_IS_RECT(item))
 	{
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_bar_init(GTK_OBJECT(spw)), bar_lbl);
-		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to RECT type objects
+		//gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to RECT type objects
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_color_init(GTK_OBJECT(spw)), color_lbl);
 		//gtk_notebook_append_page(GTK_NOTEBOOK(nb),isac_menu_function_init(GTK_OBJECT(spw)), function_lbl);
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_opacity_init(GTK_OBJECT(spw)), opacity_lbl);
@@ -355,7 +355,7 @@ static void isac_notebook_new(SPWidget *spw)
 	}
 	else if (start && end)
 	{
-		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to OTHER type objects
+		//gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to OTHER type objects
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_color_init(GTK_OBJECT(spw)), color_lbl);
 		//gtk_notebook_append_page(GTK_NOTEBOOK(nb),isac_menu_function_init(GTK_OBJECT(spw)), function_lbl);
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_opacity_init(GTK_OBJECT(spw)), opacity_lbl);
@@ -385,7 +385,7 @@ static void isac_notebook_new(SPWidget *spw)
 	}
 	else
 	{
-		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to OTHER type objects
+		//gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_clone_init(GTK_OBJECT(spw)), clone_lbl);	//Added Faceplate(Clone) to OTHER type objects
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_color_init(GTK_OBJECT(spw)), color_lbl);
 		//gtk_notebook_append_page(GTK_NOTEBOOK(nb),isac_menu_function_init(GTK_OBJECT(spw)), function_lbl);
 		gtk_notebook_append_page(GTK_NOTEBOOK(nb), isac_menu_opacity_init(GTK_OBJECT(spw)), opacity_lbl);
@@ -638,7 +638,7 @@ void isac_update_syntax(GtkWidget *widget, SPWidget *spw)
 
 	else if (SP_IS_FLOWTEXT(item) || SP_IS_TEXT(item))
 	{
-		isac_syntax = isac_get_clone_syntax(isac_syntax, spw);	//Updates syntax for Faceplate(Clone) on TEXT objects
+		//isac_syntax = isac_get_clone_syntax(isac_syntax, spw);	//Updates syntax for Faceplate(Clone) on TEXT objects
 		isac_syntax = isac_get_color_syntax(isac_syntax, spw);
 		//isac_syntax = isac_get_function_syntax(isac_syntax, spw);
 		isac_syntax = isac_get_get_syntax(isac_syntax, spw);
@@ -654,7 +654,7 @@ void isac_update_syntax(GtkWidget *widget, SPWidget *spw)
 
 	else if (SP_IS_RECT(item))
 	{
-		isac_syntax = isac_get_clone_syntax(isac_syntax, spw);	//Updates syntax for Faceplate(Clone) on RECT objects
+		//isac_syntax = isac_get_clone_syntax(isac_syntax, spw);	//Updates syntax for Faceplate(Clone) on RECT objects
 		isac_syntax = isac_get_bar_syntax(isac_syntax, spw);
 		isac_syntax = isac_get_color_syntax(isac_syntax, spw);
 		//isac_syntax = isac_get_function_syntax(isac_syntax, spw);
@@ -671,7 +671,7 @@ void isac_update_syntax(GtkWidget *widget, SPWidget *spw)
 
 	else
 	{
-		isac_syntax = isac_get_clone_syntax(isac_syntax, spw);	//Updates syntax for Faceplate(Clone) on OTHER objects
+		//isac_syntax = isac_get_clone_syntax(isac_syntax, spw);	//Updates syntax for Faceplate(Clone) on OTHER objects
 		isac_syntax = isac_get_color_syntax(isac_syntax, spw);
 		//isac_syntax = isac_get_function_syntax(isac_syntax, spw);
 		isac_syntax = isac_get_opacity_syntax(isac_syntax, spw);
@@ -4140,7 +4140,7 @@ GtkWidget *isac_menu_get_init(GtkObject *spw)
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf), GTK_WRAP_WORD);
 	GtkTextBuffer *desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf));
 	//gtk_text_view_set_editable(GTK_TEXT_VIEW(tf), FALSE);
-  gtk_text_buffer_set_text(desc_buffer, "Display values in the text object. Use C/printf convention like %05.2f to display 01.20 when the tag has the value 1.2. Also D3 format convention is supported.", -1);
+	gtk_text_buffer_set_text(desc_buffer, "Display values in the text object. Use C/printf convention like %05.2f to display 01.20 when the tag has the value 1.2. Also D3 format convention is supported.", -1);
 	gtk_container_add(GTK_CONTAINER(int_expander), tf);
 	//gtk_table_attach_defaults (GTK_TABLE (tb1), tf, 1, 3, 2, 3);
 	gtk_widget_show(tf);
@@ -4749,7 +4749,7 @@ GtkWidget *isac_menu_script_init(GtkObject *spw)
 	GtkTreeIter iter;
 	GtkTreePath *path = gtk_tree_path_new_first();
 	GtkTextBuffer *buffer;
-	char *event[] = { "mouseup", "mousedown", "mouseover", "mouseout", "mousemove" , "keydown", "exec_once", "exec_on_update", "vega-lite", "vega", "vega-json", "vega4", "vega4-json" };	//HSH: added keydown
+	char *event[] = { "mouseup", "mousedown", "mouseover", "mouseout", "mousemove", "exec_once", "exec_on_update", "vega-lite", "vega", "vega-json", "vega4", "vega4-json", "keydown"};	//HSH: added keydown
 
 	hbox = gtk_hbox_new(FALSE, 4);
 	vbox = gtk_vbox_new(FALSE, 4);
@@ -4790,7 +4790,7 @@ GtkWidget *isac_menu_script_init(GtkObject *spw)
 	gtk_container_add(GTK_CONTAINER(scroll), script_list);
 	gtk_box_pack_start(GTK_BOX(hbox), scroll, FALSE, TRUE, 0);
 
-	for (int i = 0; i < 13; i++) // append the tab events "mouseup" "mousedown" "mouseover" "mouseout" "mousemove", ... //HSH "keydown"
+	for (int i = 0; i< 13; i++) // append the tab events "mouseup" "mousedown" "mouseover" "mouseout" "mousemove" //HSH "keydown"
 	{
 		gtk_list_store_append(store, &iter);
 		// append to column 0 each tab event & append to column 2 with null string
@@ -5445,7 +5445,7 @@ GtkWidget *isac_menu_tooltips_init(GtkObject *spw)
 	gtk_widget_set_sensitive(GTK_WIDGET(tf), FALSE);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(tf), GTK_WRAP_WORD);
 	GtkTextBuffer *desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tf));
-  gtk_text_buffer_set_text(desc_buffer, "Hint (tooltip) when mouse over this graphic.", -1);	
+	gtk_text_buffer_set_text(desc_buffer, "Hint (tooltip) when mouse over this graphic.", -1);
 	gtk_container_add(GTK_CONTAINER(int_expander), tf);
 	gtk_widget_show(tf);
 

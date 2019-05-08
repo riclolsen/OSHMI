@@ -1,6 +1,6 @@
 ; oshmi.nsi
 ; OSHMI installer script
-; Copyright 2008-2018 - Ricardo L. Olsen
+; Copyright 2008-2019 - Ricardo L. Olsen
 
 ; NSIS (Nullsoft Scriptable Install System) - http://nsis.sourceforge.net/Main_Page
 
@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.4"
-!define VERSION_ "6.4.0.0"
+!define VERSION "v.6.5"
+!define VERSION_ "6.5.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -237,6 +237,10 @@ Section "" ; empty string makes it hidden, so would starting with -
   
   SetOutPath $INSTDIR\nginx_php
   File /r /x *.log "..\nginx_php\*.*" 
+  SetOutPath $INSTDIR\nginx_php\php
+  File /a "..\conf_templates\php.ini"
+  SetOutPath $INSTDIR\nginx_php\conf
+  File /a "..\conf_templates\nginx.conf"
 
   SetOutPath $INSTDIR\linux
   File /a "..\linux\*.*"
@@ -376,8 +380,12 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\docs\oshmi_operation_manual-en_us.pdf"
   File /a "..\docs\oshmi_configuration_manual-en_us.odt"
   File /a "..\docs\oshmi_configuration_manual-en_us.pdf"
+  File /a "..\docs\oshmi_dnp3_config-en_us.odt"
   File /a "..\docs\oshmi_dnp3_config-en_us.pdf"
+  ;File /a "..\docs\oshmi_modbus_config-en_us.odt"
   File /a "..\docs\oshmi_modbus_config-en_us.pdf"
+  File /a "..\docs\oshmi_opc_client_config-en_us.odt"
+  File /a "..\docs\oshmi_opc_client_config-en_us.pdf"
   File /a "..\docs\lua_reference_manual.pdf"
   File /a "..\docs\inkscape-shortcuts1.svg"
   File /a "..\docs\inkscape-shortcuts2.svg"

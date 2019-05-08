@@ -1,0 +1,1 @@
+ git clone --recurse-submodules https://gitlab.com/inkscape/inkscape.git --single-branch --branch 0.92.x

@@ -367,6 +367,7 @@ void AboutBox::initStrings() {
 "Dmitry G. Mastrukov\n"
 "David Mathog\n"
 "Matiphas\n"
+"Patrick McDermott\n"
 "Michael Meeks\n"
 "Federico Mena\n"
 "MenTaLguY\n"
@@ -639,7 +640,7 @@ void AboutBox::initStrings() {
      * This text is copied from the COPYING file
      */         
     license_text =
-    "SCADAvis.io vector graphics synoptic display editor (April/2018)\n"
+    "SCADAvis.io vector graphics synoptic display editor.\n"
     "Modified and custom built for:\n"
     "  * SCADAvis.io\n"
     "  * xPlainCloud.com\n"
@@ -649,14 +650,14 @@ void AboutBox::initStrings() {
     "We respect and intend to comply with the branding policy of the Inkscape Project\n"
     "  https://inkscape.org/en/about/branding/\n"
     "In our view the modifications introduced are not substantial and do not intend to create a competitive product.\n"
-    "The modifications introduced are meant to allow the use of the sotware as a SCADA Synoptics Editor.\n"
+    "The modifications introduced are meant to allow the use of the sotware as a SCADA Synoptic Editor.\n"
     "We respect the GPL license of the upstream work by making the source code of modifications to the original Inkscape and SAGE code available at:\n"
     "  https://sourceforge.net/p/oshmiopensubstationhmi/mercurial/ci/default/tree/inkscape_sage_src/\n\n"
     "The original SAGE (SCADA Animation Graphic Editor) software and source code is available here:\n"
     "  https://sourceforge.net/projects/sage-scada/\n"
     "Licensed under the GNU GPLv3\n"
     "  https://www.gnu.org/licenses/gpl-3.0.en.html\n"
- 
+    "\n"
     "                    GNU GENERAL PUBLIC LICENSE\n"
     "                       Version 3, 29 June 2007\n"
     "\n"

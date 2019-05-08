@@ -91,9 +91,12 @@ set(ui_SRC
 	dialog/messages.cpp
 	dialog/new-from-template.cpp
 	dialog/object-attributes.cpp
+
 	sage/json.cpp
 	sage/isac-menu.cpp
 	sage/object-properties.cpp
+
+#	dialog/object-properties.cpp
 	dialog/objects.cpp
 	dialog/ocaldialogs.cpp
 	dialog/pixelartdialog.cpp
@@ -233,9 +236,7 @@ set(ui_SRC
 	dialog/messages.h
 	dialog/new-from-template.h
 	dialog/object-attributes.h
-	sage/json.h
-	sage/isac-menu.h
-    sage/object-properties.h
+	dialog/object-properties.h
 	dialog/objects.h
 	dialog/ocaldialogs.h
 	dialog/panel-dialog.h

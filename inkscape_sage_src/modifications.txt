@@ -1,0 +1,26 @@
+
+add inkscape\src\ui\sage\*.*
+isac-menu.cpp
+isac-menu.h
+Json.cpp
+Json.h
+object-properties.cpp
+object-properties.h
+
+change inkscape\src\ui\CMakeLists.txt
+
+	dialog/object-attributes.cpp
+
+	sage/json.cpp
+	sage/isac-menu.cpp
+	sage/object-properties.cpp
+
+#	dialog/object-properties.cpp
+
+Change:
+inkscape\src\ui\dialog\aboutbox.cpp
+packaging/win32/inkscape.nsi
+packaging/wix/files.py
+packaging/wix/inkscape.wxs
+share/screens/about.svg
+

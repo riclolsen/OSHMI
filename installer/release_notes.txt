@@ -26,6 +26,7 @@ Acknowledgements:
   ICCP Client by Fernando Covatti - https://github.com/fcovatti/iccp
   Opendnp3 - https://www.automatak.com/opendnp3/
   Libmodbus - http://libmodbus.org/
+  H-OPC - https://github.com/hylasoft-usa/h-opc
   QT - http://www.qt.io
   Lua Language - https://www.lua.org
   GNU Libmicrohttpd: https://www.gnu.org/software/libmicrohttpd
@@ -168,9 +169,31 @@ QTester104:
 
 DNP3 and Modbus Drivers:
  - Visual Studio Community (2015 or newer).
+ - OpenDNP3 and Libmodbus libraries.
+
+OPC Driver:
+ - Visual Studio Community (2015 or newer).
+ - H-OPC library (can be obtained via NuGET package).
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 6.5:
+
+OPC Driver:
+ - New OPC UA/DA (TCP/IP binary) client driver version 0.1.
+
+Chromium:
+ - Updated to version 74.0.3729.131.
+
+PHP:
+ - Updated to version 7.2.18 x86 NTS.
+ - The version was downgraded due to SQLite table locking problems with PHP 7.3.
+
+Nginx:
+ - Updated to version 1.16.0.
 
 -------------------------------------------------------------------
 
