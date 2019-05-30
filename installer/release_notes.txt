@@ -1,5 +1,5 @@
 OSHMI - Open Substation HMI
-    Copyright 2008-2018 - Ricardo L. Olsen 
+    Copyright 2008-2019 - Ricardo L. Olsen 
     (https://www.linkedin.com/in/ricardo-olsen/)
 
     This program is free software: you can redistribute it and/or modify
@@ -177,6 +177,17 @@ OPC Driver:
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 6.6:
+
+Screen Viewer:
+ - "tag" variable made available for read in scripts of "Color" XSAC processing.
+
+Webserver.exe:
+ - Fixed problem when correcting AnsiString.sprintf %g double values 
+   (that prints 00.0 or -00.0).
 
 -------------------------------------------------------------------
 

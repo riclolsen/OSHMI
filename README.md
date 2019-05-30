@@ -1,7 +1,7 @@
 # OSHMI - Open Substation HMI
 A modern SCADA HMI for substations, IoT and other automation applications.
 
-This project exists because I believe that by combining existing open source projects and tools we can create a very capable, mobile and cloud-friendly HMI system that can rival proprietary software. This approach makes it possible to sum the forces of each project (Chromium, SVG/HTML5, PHP, Lua, SQLite, Inkscape, OpenDNP3, Nginx, Vega, PostgreSQL, Grafana,…) to achieve a great set of open, evergreen, modular and customizable tools for building great HMIs for automation projects. If you also believe this is possible, please give OSHMI a try and collaborate with the project!
+This project exists because we believe that by combining existing open source projects and tools we can create a very capable, mobile and cloud-friendly HMI system that can rival proprietary software. This approach makes it possible to sum the forces of each project (Chromium, SVG/HTML5, PHP, Lua, SQLite, Inkscape, OpenDNP3, Nginx, Vega, PostgreSQL, Grafana,…) to achieve a great set of open, evergreen, modular and customizable tools for building great HMIs for automation projects. If you also believe this is possible, please give OSHMI a try and collaborate with the project!
 
 - Mobile and Cloud friendly.
 - Created for substation automation and control centers, but can be used for IoT and general SCADA HMI automation applications.
@@ -10,12 +10,12 @@ This project exists because I believe that by combining existing open source pro
 - Strong focus on UX and High Performance HMI / ISA101 compatible graphics.
 - Redundant mode of operation, dual server/ ?n? clients. Unlimited points, clients, monitors and viewers.
 - Easy configuration with plain text files.
-- IEC 60870-5-104 (QTester104), DNP3, MODBUS and ICCP protocol drivers. Can connect to IEC61850 devices using protocol converters.
+- IEC 60870-5-104 (QTester104), DNP3, MODBUS, OPC UA/DA and ICCP protocol drivers. Can connect to IEC61850 devices using protocol converters.
 - The client web interface can be accessed by modern IOS, Android devices or by an HTML5 browser.
 - Please notice that OSHMI does NOT function by itself as a protocol gateway!
 
 Some Features:
-- Screen Viewer: full-graphics, vector based, lossless zoom (SVG). Amazing Vega Charts Engine. Scale great graphics from the cellphone to the video-wall.
+- Screen Viewer: full-graphics, vector based, lossless zoom (SVG). Amazing Vega charts engine. Scale great graphics from the cellphone to the video-wall.
 - Events Viewer: millisecond resolution; can operate with field time tags or local time tags; 2 stage acknowledgement/elimination; historical mode.
 - Tabular Viewer: point list shown filtered by substation and bay.
 - Alarms Viewer: displays alarms, with filters by substation and priority.
@@ -28,13 +28,11 @@ Some Features:
 - Automation functions can be implemented in LUA (e.g. substation restoration, tap control).
 - Distinct treatment for digital states, alarms and protection events. Range check for analog values. Calculation of points.
 - Dedicated Shell that can replace the standard Windows Shell and can restrict access only to the HMI functions.
-- Excellent Inkscape based Graphics editor to create SVG graphics with SCADA animations.
+- Excellent Inkscape-based graphics editor to create SVG graphics with SCADA animations.
 - Use of Desktop Notifications for breaker opening by protection.
-- No need for Active X, Java, Flash/Flex, WPF/WCF, XAML, Silverlight or any other plugin!
+- No need for any browser plugin!
 
-Why is it free? Because it was built with open source libraries, tools, languages, compilers, etc.
-
-Software languages: english and portuguese. Can be easily translated to other languages.
+Software languages: english and portuguese. Can be easily translated to other languages (UTF-8 user interface).
 
 Contact me here: https://www.linkedin.com/in/ricardo-olsen/
 

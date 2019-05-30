@@ -3273,7 +3273,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                         var script, ch, fill, stroke, attrib, attribval, tag = null;                        
                         return eval(src);
                         }
-                      evalprot( 'var thisobj=window.SVGDoc.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + script, i );
+                      evalprot( 'var tag="'+tag+'";var thisobj=window.SVGDoc.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + script, i );
                     }                  
                   catch ( err ) 
                     { 

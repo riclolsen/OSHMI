@@ -1369,7 +1369,7 @@ for ( i = 0; lista[i] != 0 && i < LIMITE_PONTOS_TABULAR && i < taml; i++ )
          SVal.sprintf("%.14g",valor);
          // buggy sprintf printing 00.000xyz or -00.000xyz like values cause errors (turn 00.000 into 0.000)
          int p = SVal.Pos("00.");
-         if ( p )
+         if ( p==1 || p==2 && SVal[1]=='-' )
            SVal = SVal.Delete(p, 1);
          }
        else
@@ -1610,7 +1610,7 @@ for ( i = 0; lista[i] != 0 && i < LIMITE_PONTOS_TABULAR && i < taml; i++ )
          SVal.sprintf("%.14g",valor);
          // buggy sprintf printing 00.000xyz or -00.000xyz like values cause errors (turn 00.000 into 0.000)
          int p = SVal.Pos("00.");
-         if ( p )
+         if ( p==1 || p==2 && SVal[1]=='-' )
            SVal = SVal.Delete(p, 1);
          }
        else
@@ -1908,7 +1908,7 @@ for ( int i = 0; ListaPontos[i] != 0; i++ )
      S.sprintf( "%.14g", valor );
      // buggy sprintf printing 00.000xyz or -00.000xyz like values cause errors (turn 00.xxx into 0.xxx)
      int p = S.Pos("00.");
-     if ( p )
+     if ( p==1 || p==2 && S[1]=='-' )
        S = S.Delete(p, 1);
 
      if ( reqinfo )
