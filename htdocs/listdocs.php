@@ -13,9 +13,10 @@ header("Cache-Control: no-store, must-revalidate");
 <body style="font-family:Helvetica;font-size:18pt;">
     
 <ol>
+
 <?PHP
 foreach (glob("../docs/*.[pP][dD][fF]") as $filename) {
-    $bname = str_replace(".pdf","",strtolower(basename($filename)));
+    $bname = str_ireplace(".pdf","",basename($filename));
     // do something with $filename
     echo "<li style='list-style-type: circle;'><a href='$filename' style='text-decoration: none;color:blue'>$bname</a></li>";
 }

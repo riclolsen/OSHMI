@@ -1161,6 +1161,8 @@ if ( ((*it).second).Formula != 0 )
 if ( calculo == 0 )
   return 0;
 
+double prev_val = ((*it).second).Valor;
+
 try
 {
 
@@ -1546,8 +1548,8 @@ if ( !((*it).second).EventoDigital )
 }
 catch (Exception &E)
   {
-    ((*it).second).Valor = 0; // avoid problems with malformed fp value
-    ((*it).second).sValor = 0;
+    ((*it).second).Valor = prev_val; // avoid problems with malformed fp value
+    ((*it).second).sValor = (short)prev_val;
     ((*it).second).Acessando = 0;
     ((*it).second).Qual.Falha = 1;
 
@@ -2795,10 +2797,10 @@ catch ( Exception &E )
   {
   if (tipo == 13 || tipo == 36)
     {
-    pt.Valor = 0;
-    pt.sValor = 0;
+    // pt.Valor = 0;
+    // pt.sValor = 0;
     }
-  pt.Qual.Falha = 0;
+  pt.Qual.Falha = 1;
   Loga( E.Message + (String)" | Exception for point: " + (String)nponto + (String)" type: " + tipo);
   return -4;
   }

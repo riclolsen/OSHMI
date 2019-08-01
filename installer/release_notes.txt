@@ -180,6 +180,16 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.7:
+
+Webserver.exe:
+ - Modified treatment of floating exception to just fail the point and preserve the old value.
+
+SQLite:
+ - Updated to version 3.29.0.
+
+-------------------------------------------------------------------
+
 Notes for version 6.6:
 
 Screen Viewer:
