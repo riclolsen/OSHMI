@@ -16,6 +16,10 @@
 #include <NMHttp.hpp>
 #include <Psock.hpp>
 #include "IdTCPServer.hpp"
+#include <NMURL.hpp>
+#include "IdHTTP.hpp"
+#include "IdTCPClient.hpp"
+#include "IdTCPConnection.hpp"
 //---------------------------------------------------------------------------
 class TfmWebServ : public TForm
 {
@@ -30,9 +34,7 @@ __published:	// IDE-managed Components
         TLabel *lbOutroIHM;
         TLabel *lbReset;
         TLabel *Label1;
-        void __fastcall IdHTTPServer1CommandGet(TIdPeerThread *AThread,
-          TIdHTTPRequestInfo *ARequestInfo,
-          TIdHTTPResponseInfo *AResponseInfo);
+        TIdHTTP *IdHTTP1;
         //void __fastcall NMUDP1DataReceived(TComponent *Sender,
         // int NumberBytes, AnsiString FromIP, int Port);
         //void __fastcall Timer1Timer(TObject *Sender);
@@ -42,7 +44,6 @@ __published:	// IDE-managed Components
         void __fastcall NMHTTP1Status(TComponent *Sender,
           AnsiString Status);
         void __fastcall FormCreate(TObject *Sender);
-        void __fastcall FormDestroy(TObject *Sender);
         void __fastcall Timer3Timer(TObject *Sender);
         void __fastcall IdHTTPServer1Exception(TIdPeerThread *AThread,
           Exception *AException);

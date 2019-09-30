@@ -273,7 +273,7 @@ static hmi_sendcmd( lua_State *L )
          }
 
        // trata caso de simulação
-       if ( ( BL.GetSimulacao() == SIMULMOD_MESTRE ) || ( BL.GetSimulacao() == SIMULMOD_LOCAL ) )
+       if ( ( BL.GetSimulacao() == SIMULMOD_LOCAL ) )
          {
          int ret=fmSimul->SimulaComando( nponto, valor );
          lua_pushinteger( L, ret );
@@ -284,12 +284,6 @@ static hmi_sendcmd( lua_State *L )
          if ( IP_BDTR1 == "" ) // se não tem bdtr, manda pelo 104
            {
            int ret = fmIEC104M->ComandoIEC_Dig( nponto, valor&0x01?0:1 );
-           lua_pushinteger( L, ret );
-           return 1;
-           }
-         else
-           {
-           int ret = fmBDTR->bdtr.MandaComandoDig( nponto, valor );
            lua_pushinteger( L, ret );
            return 1;
            }

@@ -1,8 +1,11 @@
 //---------------------------------------------------------------------------
-// Communication I104M ( DNP3.EXE, MODBUS.EXE, ICCP_CLIENT.EXE, IEC104M.EXE )
+// Communication I104M transport protocol
+// Used by protocol drivers
+// DNP3.EXE, QTESTER104.EXE, MODBUS.EXE, ICCP_CLIENT.EXE, IEC104M.EXE
+//
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2018 - Ricardo L. Olsen
+	Copyright 2008-2019 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

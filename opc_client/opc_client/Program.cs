@@ -28,12 +28,14 @@ using System.Web.Script.Serialization;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using Opc.Ua;
 
 namespace OSHMI_OPC_Client
 {
     class Program
     {
-        static public string Version = "OSHMI OPC UA/DA Driver Version 0.1";
+        static public string Version = "OSHMI OPC UA/DA Driver Version 0.2";
         static public string ConfigFile = "c:\\oshmi\\conf\\opc_client.conf";
         static public int UDPPortSend = 9100;
         static public int UDPPortListen = 9101;
@@ -42,7 +44,6 @@ namespace OSHMI_OPC_Client
         static public bool logcommand = true;
 
         static public ConcurrentQueue<OSHMI_control> ControlQueue = new ConcurrentQueue<OSHMI_control>();
-
         public const int bufSize = 8 * 1024;
 
         public class State
@@ -70,11 +71,43 @@ namespace OSHMI_OPC_Client
 
         public struct OPC_server
         {
+            public string application_name;
+            public string certificate_file_name;
+            public string certificate_password;
             public string opc_url;
             public List<OPC_entry> entries;
             public int read_period;
             public int is_opc_ua;
         }
+
+        /// <summary>
+        /// Extracts the application URI specified in the certificate.
+        /// </summary>
+        /// <param name="certificate">The certificate.</param>
+        /// <returns>The application URI.</returns>
+        public static string GetApplicationUriFromCertificate(X509Certificate2 certificate)
+        {
+            // extract the alternate domains from the subject alternate name extension.
+            X509SubjectAltNameExtension alternateName = null;
+
+            foreach (X509Extension extension in certificate.Extensions)
+            {
+                if (extension.Oid.Value == X509SubjectAltNameExtension.SubjectAltNameOid || extension.Oid.Value == X509SubjectAltNameExtension.SubjectAltName2Oid)
+                {
+                    alternateName = new X509SubjectAltNameExtension(extension, extension.Critical);
+                    break;
+                }
+            }
+
+            // get the application uri.
+            if (alternateName != null && alternateName.Uris.Count > 0)
+            {
+                return alternateName.Uris[0];
+            }
+
+            return string.Empty;
+        }
+
 
         static void SendUdp(byte[] data)
         {
@@ -223,7 +256,7 @@ namespace OSHMI_OPC_Client
             }
         }
 
-        static void ProcessUa(String URI, List<OPC_entry> entries, int readperiod)
+        static void ProcessUa(String URI, List<OPC_entry> entries, int readperiod, string application_name, string cert_file_name, string cert_password)
         {
             CultureInfo ci = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = ci;
@@ -233,11 +266,39 @@ namespace OSHMI_OPC_Client
             {
                 try
                 {
+                    System.Random rnd = new Random();
+                    string sn = application_name + "_" + rnd.Next();
+
                     var options = new UaClientOptions
                     {
-                        SessionTimeout = 60000,
-                        SessionName = "OSHMI client (h-opc)"
+                        SessionTimeout = 30000U,
+                        SessionName = sn,
+                        UseMessageSecurity = false,
+                        AutoAcceptUntrustedCertificates = true,
+                        MaxSubscriptionCount = 500,
+                        MaxPublishRequestCount = 100,
+                        MaxNotificationQueueSize = 500,
+                        MaxMessageQueueSize = 50,
+                        ApplicationName = application_name,
+                        ConfigSectionName = application_name
                     };
+
+                    if (cert_file_name != "")
+                    {
+                        if (File.Exists(cert_file_name))
+                        {
+                            options.ApplicationCertificate = new X509Certificate2(cert_file_name, cert_password, X509KeyStorageFlags.MachineKeySet);
+                            //options.ApplicationCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2();
+                            //options.ApplicationCertificate.Import(cert_file_name);
+
+                            Console.WriteLine("Application URI: " + GetApplicationUriFromCertificate(options.ApplicationCertificate));
+
+                            //Print to console information contained in the certificate.
+                            Console.WriteLine("{0}Certificate to string: {1}{0}", Environment.NewLine, options.ApplicationCertificate.ToString(true));
+                        }
+                        else
+                            Console.WriteLine("Certificate file not found: " + cert_file_name);
+                    }
 
                     using (var client = new UaClient(new Uri(URI), options))
                     {
@@ -1062,13 +1123,23 @@ namespace OSHMI_OPC_Client
                     //                     .SelectMany(element => element).ToList();
                     if (result[0][0] == '#' || result.Count()==0) // comment or empty line
                         continue;
-                    if (result[0].ToLower().Contains("opc.tcp://") && result.Count()==2)
+                    if (result[0].ToLower().Contains("opc.tcp://") && result.Count()>=2)
                     { // new opc ua server
                         Console.WriteLine("NEW UA SERVER");
+                        string an = "OSHMI", cfn = "", passwd = "";
+                        if (result.Count() >= 3)
+                            an = result[2].Trim();
+                        if (result.Count() >= 4)
+                            cfn = result[3].Trim();
+                        if (result.Count() >= 5)
+                            passwd = result[4].Trim();
                         cnt_entries = -1;
                         cnt_servers++;
                         OPC_server opcserv = new OPC_server
                         {
+                            application_name = an,
+                            certificate_file_name = cfn,
+                            certificate_password = passwd,
                             opc_url = result[0].Trim(),
                             read_period = System.Convert.ToInt32(result[1].Trim()),
                             is_opc_ua = 1,
@@ -1077,13 +1148,16 @@ namespace OSHMI_OPC_Client
                         servers.Add(opcserv);
                     }
                     else
-                    if (result[0].ToLower().Contains("opcda://") && result.Count()==2)
+                    if (result[0].ToLower().Contains("opcda://") && result.Count()>=2)
                     { // new opc da server
                         Console.WriteLine("NEW DA SERVER");
                         cnt_entries = -1;
                         cnt_servers++;
                         OPC_server opcserv = new OPC_server
                         {
+                            application_name = "",
+                            certificate_file_name = "",
+                            certificate_password = "",
                             opc_url = result[0].Trim(),
                             read_period = System.Convert.ToInt32(result[1].Trim()),
                             is_opc_ua = 0,
@@ -1123,7 +1197,7 @@ namespace OSHMI_OPC_Client
             {
                 if (srv.is_opc_ua != 0)
                 {
-                    Thread t = new Thread(() => ProcessUa(srv.opc_url, srv.entries, srv.read_period));
+                    Thread t = new Thread(() => ProcessUa(srv.opc_url, srv.entries, srv.read_period, srv.application_name, srv.certificate_file_name, srv.certificate_password));
                     t.Start();
                 }
                 else
@@ -1133,55 +1207,6 @@ namespace OSHMI_OPC_Client
                 }
             }
 
-/*
-            OPC_entry[] entriesUA1 =
-            new OPC_entry[]{
-                //new OPC_entry() { opc_path = "ns=2;s=Demo.Dynamic.Scalar.Double", oshmi_tag = "Demo.Dynamic.Scalar.Double", opc_type = "" },
-                //new OPC_entry() { opc_path = "ns=2;s=Demo.BoilerDemo.Boiler1.FillLevelSensor.FillLevel", oshmi_tag = "Demo.BoilerDemo.Boiler1.FillLevelSensor.FillLevel", opc_type = "" },
-                //new OPC_entry() { opc_path = "ns=2;s=Demo.Dynamic.Scalar.Boolean", oshmi_tag = "Demo.Dynamic.Scalar.Boolean", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=2;s=Demo.Dynamic.Scalar.Byte", oshmi_tag = "Demo.Dynamic.Scalar.Byte", opc_type = "" },
-                //new OPC_entry() { opc_path = "ns=2;s=Demo.Dynamic.Scalar.SByte", oshmi_tag = "Demo.Dynamic.Scalar.SByte", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=2;s=Demo.Dynamic.Scalar.Int16", oshmi_tag = "Demo.Dynamic.Scalar.Int16", opc_type = "" }
-            };
-            String URIUa1 = "opc.tcp://opcuaserver.com:48010";
-            Thread tUa = new Thread(() => ProcessUa(URIUa1, entriesUA1, 15));
-            tUa.Start();
-
-            OPC_entry[] entriesUA2 =
-            new OPC_entry[]{
-                new OPC_entry() { opc_path = "ns=5;s=Random1", oshmi_tag = "Random1", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=5;s=Sinusoid1", oshmi_tag = "Sinusoid1", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=BooleanDataItem", oshmi_tag = "BooleanDataItem", oshmi_cmd_tag = "KOR1TR1-2XCBR5201----K", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=Int16DataItem", oshmi_tag = "Int16DataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=Int32DataItem", oshmi_tag = "Int32DataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=Int64DataItem", oshmi_tag = "Int64DataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=UInt16DataItem", oshmi_tag = "UInt16DataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=UInt32DataItem", oshmi_tag = "UInt32DataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=UInt64DataItem", oshmi_tag = "UInt64DataItem", oshmi_cmd_tag = "", opc_type = "" },
-                // new OPC_entry() { opc_path = "ns=3;s=StringDataItem", oshmi_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=ByteDataItem", oshmi_tag = "ByteDataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=SByteDataItem", oshmi_tag = "SByteDataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=DoubleDataItem", oshmi_tag = "DoubleDataItem", oshmi_cmd_tag = "TES_DNP3_CMD_ANA_0", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=3;s=DateTimeDataItem", oshmi_tag = "DateTimeDataItem", oshmi_cmd_tag = "", opc_type = "" },
-                new OPC_entry() { opc_path = "ns=5;s=Counter1", oshmi_tag = "Counter1", oshmi_cmd_tag = "", opc_type = "" }
-            };
-            String URIUa2 = "opc.tcp://test:test@LAPTOP-GSJBD1FP:53530/OPCUA/SimulationServer";
-            Thread tUa2 = new Thread(() => ProcessUa(URIUa2, entriesUA2, 15));
-            tUa2.Start();
-
- 
-            OPC_entry[] entriesDA =
-            new OPC_entry[]{
-                new OPC_entry() { opc_path = "Random.PsFloat1", oshmi_tag = "Random.PsFloat1", oshmi_cmd_tag = "", opc_type = "float" },
-                new OPC_entry() { opc_path = "Random.PsInteger1", oshmi_tag = "Random.PsInteger1", oshmi_cmd_tag = "", opc_type = "vt_i4" },
-                new OPC_entry() { opc_path = "Random.PsBool1", oshmi_tag = "Random.PsBool1", oshmi_cmd_tag = "", opc_type = "bool" },
-                new OPC_entry() { opc_path = "Random.PsState1", oshmi_tag = "Random.PsState1", oshmi_cmd_tag = "", opc_type = "state" },
-                new OPC_entry() { opc_path = "Random.PsDateTime1", oshmi_tag = "Random.PsDateTime1", oshmi_cmd_tag = "", opc_type = "datetime" }
-            };
-            String URIda = "opcda://localhost/Prosys.OPC.Simulation";
-            Thread tDa = new Thread(() => ProcessDa(URIda, entriesDA, 5));
-            tDa.Start();
-*/            
             UdpClient listener = new UdpClient(UDPPortListen);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, UDPPortListen);
 

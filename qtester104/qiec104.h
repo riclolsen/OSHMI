@@ -44,7 +44,7 @@ public:
     explicit QIec104(QObject *parent = 0);
     ~QIec104();
     int SendCommands; // 1 = allow sending commands, 0 = don't send commands
-    int BDTRForcePrimary; // 1 = force primary (cant't stay secondary) , 0 = can be secondary
+    int ForcePrimary; // 1 = force primary (cant't stay secondary) , 0 = can be secondary
     QTimer *tmKeepAlive; // 1 second timer
     QTcpSocket *tcps; // socket for iec104 (tcp)
     void terminate();
@@ -52,13 +52,12 @@ public:
     void enable_connect();
 
 signals:
-    void signal_dataIndication( iec_obj *obj, int numpoints );
+    void signal_dataIndication( iec_obj *obj, unsigned numpoints );
     void signal_interrogationActConfIndication();
     void signal_interrogationActTermIndication();
     void signal_tcp_connect();
     void signal_tcp_disconnect();
-    void signal_commandActConfIndication(iec_obj *obj);
-    void signal_commandActTermIndication(iec_obj *obj);
+    void signal_commandActRespIndication(iec_obj *obj);
 
 public slots:
     void slot_tcpdisconnect(); // tcp disconnect for iec104
@@ -80,9 +79,8 @@ private:
     void sendTCP( char * data, int sz );
     void interrogationActConfIndication();
     void interrogationActTermIndication();
-    void commandActConfIndication( iec_obj *obj );
-    void commandActTermIndication( iec_obj *obj );
-    void dataIndication(iec_obj *obj, int numpoints);
+    void commandActRespIndication( iec_obj *obj );
+    void dataIndication(iec_obj *obj, unsigned numpoints);
     bool mEnding;
     bool mAllowConnect;
 };

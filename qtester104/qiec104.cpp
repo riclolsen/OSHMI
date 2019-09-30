@@ -36,7 +36,7 @@ QIec104::QIec104( QObject *parent ) :
     mEnding = false;
     mAllowConnect = true;
     SendCommands = 0;
-    BDTRForcePrimary = 0;
+    ForcePrimary = 0;
     mLog.activateLog();
     mLog.doLogTime();
 
@@ -59,7 +59,7 @@ QIec104::~QIec104()
     delete tcps;
 }
 
-void QIec104::dataIndication( iec_obj *obj, int numpoints )
+void QIec104::dataIndication( iec_obj *obj, unsigned numpoints )
 {
     emit signal_dataIndication( obj, numpoints );
 }
@@ -74,15 +74,15 @@ char buf[100];
       { // alternate main and backup UTR IP address, if configured
       if ( (++cnt) % 2 || strcmp(getSecondaryIP_backup(), "") == 0 )
         {
-        tcps->connectToHost( getSecondaryIP(), getPortTCP(), QIODevice::ReadWrite );
+        tcps->connectToHost( getSecondaryIP(), quint16(getPortTCP()), QIODevice::ReadWrite );
         sprintf( buf, "Try to connect IP: %s", getSecondaryIP() );
-        mLog.pushMsg( (const char *)buf );
+        mLog.pushMsg( const_cast<char *>(buf) );
         }
       else
         {
-        tcps->connectToHost( getSecondaryIP_backup(), getPortTCP(), QIODevice::ReadWrite );
+        tcps->connectToHost( getSecondaryIP_backup(), quint16(getPortTCP()), QIODevice::ReadWrite );
         sprintf( buf, "Try to connect IP: %s", getSecondaryIP_backup() );
-        mLog.pushMsg( (const char *)buf );
+        mLog.pushMsg( const_cast<char *>(buf) );
         }
       }
 }
@@ -98,14 +98,14 @@ void QIec104::slot_tcperror( QAbstractSocket::SocketError socketError )
     {
     char buf[100];
     sprintf( buf, "SocketError: %d", socketError );
-    mLog.pushMsg( (const char *)buf );
+    mLog.pushMsg( const_cast<char *>(buf) );
     }
 }
 
 int QIec104::readTCP( char * buf, int szmax )
 {
     if (!mEnding)
-      return tcps->read( buf, szmax );
+      return int(tcps->read( buf, szmax ));
     else
       return 0;
 }
@@ -164,14 +164,9 @@ void  QIec104::interrogationActTermIndication()
     emit signal_interrogationActTermIndication();
 }
 
-void QIec104::commandActConfIndication( iec_obj *obj )
+void QIec104::commandActRespIndication( iec_obj *obj )
 {
-    emit signal_commandActConfIndication( obj );
-}
-
-void QIec104::commandActTermIndication( iec_obj *obj )
-{
-    emit signal_commandActTermIndication( obj );
+    emit signal_commandActRespIndication( obj );
 }
 
 void QIec104::terminate()
@@ -207,5 +202,5 @@ void QIec104::enable_connect()
 }
 
 int QIec104::bytesAvailableTCP() {
-  return tcps->bytesAvailable();
+  return int(tcps->bytesAvailable());
 }

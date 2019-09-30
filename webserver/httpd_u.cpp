@@ -24,6 +24,9 @@ OSHMI - Open Substation HMI
 
 #include <stdlib.h>
 #include <string>
+#include <cctype>
+#include <iomanip>
+#include <sstream>
 #include "httpd_u.h"
 #include "microhttpd.h"
 #include "bcolocal.h"
@@ -51,6 +54,46 @@ OSHMI - Open Substation HMI
 TfmMicroHttpd *fmMicroHttpd;
 
 using namespace std;
+
+string url_encode(const string &value) {
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    for (string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
+        string::value_type c = (*i);
+
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+
+        // Any other characters are percent-encoded
+        escaped << uppercase;
+        escaped << '%' << setw(2) << int((unsigned char) c);
+        escaped << nouppercase;
+    }
+
+    return escaped.str();
+}
+
+string url_decode(string &SRC) {
+    string ret;
+    char ch;
+    unsigned i, ii;
+    for (i=0; i<SRC.length(); i++) {
+        if (int(SRC[i])==37) {
+            sscanf(SRC.substr(i+1,2).c_str(), "%x", &ii);
+            ch=static_cast<char>(ii);
+            ret+=ch;
+            i=i+2;
+        } else {
+            ret+=SRC[i];
+        }
+    }
+    return (ret);
+}
 
 int sort_function( const void *a, const void *b );
 int sort_function_alm_time( const void *a, const void *b );
@@ -328,6 +371,9 @@ if ( realip != NULL )
 
  if ( found && pt.EhComando() && !BL.ComandoIntertravado( cnponto ) ) // testa se o ponto existe, é de comando e não está intertravado
    {
+   cmdNPonto = cnponto;
+   cmdCntAck = BL.GetAckCmd( cnponto, NULL, NULL, NULL );
+   
    // intercepta comando em script lua, se retorna 0 continua ao protocolo/simul
    if ( fmLua->luaInterceptCommands( cnponto, val ) == 0 )
      {
@@ -352,29 +398,14 @@ if ( realip != NULL )
          // manda o comando para o protocolo (varredor iec104m)
          if ( pt.EhComandoDigital() )
            {
-           ret = fmIEC104M->ComandoIEC_Dig( cnponto, val&0x01?0:1 );
            Loga( (String)"Command Sent(IEC): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)val + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
+           ret = fmIEC104M->ComandoIEC_Dig( cnponto, val&0x01?0:1 );
            }
          else
            {
+           Loga( (String)"Command Sent(IEC): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
            ret = fmIEC104M->ComandoIEC_Ana( cnponto, fval );
            BL.IncNumVar(); // reporta variação para que a aplicação atualize o status mais rapidamente
-           Loga( (String)"Command Sent(IEC): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
-           }
-         }
-       else
-         {
-         // Testa se o comando é analógico ou digital
-         if ( pt.EhComandoDigital() )
-           {
-           ret = fmBDTR->bdtr.MandaComandoDig( cnponto, val );
-           Loga( (String)"Command Sent(BDTR): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)val + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
-           }
-         else
-           {
-           ret = fmBDTR->bdtr.MandaComandoAna( cnponto, fval );
-           BL.IncNumVar(); // reporta variação para que a aplicação atualize o status mais rapidamente
-           Loga( (String)"Command Sent(BDTR): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
            }
          }
 
@@ -382,21 +413,18 @@ if ( realip != NULL )
          {
          if ( pt.EhComandoDigital() )
            {
-           ret = fmJSON->Command( pt, val&0x01?0:1 ); // val=2 -> ON(true), val=1 -> OFF(false)
            Loga( (String)"Command Sent(JSON): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)val + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
+           ret = fmJSON->Command( pt, val&0x01?0:1 ); // val=2 -> ON(true), val=1 -> OFF(false)
            }
          else
            {
+           Loga( (String)"Command Sent(JSON): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
            ret = fmJSON->Command( pt, fval);
            BL.IncNumVar(); // reporta variação para que a aplicação atualize o status mais rapidamente
-           Loga( (String)"Command Sent(JSON): IP=" + (String)client_ip + (String)", RealIP=" + sRealIp + (String)", user=" + (String)BL.getUserName() + (String)", point=" + (String)cnponto + (String)", val=" + (String)fval + (String)", id=" + (String)pt.GetNome(), ARQUIVO_LOGCMD );
            }
          }
        }
      }
-
-   cmdNPonto = cnponto;
-   cmdCntAck = BL.GetAckCmd( cnponto, NULL, NULL, NULL );
    }
  else
    ret = -1;
@@ -440,8 +468,8 @@ if ( sPonto == "" )
   return mhd_EnqueueResponse(connection, sResp.c_str(), MIME_JAVASCRIPT);
   }
 
- int cnponto, falha, cmd, cnt;
- double hora;
+ int cnponto, falha, cnt;
+ double hora, cmd;
 
  cnponto = atoi(sPonto.c_str());
  if ( cnponto == 0 )
@@ -451,6 +479,8 @@ if ( sPonto == "" )
    }
 
  cnt = BL.GetAckCmd( cnponto, &falha, &cmd, &hora );
+
+ logln( (String)"ComandoAck npt=" + cnponto + " fail=" + falha + " val=" + cmd + " cnt=" + cmdCntAck + " cntresp=" + cnt );
 
  if ( cnt == -1 )
    {
@@ -469,7 +499,7 @@ if ( sPonto == "" )
 
  if ( cnponto == cmdNPonto && cnt == cmdCntAck )
    {
-   sResp = "ComandoAck='Command Unconfirmed: " + (String)cnponto + "';";
+   sResp = "ComandoAck='Waiting Confirmation: " + (String)cnponto + "';";
    return mhd_EnqueueResponse(connection, sResp.c_str(), MIME_JAVASCRIPT);
    }
 
@@ -569,34 +599,6 @@ try {
   BL.EscrevePonto( nponto, valor, flg, 0, 0 );
   if ( tipopt != "D" ) // para analógicos
     BL.SetValorTipico( nponto, valor ); // guarda como valor típico para simulação
-
-  // se tem simulacao mestre, vou encaminha para os escravos
-  if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
-    {
-    if ( tipopt == "A" )
-      {
-      msg_float ms;
-      ms.COD = T_FLT|T_CONV;
-      ms.NRPT = 1;
-      ms.ORIG = 0;
-      ms.PONTO[0].ID = nponto;
-      ms.PONTO[0].VALOR = (float)valor;
-      ms.PONTO[0].STAT = flg;
-      fmBDTR->EnviaEscravosBDTR( (char *)&ms, sizeof(ms) );
-      }
-    else
-      {
-      msg_dig_tag ms;
-      ms.COD = T_DIG_TAG|T_CONV;
-      ms.NRPT = 1;
-      ms.ORIG = 0;
-      fmBDTR->TagBDTR_HoraAtual( &ms.PONTO[0].TAG );
-      ms.PONTO[0].ID = nponto;
-      ms.PONTO[0].UTR = 0;
-      ms.PONTO[0].STAT = flg;
-      fmBDTR->EnviaEscravosBDTR( (char *)&ms, sizeof(ms) );
-      }
-    }
   }
   catch ( Exception &E )
     { logln( "E: 10-" + E.Message ); }
@@ -737,6 +739,8 @@ if ( found )
 
   try {
     String anot = sAnot.Trim();
+    //string undecoded = anot.c_str();
+    //anot = url_decode(undecoded).c_str();
 
     // se entrou ou saiu anotação, bloqueia ou libera comando
     if ( ((int)( pt.TemAnotacao() )) ^ ((int)( anot != "" )) )
@@ -783,7 +787,9 @@ if ( found )
   // se tem outro ihm e não veio dele vou encaminhar a mensagem
   if ( IHMRED_IP_OUTRO_IHM != "" )
   if ( (String)client_ip != IHMRED_IP_OUTRO_IHM )
-    BL.lstHTTPReq_OutroIHM.push_back( (String)url +
+    {
+    // string stdstr_escapedanot = url_encode(sAnot.c_str());
+    BL.lstHTTPReq_OutroIHM_writepoint.push_back( (String)url +
                                       (String)"?W=" + nponto +
                                       (String)"&LI=" + sLI +
                                       (String)"&LS=" + sLS +
@@ -791,7 +797,8 @@ if ( found )
                                       (String)"&AI=" + sAlrInh +
                                       (String)"&AN=" + sAnot +
                                       (String)"&VN=" + sVN
-                                     );
+                                    );
+    }
   }
 
 return mhd_EnqueueResponse(connection, sResp.c_str(), MIME_JSON);

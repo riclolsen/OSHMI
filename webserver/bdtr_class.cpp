@@ -60,6 +60,7 @@ return IHM_PRINCIPAL;
 // Pede GI (general interrogation) ao BDTR. par=0: somente se principal, par=1: forçada
 void BDTR::Sol_Integridade(tipo_integridade tpint)
 {
+/*
 // Pede uma integridade ao BDTR
 msg_req m;
 
@@ -105,6 +106,7 @@ if ( (IP_BDTR1 != "") && (IHM_PRINCIPAL || tpint == integridade_forcada) )
   }
 
 SegundosParaGI = PERIODO_INTEGRIDADE; // contagem para a próxima GI
+*/
 }
 
 void BDTR::EnviaHora( string IP, unsigned char Origem )
@@ -152,6 +154,7 @@ if ( IP == "" )
 
 int BDTR::EnviaComando(msg_com * mc)
 {
+/*
   if ( IP_BDTR1 != "" )     // comando, manda quer seja principal ou reserva
     {
     cntCmd++;
@@ -173,12 +176,14 @@ int BDTR::EnviaComando(msg_com * mc)
       msg_status="Erro de rede ao enviar comando!";
       }
     }
+*/
   return 0;
 }
 
 // bloqueia ou desbloqueia comando (blk=1: bloqueia blk=0:desbloqueia)
 int BDTR::BlkComando(int endponto, int blk)
 {
+/*
 if ( BDTR_ENVIA_COMANDOS == 0 )
   return 1;
 
@@ -220,12 +225,13 @@ int tipo = T_DIG;
           msg_status = "Erro de rede ao bloquear comando!";
           }
         }
+*/
       return 0;
 }
 
 int BDTR::EnviaPontoDig(int endponto, unsigned char qualif, string ip, int porta)
 {
-
+/*
 if ( ip == "" || porta == 0 || endponto == 0 )
   return 1;
 
@@ -253,6 +259,7 @@ if ( ip == "" || porta == 0 || endponto == 0 )
           msg_status = "Erro de rede ao enviar ponto digital!";
           }
         }
+*/
       return 0;
 }
 
@@ -314,6 +321,7 @@ try
 
   switch (Cod) // vai pelo tipo da mensagem (COD)
     {
+/*
     case T_DIG :
       {
       msg_dig *m;
@@ -508,7 +516,7 @@ try
       SegundosParaGI=DELAY_PARA_INTEGRIDADE_APOS_RESET;    
       cntReset++;
       break;
-
+*/
     case T_HORA : // mensagem de acerto de hora
       {
       // m->ORIG==255 ORIGEM = 255 identifica mensagem keep-alive do IHM redundante
@@ -527,7 +535,7 @@ try
       cntSinc++;
       }
       break;
-
+/*
     case T_ACK :
       {
       cntAck++;
@@ -537,10 +545,6 @@ try
         {
         sprintf(linha, "Ack Cmd: pt %d fl %d vl %d", m->COMP, m->ID & 0x80, m->ID & 0x03 );
         logaln(linha);
-        // m->ORIG; // identificador da base de dados (CIN=204)
-        //CmdAckCmd= m->ID & 0x02;   // 1: DESLIGAR ou 2: LIGAR>  + 128 (bit FALHA) em caso de ERRO. Se bit desligado OK.
-        //CmdAckFalha= (m->ID & 0x80) ? 1 : 0;
-        //CmdAckNponto=m->COMP; // número do ponto
         SetAckCmd(m->COMP, (m->ID & 0x80) ? 1 : 0, m->ID & 0x03);
         }
       }  
@@ -570,6 +574,7 @@ try
     case T_GRUPO :
       cntOutras++;
       break;
+*/      
     default:
       cntErro++;
       break;
@@ -589,6 +594,7 @@ catch (...)
 
 void BDTR::ontimerseg()
 {
+/*
 // vou quitar os eventos recebidos
 if ( EhPrincipal() )
 while (EventosAQuitar)
@@ -624,6 +630,7 @@ if (SegundosParaGI>0)
     SegundosParaGI = PERIODO_INTEGRIDADE; // reinicia a contagem para a próxima
     }
   }
+*/  
 }
 
 void BDTR::SetaPeriodoIntegridade(int segundos)
@@ -640,6 +647,7 @@ return ( BDTR_PORTA_CMD_LOCAL == BDTR_PORTA_CMD );
 // mostra conversor IEC104/BDTR, pedindo o grupo 255 para a máquina local na porta de comando
 void BDTR::ShowConv104BDTR()
 {
+/*
 if ( !VarredorEhConversor() )
   return;
 
@@ -654,5 +662,6 @@ m.NPTS = 0;
 m.PONTOS[0] = 0;
 
 envia_udp( "127.0.0.1", BDTR_PORTA_CMD, (char *)&m, sizeof(m) );
+*/
 }
 

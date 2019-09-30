@@ -173,10 +173,56 @@ DNP3 and Modbus Drivers:
 
 OPC Driver:
  - Visual Studio Community (2015 or newer).
- - H-OPC library (can be obtained via NuGET package).
+ - Forked H-OPC library https://github.com/riclolsen/h-opc.
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 6.8:
+
+OPC Client:
+ - Updated to version 0.2.
+ - Client can now specify the application certificate file and password.
+ - Client can now set the application name.
+ - Added Certificate Generator Tool and example of self-signed certificate creation.
+ - Uses now a forked customized version of h-opc.
+ - Fixed application URI problem with certificate validation.
+ - Fixed OPC DA type identification.
+ - Tag data type parameter is now considered optional, leave empty to let the driver 
+   detect the type automatically.
+ - Updated driver documentation.
+
+QTester104:
+ - Updated to version 2.0.
+ - Changed underlying transport protocol from BDTR to I104M.
+ - Removed limitation of addresses > 65535 when forwarding 
+   to OSHMI webserver.exe.
+ - Added ASDU types bitstring and integrated totals.
+ - Added Test Command with time tag.
+ - Added Reset Process Command.
+ - Compiled with QT 5.13/MingGW 32 bits.
+ - Support for 64 bit compilation.
+ - Fixed most compiler warnings.
+
+Webserver:
+ - Removed support for the old BDTR adapter protocol.
+ - Removed section BDTR from hmi.ini config file.
+ - Fixed blocking annotation synchronization.
+ - Blocking annotations limited to 999 characters.
+ - Documental annotations limited to 4000 characters.
+
+Installer:
+ - Do not rewrite browser configuration in "hmi.ini".
+
+Chromium:
+ - Updated to version 77.0.3865.75.
+ - Much better notification display with more room and
+   options to expand/contract/block notifications.
+
+Nginx:
+ - Updated to version 1.16.1.
 
 -------------------------------------------------------------------
 

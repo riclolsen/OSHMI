@@ -382,7 +382,6 @@ object fmBDTR: TfmBDTR
     Height = 17
     Caption = 'Integrity'
     TabOrder = 3
-    OnClick = btIntgrClick
   end
   object IdUDPServer1: TIdUDPServer
     BroadcastEnabled = True

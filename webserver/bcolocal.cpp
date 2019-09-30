@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2018 - Ricardo L. Olsen
+	Copyright 2008-2019 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -2468,7 +2468,7 @@ if ( tipo != BEEP_NENHUM )
   TemBeep = tipo;
 }
 
-int TBancoLocal::SetAckCmd(int nponto, int falha, int cmd) // seta ack de comando
+int TBancoLocal::SetAckCmd(int nponto, int falha, double cmd) // seta ack de comando
 {
 map <int, TPonto>::iterator it;
 
@@ -2481,30 +2481,27 @@ map <int, TPonto>::iterator it;
  (*it).second.CmdAckCnt++;
  (*it).second.CmdAckTagTempo = Now();
 
- if ( cmd != 3 && cmd != 0 )
-   {
-   Loga( (String)"Command Ack: point=" + (String)nponto + (String)", fail=" + (String)falha + (String)", val=" + (String)cmd + (String)", id=" + (String)((*it).second.GetNome()), ARQUIVO_LOGCMD );
-   }
+ Loga( (String)"Command Ack: point=" + (String)nponto + (String)", fail=" + (String)falha + (String)", val=" + (String)cmd + (String)", id=" + (String)((*it).second.GetNome()), ARQUIVO_LOGCMD );
 
  return true;
 }
 
-int TBancoLocal::GetAckCmd(int nponto, int *falha, int *cmd, double * hora) // testa ack de comando
+int TBancoLocal::GetAckCmd(int nponto, int *falha, double *cmd, double * hora) // testa ack de comando
 {
 map <int, TPonto>::iterator it;
 
   it=Pontos.find(nponto);
   if (it==Pontos.end())
-    return -1; // ponto não encontrado ou sem confirmação
+    return -1; // not found
 
- if (cmd!=NULL)
-   *cmd=(*it).second.CmdAckCmd;
+  if (cmd!=NULL)
+    *cmd=(*it).second.CmdAckCmd;
 
- if (falha!=NULL)
-   *falha=(*it).second.CmdAckFalha;
+  if (falha!=NULL)
+    *falha=(*it).second.CmdAckFalha;
 
- if (hora!=NULL)
-   *hora=(*it).second.CmdAckTagTempo;
+  if (hora!=NULL)
+    *hora=(*it).second.CmdAckTagTempo;
 
 return (*it).second.CmdAckCnt;
 }
@@ -2775,18 +2772,34 @@ try
           break;
 
       // retorno (ack/nack) dos comandos
+
+      // digitals
       case 45: // comando simples
       case 46: // comando duplo
       case 47: // comando regulação
       case 58: // comando simples c/ tag
       case 59: // comando duplo c/ tag
       case 60: // comando regulação c/ tag
-          {
-          pdig = (unsigned char *)ptinfo;
-          SetAckCmd( nponto, causa & 0x40 ? 1 : 0, *pdig & ESTDUP_MASCARA );
-          }
+          SetAckCmd( nponto, causa & 0x40 ? 1 : 0, (double)(*((unsigned char *)ptinfo) & ESTDUP_MASCARA) );
           return -4;
-
+      // analogs
+      case 48:
+      case 49:
+      case 50:
+      case 61:
+      case 62:
+      case 63:
+          if (taminfo == 4)
+            SetAckCmd( nponto, causa & 0x40 ? 1 : 0, *((float *)ptinfo) );
+          if (taminfo == 8)
+            SetAckCmd( nponto, causa & 0x40 ? 1 : 0, *((double *)ptinfo) );
+          return -4;
+      // bitstring    
+      case 51:
+      case 64:
+          if (taminfo == 4)
+            SetAckCmd( nponto, causa & 0x40 ? 1 : 0, *((unsigned int *)ptinfo) );
+          return -4;
       default: // tipo desconhecido
           return -5;
       }

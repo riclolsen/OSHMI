@@ -1,6 +1,6 @@
 object fmWebServ: TfmWebServ
-  Left = 1203
-  Top = 192
+  Left = 894
+  Top = 197
   Width = 592
   Height = 547
   Caption = 'fmWebServ'
@@ -12,7 +12,6 @@ object fmWebServ: TfmWebServ
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object lbOutroIHM: TLabel
@@ -72,7 +71,6 @@ object fmWebServ: TfmWebServ
     ReplyExceptionCode = 0
     ReplyTexts = <>
     ReplyUnknownCommand.NumericCode = 0
-    OnCommandGet = IdHTTPServer1CommandGet
     Left = 336
     Top = 16
   end
@@ -100,5 +98,20 @@ object fmWebServ: TfmWebServ
     OnTimer = Timer3Timer
     Left = 368
     Top = 80
+  end
+  object IdHTTP1: TIdHTTP
+    MaxLineAction = maException
+    AllowCookies = True
+    ProxyParams.BasicAuthentication = False
+    ProxyParams.ProxyPort = 0
+    Request.ContentLength = -1
+    Request.ContentRangeEnd = 0
+    Request.ContentRangeStart = 0
+    Request.Accept = 'text/html, */*'
+    Request.BasicAuthentication = False
+    Request.UserAgent = 'Mozilla/3.0 (compatible; Indy Library)'
+    HTTPOptions = [hoForceEncodeParams]
+    Left = 416
+    Top = 16
   end
 end

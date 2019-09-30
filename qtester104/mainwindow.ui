@@ -240,6 +240,26 @@
         <string>103: Clock Syncronization - C_CS_NA_1</string>
        </property>
       </item>
+      <item>
+       <property name="text">
+        <string>105: Reset Process Command - C_RP_NA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>107: Test Command with time tag - C_TS_TA_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>101: Counter Interrogation Command - C_CI_NA_1 *NOT IMPL</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>102: Read Command - C_RD_NA_1 *NOT IMPL</string>
+       </property>
+      </item>
      </widget>
     </item>
     <item row="4" column="1">

@@ -29,13 +29,6 @@ void envia_udp(char * IP, int porta, char * buf, int sz);
 void set_udp_timeout(int timeout);
 int le_udp(char * buf, int szmax);
 void logaln(string msg);
-int EscrevePonto(  int EndPonto,
-                   float valor,
-                   unsigned char qualif,
-                   int calculo=0,
-                   int usakconv=0,
-                   int temtagtmp=0,
-                   int espontaneo=0);
                    
 int  IncluiEvento( unsigned int EndPonto,
                    unsigned int UTR,
@@ -51,8 +44,6 @@ int  IncluiEvento( unsigned int EndPonto,
 int SetAckCmd(int EndPonto, int falha, int cmd); // seta ack de comando
 void RecebeuIntegridade();
 void RecebeuHora(msg_sinc *m);
-int MandaComandoDig(int nponto, int val);
-int MandaComandoAna(int nponto, float val);
 void CommandIndication(int endcmd, char flags, float valor);
 };
 
@@ -117,7 +108,6 @@ __published:	// IDE-managed Components
         void __fastcall IdUDPServer1UDPRead(TObject *Sender,
           TStream *AData, TIdSocketHandle *ABinding);
         void __fastcall Timer1Timer(TObject *Sender);
-        void __fastcall btIntgrClick(TObject *Sender);
         void __fastcall Timer2Timer(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
         void __fastcall cbMonitClick(TObject *Sender);
@@ -128,9 +118,6 @@ public:		// User declarations
         void FinalizandoAplicacao();
         MyBDTR bdtr;
         TStream *UDPAData;
-        void EnviaEscravosBDTR (char * msg, int size);
-        void EnviaHoraEscravosBDTR();
-        void EnviaIntegridadeEscravosBDTR();
         void TagBDTR_HoraAtual(A_tag * ptag);
 };
 

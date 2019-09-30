@@ -39,7 +39,6 @@ __published:	// IDE-managed Components
         TLabel *lbTime;
         TShape *shSDE;
         TShape *shWeb;
-        TLabel *Label2;
         TLabel *Label3;
         TButton *btClose;
         TShape *shI104;

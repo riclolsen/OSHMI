@@ -106,47 +106,6 @@ try {
         BL.EscrevePonto(nponto, valor, flags.Byte, 0, 0, 0, 1);
         }
 
-      // se for simulação mestre, vou mandar para os escravos
-      if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
-        {
-        if ( BL.GetTipo(nponto) == 'D' )
-          {
-          if ( ehevento )
-            {
-            msg_dig_tag ms;
-            ms.COD = T_DIG_TAG|T_CONV;
-            ms.NRPT = 1;
-            ms.ORIG = 0;
-            fmBDTR->TagBDTR_HoraAtual(&ms.PONTO[0].TAG);
-            ms.PONTO[0].ID = nponto;
-            ms.PONTO[0].UTR = 0;
-            ms.PONTO[0].STAT = flags.Byte;
-            fmBDTR->EnviaEscravosBDTR((char *)&ms, sizeof(ms) );
-            }
-          else
-            {
-            msg_dig ms;
-            ms.COD = T_DIG|T_CONV;
-            ms.NRPT = 1;
-            ms.ORIG = 0;
-            ms.PONTO[0].ID = nponto;
-            ms.PONTO[0].STAT = flags.Byte;
-            fmBDTR->EnviaEscravosBDTR((char *)&ms, sizeof(ms) );
-            }
-          }
-        else
-          {
-          msg_float ms;
-          ms.COD = T_FLT|T_CONV;
-          ms.NRPT = 1;
-          ms.ORIG = 0;
-          ms.PONTO[0].ID = nponto;
-          ms.PONTO[0].VALOR = valor;
-          ms.PONTO[0].STAT = flags.Byte;
-          fmBDTR->EnviaEscravosBDTR((char *)&ms, sizeof(ms) );
-          }
-        }
-
       btBuscaClick(NULL);
       fmVeDados->edBusca->Text = nponto;
       fmVeDados->btBuscaPontoClick(NULL);
@@ -384,32 +343,6 @@ if ( !found )
 
 if ( nptsup != 0 )
   {
-   // se for mestre, insere evento do comando, e mando para os escravos
-   if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
-     {
-      IncluiEvento(
-        nponto,
-        SDE_UTREVSIMUL, // identifica UTR simulacao
-        ((unsigned char)valor) | QUAL_FALHATAG,
-        0,
-        SDE_GERAHORAMS, // data/hora atual
-        0,
-        0,
-        0,
-        0,
-        0);
-
-      // manda evento do comando
-      msg_dig_tag ms;
-      ms.COD = T_DIG_TAG|T_CONV;
-      ms.NRPT = 1;
-      ms.ORIG = 0;
-      fmBDTR->TagBDTR_HoraAtual(&ms.PONTO[0].TAG);
-      ms.PONTO[0].ID = nponto;
-      ms.PONTO[0].UTR = 0;
-      ms.PONTO[0].STAT = ((unsigned char)valor) | QUAL_FALHATAG;
-      fmBDTR->EnviaEscravosBDTR((char *)&ms, sizeof(ms) );
-     }
 
   TFA_Qual flags;
   flags.Byte = 0;
@@ -452,35 +385,6 @@ if ( nptsup != 0 )
         0,
         0,
         0);
-
-       // se estiver no modo de simulação mestre, manda o valor simulado aos escravos
-       if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
-        {
-        msg_dig_tag ms;
-        ms.COD = T_DIG_TAG|T_CONV;
-        ms.NRPT = 1;
-        ms.ORIG = 0;
-        fmBDTR->TagBDTR_HoraAtual(&ms.PONTO[0].TAG);
-        ms.PONTO[0].ID = nptsup;
-        ms.PONTO[0].UTR = 0;
-        ms.PONTO[0].STAT = flags.Byte;
-        fmBDTR->EnviaEscravosBDTR((char *)&ms, sizeof(ms) );
-        }
-      }
-    else
-      {
-       // se estiver no modo de simulação mestre, manda o valor simulado aos escravos
-       if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
-        {
-        msg_float ms;
-        ms.COD = T_FLT|T_CONV;
-        ms.NRPT = 1;
-        ms.ORIG = 0;
-        ms.PONTO[0].ID = nptsup;
-        ms.PONTO[0].VALOR = valor;
-        ms.PONTO[0].STAT = flags.Byte;
-        fmBDTR->EnviaEscravosBDTR((char *)&ms, sizeof(ms) );
-        }
       }
 
     BL.EscrevePonto( nptsup, valor, flags.Byte, 0, 0, 1 );
@@ -490,6 +394,7 @@ if ( nptsup != 0 )
 
 return 1; // erro
 }
+
 
 #define MXANA 150
 #pragma warn -aus
@@ -592,19 +497,6 @@ for ( it = PontosTR.begin(); it != PontosTR.end(); it++ )
       if ( int(RandG(8, 3)) == 8 || first || forca )
         {
         BL.EscrevePonto(((*it).first), valor, QUAL_TIPO|falha, 0);
-        if ( BL.GetSimulacao() == SIMULMOD_MESTRE ) // em modo mestre, não simula digitais
-          {
-          pana->PONTO[cntana].ID = ((*it).first);
-          pana->PONTO[cntana].VALOR = valor;
-          pana->PONTO[cntana].STAT = QUAL_TIPO|falha;
-          cntana++;
-          if ( cntana >= MXANA )
-            {
-            pana->NRPT = cntana;
-            fmBDTR->EnviaEscravosBDTR((char*)pana, sizeof(msg_float)+sizeof(A_float)*(cntana-1));
-            cntana = 0;
-            }
-          }
         }
       } // analógicos
     else
@@ -697,17 +589,6 @@ for ( it = PontosTR.begin(); it != PontosTR.end(); it++ )
     } // supervisionados
   }
 
-// vê se falta mandar algum dado
-if ( cntana > 0 )
-  {
-  pana->NRPT = cntana;
-  fmBDTR->EnviaEscravosBDTR( (char*)pana, sizeof(msg_float)+sizeof(A_float)*(cntana - 1) );
-  }
-
-// após a primeira simulação, manda integridade
-if ( BL.GetSimulacao() == SIMULMOD_MESTRE && first )
-  fmBDTR->EnviaIntegridadeEscravosBDTR();
-
 first=0;
 }
 
@@ -718,5 +599,8 @@ if ( BL.HaSimulacao() )
   ProcessaSimulacao();
 }
 //---------------------------------------------------------------------------
+
+
+
 
 

@@ -35,13 +35,16 @@
 #include "iec104_types.h"
 #include "logmsg.h"
 
+#pragma pack(push)
+#pragma pack(1) // byte aligned structures
+
 struct iec_obj {
-    unsigned int address;  // 3 byte address
+    uint32_t address;  // 3 bytes address in 4 bytes space
 
-    float value; // value
+    float value; // value 4 bytes float
 
-    cp56time2a timetag; // 7 byte time tag
-    unsigned char reserved; // for future use
+    cp56time2a timetag; // 7 bytes time tag
+    unsigned char reserved1; // for future use
 
     unsigned char type; // iec type
     unsigned char cause; //
@@ -60,13 +63,24 @@ struct iec_obj {
     unsigned char se :1; // select=1 / execute=0
     // + 6 bits = 8 bits
 
+    unsigned char t :1; // transient flag
     unsigned char bl :1; // blocked/not blocked
     unsigned char sb :1; // substituted/not substituted
     unsigned char nt :1; // not topical/topical
     unsigned char iv :1; // valid/invalid
-    unsigned char t :1; // transient flag
     unsigned char pn :1; // 0=positive, 1=negative
+    unsigned char cy :1; // counter carry
+    unsigned char cadj :1; // counter adjust
+    // 8 bits=1 byte
+
+    union {
+    uint32_t bcr; // binary counter reading 4 bytes unsigned
+    uint32_t bsi; // binary state information 4 bytes unsigned
+    };
+    unsigned char sq :5; // counter seq
 };
+
+#pragma pack(pop)
 
 class iec104_class
 {
@@ -94,18 +108,25 @@ class iec104_class
     static const unsigned int C_SE_NA_1 = 48; // set-point normalised command
     static const unsigned int C_SE_NB_1 = 49; // set-point scaled command
     static const unsigned int C_SE_NC_1 = 50; // set-point short floating point command
+    static const unsigned int C_BO_NA_1 = 51; // Bitstring of 32 bit command
     static const unsigned int C_SC_TA_1 = 58; // single command with time tag
     static const unsigned int C_DC_TA_1 = 59; // double command with time tag
     static const unsigned int C_RC_TA_1 = 60; // regulating step command with time tag
     static const unsigned int C_SE_TA_1 = 61; // set-point normalised command with time tag
     static const unsigned int C_SE_TB_1 = 62; // set-point scaled command with time tag
     static const unsigned int C_SE_TC_1 = 63; // set-point short floating point command with time tag
+    static const unsigned int C_BO_TA_1 = 64; // Bitstring of 32 bit command with time tag
     static const unsigned int M_EI_NA_1 = 70; // end of initialization
     static const unsigned int C_IC_NA_1 = 100; // general interrogation (GI)
     static const unsigned int C_CI_NA_1 = 101; // counter interrogation
+    static const unsigned int C_RD_NA_1 = 102; // read command
     static const unsigned int C_CS_NA_1 = 103; // clock synchronization command
     static const unsigned int C_RP_NA_1 = 105; // reset process command
     static const unsigned int C_TS_TA_1 = 107; // test command with time tag CP56Time2a
+    static const unsigned int P_ME_NA_1 = 110; // Parameter of measured values, normalized value
+    static const unsigned int P_ME_NB_1 = 111; // Parameter of measured values, scaled value
+    static const unsigned int P_ME_NC_1 = 112; // Parameter of measured values, short floating point number
+    static const unsigned int P_AC_NA_1 = 113; // Parameter activation
 
     /* cause of transmition (standard) */
     static const unsigned int CYCLIC = 1;
@@ -182,10 +203,11 @@ class iec104_class
     static const int t1_startdtact = 6;
     int gi_period; // minimum time for request between GI's
     static const int gi_retry_time = 45; // wait time to retry when requested a GI and not responded
+    unsigned short test_command_count = 0; // test command counter
 
     protected:
     void LogFrame(char * frame, int size, bool is_send);
-    void LogPoint(int address, float val, char * qualifier, cp56time2a * timetag);
+    void LogPoint(int address, double val, char * qualifier, cp56time2a * timetag);
     void parseAPDU(iec_apdu * papdu, int sz, bool accountandrespond = true); // parse APDU, ( accountandrespond == false : process the apdu out of the normal handshake )
     char * trim(char *s);
 
@@ -210,17 +232,15 @@ class iec104_class
     // ---- virtual funcions, user defined on derived class (not mandatory)---
 
     // user point process, user provided. (on one call must be only objects of one type)
-    virtual void dataIndication( iec_obj * /*obj*/, int /*numpoints*/){};
+    virtual void dataIndication( iec_obj * /*obj*/, unsigned /*numpoints*/){}
     // inform user that ACTCONFIRM of Interrogation was received from slave
-    virtual void interrogationActConfIndication(){};
+    virtual void interrogationActConfIndication(){}
     // inform user that ACTTERM of Interrogation was received from slave
-    virtual void interrogationActTermIndication(){};
+    virtual void interrogationActTermIndication(){}
     // inform user of command activation
-    virtual void commandActConfIndication( iec_obj * /*obj*/ ){};
-    // inform user of command termination
-    virtual void commandActTermIndication( iec_obj * /*obj*/ ){};
+    virtual void commandActRespIndication( iec_obj * /*obj*/ ){}
     // user process APDU
-    virtual void userprocAPDU(iec_apdu * /* papdu */, int /* sz */){};
+    virtual void userprocAPDU(iec_apdu * /* papdu */, int /* sz */){}
 
     // -------------------------------------------------------------------------
 

@@ -33,26 +33,23 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="h-opc, Version=0.9.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\h-opc-sd.1.0.2\lib\h-opc.dll</HintPath>
+    <Reference Include="Opc.Ua.Client">
+      <HintPath>..\..\h-opc-master\ext_packages\Opc.Ua.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Opc.Ua.Client, Version=1.2.334.4, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\h-opc-sd.1.0.2\lib\Opc.Ua.Client.dll</HintPath>
+    <Reference Include="Opc.Ua.Configuration">
+      <HintPath>..\..\h-opc-master\ext_packages\Opc.Ua.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Opc.Ua.Configuration, Version=1.2.334.4, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\h-opc-sd.1.0.2\lib\Opc.Ua.Configuration.dll</HintPath>
+    <Reference Include="Opc.Ua.Core">
+      <HintPath>..\..\h-opc-master\ext_packages\Opc.Ua.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Opc.Ua.Core, Version=1.2.334.4, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\h-opc-sd.1.0.2\lib\Opc.Ua.Core.dll</HintPath>
+    <Reference Include="OpcComRcw">
+      <HintPath>..\..\h-opc-master\ext_packages\OpcComRcw.dll</HintPath>
     </Reference>
-    <Reference Include="OpcComRcw, Version=2.0.105.1, Culture=neutral, PublicKeyToken=9a40e993cbface53, processorArchitecture=MSIL">
-      <HintPath>..\packages\h-opc-sd.1.0.2\lib\OpcComRcw.dll</HintPath>
+    <Reference Include="OpcNetApi">
+      <HintPath>..\..\h-opc-master\ext_packages\OpcNetApi.dll</HintPath>
     </Reference>
-    <Reference Include="OpcNetApi, Version=2.1.105.1, Culture=neutral, PublicKeyToken=9a40e993cbface53, processorArchitecture=MSIL">
-      <HintPath>..\packages\h-opc-sd.1.0.2\lib\OpcNetApi.dll</HintPath>
-    </Reference>
-    <Reference Include="OpcNetApi.Com, Version=2.1.105.1, Culture=neutral, PublicKeyToken=9a40e993cbface53, processorArchitecture=MSIL">
-      <HintPath>..\packages\h-opc-sd.1.0.2\lib\OpcNetApi.Com.dll</HintPath>
+    <Reference Include="OpcNetApi.Com">
+      <HintPath>..\..\h-opc-master\ext_packages\OpcNetApi.Com.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -70,7 +67,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\h-opc-master\h-opc\h-opc.csproj">
+      <Project>{4f43b6f0-0c32-4c34-978e-9b8b5b0b6e80}</Project>
+      <Name>h-opc</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

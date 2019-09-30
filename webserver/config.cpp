@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2018 - Ricardo L. Olsen
+	Copyright 2008-2019 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ int BDTR_PORTA_CMD = 65281;
 int BDTR_GRUPO_INTEGRIDADE = 0;
 int HTTP_PORTA_OLD = 51907;
 int HTTP_PORTA = 51908;
-String IP_BDTR1 = "127.0.0.1";
+String IP_BDTR1 = "";
 String IP_BDTR2 = "";
 int END_BDTR = 201;
 int END_IHM = 208;
@@ -130,17 +130,17 @@ if ( pIni == NULL )
   return 1;
 
 T_INTEGRIDADE = pIni->ReadInteger( "BDTR", "INTEGRITY_PERIOD", T_INTEGRIDADE );
-BDTR_PORTA = pIni->ReadInteger( "BDTR", "BDTR_PORT", BDTR_PORTA );
-BDTR_PORTA_CMD = pIni->ReadInteger( "BDTR", "BDTR_PORT_CMD", BDTR_PORTA_CMD );
-BDTR_GRUPO_INTEGRIDADE = pIni->ReadInteger( "BDTR", "INTEGRITY_GROUP", BDTR_GRUPO_INTEGRIDADE );
-IP_BDTR1 = pIni->ReadString( "BDTR", "IP_BDTR1", IP_BDTR1 ).Trim();
-IP_BDTR2 = pIni->ReadString( "BDTR", "IP_BDTR2", IP_BDTR2 ).Trim();
-END_BDTR = pIni->ReadInteger( "BDTR", "ADDR_BDTR", END_BDTR );
-END_IHM = pIni->ReadInteger( "BDTR", "ADDR_IHM", END_IHM );
-ENVIA_COMANDOS = pIni->ReadInteger( "BDTR", "SEND_COMMANDS", ENVIA_COMANDOS );
-BDTR_ACERTO_HORA = pIni->ReadInteger( "BDTR", "ACCEPT_TIME", BDTR_ACERTO_HORA );
-BDTR_PERIODO_ENVIO_ACERTO_HORA = pIni->ReadInteger( "BDTR", "SEND_TIME_PERIOD", BDTR_PERIODO_ENVIO_ACERTO_HORA );
-PONTO_OPERACAO = pIni->ReadInteger("BDTR", "OPERATION_POINT", PONTO_OPERACAO );
+//BDTR_PORTA = pIni->ReadInteger( "BDTR", "BDTR_PORT", BDTR_PORTA );
+//BDTR_PORTA_CMD = pIni->ReadInteger( "BDTR", "BDTR_PORT_CMD", BDTR_PORTA_CMD );
+//BDTR_GRUPO_INTEGRIDADE = pIni->ReadInteger( "BDTR", "INTEGRITY_GROUP", BDTR_GRUPO_INTEGRIDADE );
+//IP_BDTR1 = pIni->ReadString( "BDTR", "IP_BDTR1", IP_BDTR1 ).Trim();
+//IP_BDTR2 = pIni->ReadString( "BDTR", "IP_BDTR2", IP_BDTR2 ).Trim();
+//END_BDTR = pIni->ReadInteger( "BDTR", "ADDR_BDTR", END_BDTR );
+//END_IHM = pIni->ReadInteger( "BDTR", "ADDR_IHM", END_IHM );
+//ENVIA_COMANDOS = pIni->ReadInteger( "BDTR", "SEND_COMMANDS", ENVIA_COMANDOS );
+//BDTR_ACERTO_HORA = pIni->ReadInteger( "BDTR", "ACCEPT_TIME", BDTR_ACERTO_HORA );
+//BDTR_PERIODO_ENVIO_ACERTO_HORA = pIni->ReadInteger( "BDTR", "SEND_TIME_PERIOD", BDTR_PERIODO_ENVIO_ACERTO_HORA );
+// PONTO_OPERACAO = pIni->ReadInteger("BDTR", "OPERATION_POINT", PONTO_OPERACAO );
 
 IHMRED_IP_OUTRO_IHM = pIni->ReadString( "REDUNDANCY", "OTHER_HMI_IP", IHMRED_IP_OUTRO_IHM ).Trim();
 IHMRED_ACERTO_HORA =  pIni->ReadInteger( "REDUNDANCY", "ACCEPT_TIME", IHMRED_ACERTO_HORA );

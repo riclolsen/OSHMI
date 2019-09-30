@@ -355,7 +355,7 @@ int PontoIntertrav;      // Ponto de intertravamento (somente para ponto de coma
 int Formula;             // código da fórmula
 bool EventoDigital;      // informa se o ponto é de evento digital
 bool EventoAnalogico;    // informa se o ponto é de evento analógico
-int CmdAckCmd;           // último comando enviado 1/2
+double CmdAckCmd;        // último comando enviado 1/2
 int CmdAckFalha;         // indica falha no último comando
 int CmdAckCnt;           // contagem de confirmacoes de comandos
 double CmdAckTagTempo;   // hora da última confirmação
@@ -453,7 +453,8 @@ map <int, TPonto> Pontos; // mapa para os pontos a escutar, chave de nponto
 
 public:
 list <int> lstNPontoDump;
-list <String> lstHTTPReq_OutroIHM; // fila de requisições a mandar para o outro IHM
+list <String> lstHTTPReq_OutroIHM; // request queue to redundant hmi
+list <String> lstHTTPReq_OutroIHM_writepoint; // request queue to redundant hmi (write point)
 map <int, int> MapNPontoPorEndUTR; // mapa para achar nponto pelo endereço físico e utr
 map <String, int> MapNPontoPorTag; // mapa para encontrar nponto pelo tag
 map <String, int> DisjModulo; // mapa pelo nome do módulo para o ponto do disjuntor
@@ -503,8 +504,8 @@ bool GetAlrIn(int nponto);
 void SilenciaBeep();
 int HaBeepAtivo();
 void AtivaBeep( int tipo = BEEP_NORMAL );
-int SetAckCmd(int nponto, int falha, int cmd); // seta ack de comando
-int GetAckCmd(int nponto, int *falha, int *cmd, double *hora); // testa ack de comando
+int SetAckCmd(int nponto, int falha, double cmd); // seta ack de comando
+int GetAckCmd(int nponto, int *falha, double *cmd, double *hora); // testa ack de comando
 
 void RecebeuIntegridade(); // informa que recebeu integridade, conta
 int GetIntegridade(); // devolve contagem de integridade

@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.7"
-!define VERSION_ "6.7.0.0"
+!define VERSION "v.6.8"
+!define VERSION_ "6.8.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -209,6 +209,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateDirectory "$INSTDIR\grafana"
   CreateDirectory "$INSTDIR\PostgreSQL"
   CreateDirectory "$INSTDIR\PowerBI"
+  CreateDirectory "$INSTDIR\Opc.Ua.CertificateGenerator"
 
   SetOutPath $INSTDIR
 
@@ -382,7 +383,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\docs\oshmi_configuration_manual-en_us.pdf"
   File /a "..\docs\oshmi_dnp3_config-en_us.odt"
   File /a "..\docs\oshmi_dnp3_config-en_us.pdf"
-  ;File /a "..\docs\oshmi_modbus_config-en_us.odt"
+  File /a "..\docs\oshmi_modbus_config-en_us.odt"
   File /a "..\docs\oshmi_modbus_config-en_us.pdf"
   File /a "..\docs\oshmi_opc_client_config-en_us.odt"
   File /a "..\docs\oshmi_opc_client_config-en_us.pdf"
@@ -405,6 +406,9 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\PowerBI
   File /a /r "..\PowerBI\powerbi-oshmi-demo.pbix"  
   
+  SetOutPath $INSTDIR\Opc.Ua.CertificateGenerator
+  File /a /r "..\Opc.Ua.CertificateGenerator\*.*"  
+
   ; backup old (possibly incompatible) files to allow for the new ones to be overwritten
   Rename "$INSTDIR\conf\nginx_http.conf" "$INSTDIR\conf\nginx_http.pre_${VERSION}.conf.bak"
   Rename "$INSTDIR\conf\nginx_https.conf" "$INSTDIR\conf\nginx_https.pre_${VERSION}.conf.bak"
@@ -429,6 +433,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\conf_templates\qtester104.ini"  
   File /a "..\conf_templates\dnp3.ini"  
   File /a "..\conf_templates\modbus_queue.ini"
+  File /a "..\conf_templates\opc_client.conf"
   File /a "..\conf_templates\hmi.ini"
   File /a "..\conf_templates\hmishell.ini"
   File /a "..\conf_templates\mon_proc.ini"
@@ -476,13 +481,13 @@ Section "" ; empty string makes it hidden, so would starting with -
   StrCmp $0 "https" viewer_shortcuts_end
 
 ; chaves para o windows   
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "EVENTS_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISEVE"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TABULAR_VIEWER"    '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTAB"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "SCREEN_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTEL"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TREND_VIEWER"      '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTRE"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "CURVES_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISCUR"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "DOCS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISDOC"'
-  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "LOGS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISLOG"'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "EVENTS_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISEVE"'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TABULAR_VIEWER"    '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTAB"'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "SCREEN_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTEL"'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "TREND_VIEWER"      '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISTRE"'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "CURVES_VIEWER"     '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISCUR"'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "DOCS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISDOC"'
+;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" "LOGS_VIEWER"       '"$INSTDIR\$NAVWINCMD $NAVDATDIR --bopt --app=$HTTPSRV$NAVVISLOG"'
  
 ; chaves para o linux   
 ;  WriteINIStr "$INSTDIR\conf\hmi.ini"  "RUN" ";EVENTS_VIEWER"    '$NAVLINCMD --bopt --app=$HTTPSRV$NAVVISEVE'

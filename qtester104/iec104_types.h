@@ -23,7 +23,10 @@
 #ifndef __IEC104_TYPES_H
 #define __IEC104_TYPES_H
 
-#pragma pack(push,1)
+#include <cstdint>
+
+#pragma pack(push)
+#pragma pack(1)
 
 // 32-bit string state and change data unit
 struct iec_stcd {
@@ -134,7 +137,10 @@ struct iec_type5 {
 
 // M_BO_NA_1 - state and change information bit string
 struct iec_type7 {
+    union {
     struct iec_stcd stcd;
+    uint32_t bsi;
+    };
     unsigned char ov :1; // overflow/no overflow
     unsigned char res :3;
     unsigned char bl :1; // blocked/not blocked
@@ -176,6 +182,15 @@ struct iec_type13 {
     unsigned char iv :1; // valid/invalid
 };
 
+// M_ME_NC_1 - integrated totals
+struct iec_type15 {
+    uint32_t bcr;
+    unsigned char sq :5; // sequence
+    unsigned char cy :1; // carry
+    unsigned char ca :1; // counter adjusted
+    unsigned char iv :1; // valid/invalid
+};
+
 // M_SP_TB_1 - single point information with quality description and time tag
 struct iec_type30 {
     unsigned char sp :1; // single point information
@@ -213,7 +228,10 @@ struct iec_type32 {
 
 // M_BO_TB_1 - state and change information bit string and time tag
 struct iec_type33 {
+    union {
     struct iec_stcd stcd;
+    uint32_t bsi;
+    };
     unsigned char ov :1; // overflow/no overflow
     unsigned char res :3;
     unsigned char bl :1; // blocked/not blocked
@@ -261,7 +279,7 @@ struct iec_type36 {
 
 // M_IT_TB_1 - Integrated totals with time tag CP56Time2a
 struct iec_type37 {
-    unsigned long int bcr;
+    uint32_t bcr;
     unsigned char sq :5;
     unsigned char cy :1;
     unsigned char ca :1;
@@ -376,6 +394,10 @@ struct iec_type103 {
     cp56time2a time;
 };
 
+struct iec_type105 {
+    unsigned char qrp; // QRP qualifier of reset process
+};
+
 struct iec_type107 {
     unsigned short ioa16; // object address bytes 1,2
     unsigned char ioa8; // object address byte 3
@@ -441,6 +463,18 @@ struct iec_apdu {
         struct {
             unsigned short ioa16;
             unsigned char ioa8;
+            iec_type7 obj[1];
+        } sq7;
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
+            iec_type7 obj;
+        } nsq7[1];
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
             iec_type9 obj[1];
         } sq9;
 
@@ -473,6 +507,18 @@ struct iec_apdu {
             unsigned char ioa8;
             iec_type13 obj;
         } nsq13[1];
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
+            iec_type15 obj[1];
+        } sq15;
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
+            iec_type15 obj;
+        } nsq15[1];
 
         struct {
             unsigned short ioa16;
@@ -513,6 +559,18 @@ struct iec_apdu {
         struct {
             unsigned short ioa16;
             unsigned char ioa8;
+            iec_type33 obj[1];
+        } sq33;
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
+            iec_type33 obj;
+        } nsq33[1];
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
             iec_type34 obj[1];
         } sq34;
 
@@ -545,6 +603,18 @@ struct iec_apdu {
             unsigned char ioa8;
             iec_type36 obj;
         } nsq36[1];
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
+            iec_type37 obj[1];
+        } sq37;
+
+        struct {
+            unsigned short ioa16;
+            unsigned char ioa8;
+            iec_type37 obj;
+        } nsq37[1];
 
         struct {
             unsigned short ioa16;
@@ -620,8 +690,8 @@ struct iec_apdu {
 
         unsigned char dados[255];
         iec_type103 asdu103;
+        iec_type105 asdu105;
         iec_type107 asdu107;
-
     };
 };
 

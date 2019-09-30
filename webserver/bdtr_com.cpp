@@ -45,6 +45,7 @@ TfmBDTR *fmBDTR;
 
 void MyBDTR::CommandIndication(int endcmd, char flags, float valor)
 {
+/*
 // converte endereço físico para nponto
 int nptcmd = BL.NPontoPorEndUTR( endcmd, 0 );
 if ( nptcmd == 0 )
@@ -75,290 +76,7 @@ if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
   // simula o comando
   fmSimul->SimulaComando(nptcmd, valor);
   }
-}
-
-#define MXANA 150
-#define MXDIG 250
-void TfmBDTR::EnviaIntegridadeEscravosBDTR()
-{
-// se estiver no modo simulação mestre, simula o comando
-if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
-  { // manda tudo para os escravos
-  map <int, TPonto> &PontosTR=BL.GetMapaPontos();
-  map <int, TPonto>::iterator it;
-
-  // bdtr.logaln((string)"***** Inicio Integridade");
-
-  int cntana=0;
-  int cntdig=0;
-  char bufana[2000];
-  char bufdig[2000];
-
-  msg_float *pana;
-  pana = (msg_float *) bufana;
-  pana->COD=T_FLT|T_CONV;
-  pana->ORIG=0;
-
-  msg_dig *pdig;
-  pdig = (msg_dig *) bufdig;
-  pdig->COD=T_DIG|T_CONV;
-  pdig->ORIG=0;
-
-  for ( it = PontosTR.begin(); it != PontosTR.end(); it++ )
-    {
-    if ( ((*it).second).CodOrigem != 0 || ((*it).second).EventoDigital ) // não supervisionado ou evento
-      continue;
-
-    if ( ((*it).second).TipoAD == 'A' )
-      {
-      pana->PONTO[cntana].ID = ((*it).second).Endereco;
-      pana->PONTO[cntana].VALOR = ((*it).second).Valor;
-      pana->PONTO[cntana].STAT = ((*it).second).Qual.Byte;
-      cntana++;
-      if ( cntana >= MXANA  )
-        {
-        //bdtr.logaln((string)"***** Parcela ANA comp");
-        pana->NRPT = cntana;
-        fmBDTR->EnviaEscravosBDTR( (char*)pana, sizeof(msg_float)+sizeof(A_float)*(cntana-1) );
-        cntana = 0;
-        }
-      }
-    else
-      {
-      pdig->PONTO[cntdig].ID = ((*it).second).Endereco;
-      pdig->PONTO[cntdig].STAT = ((*it).second).Qual.Byte;
-      cntdig++;
-      if ( cntdig >= MXDIG )
-        {
-        //bdtr.logaln((string)"***** Parcela DIG comp");
-        pdig->NRPT = cntdig;
-        fmBDTR->EnviaEscravosBDTR( (char*)pdig, sizeof(msg_dig)+sizeof(A_dig)*(cntdig-1) );
-        cntdig=0;
-        }
-      }
-    }
-
-  if ( cntana > 0 )
-    {
-    //bdtr.logaln((string)"***** Parcela ANA parc");
-    pana->NRPT = cntana;
-    fmBDTR->EnviaEscravosBDTR( (char*)pana, sizeof(msg_float)+sizeof(A_float)*(cntana-1) );
-    }
-
-  if ( cntdig > 0)
-    {
-    //bdtr.logaln((string)"***** Parcela DIG parc");
-    pdig->NRPT = cntdig;
-    fmBDTR->EnviaEscravosBDTR( (char*)pdig, sizeof(msg_dig)+sizeof(A_dig)*(cntdig-1) );
-    }
-
-  //bdtr.logaln( (string)"***** Dig " );
-  //bdtr.logaln( (string)"***** Ana " );
-  //bdtr.logaln((string)"***** Fim Integridade");
-  }
-}
-
-int MyBDTR::MandaComandoDig(int nponto, int val)
-{
-if ( BDTR_ENVIA_COMANDOS == 0 )
-  return 1;
-
-bool found;
-TPonto &pt = BL.GetRefPonto(nponto, found);
-
-if (found)
-  {
-  msg_com mc;
-
-  if ( BL.ComandoIntertravado( nponto ) ) // só mando se não estiver intertravado
-     return 4;
-
-  mc.COD = T_COM;
-  mc.TVAL = T_DIG;
-  mc.ORIG = MEU_END;
-  mc.PONTO.ID = pt.Endereco;
-  mc.PONTO.STATUS = val;
-  mc.PONTO.VALOR.COM = val;
-
-  // se o varredor é conversor (104, DNP, sem banco), formato o valor especificando os parametros devidos
-  if ( VarredorEhConversor() )
-    {
-    mc.PONTO.VALOR.COM_SEMBANCO.COM = val;
-    mc.PONTO.VALOR.COM_SEMBANCO.UTR = pt.UTR;
-    mc.PONTO.VALOR.COM_SEMBANCO.ASDU = pt.CmdASDU;
-    mc.PONTO.VALOR.COM_SEMBANCO.COMIEC.dcs = val;
-    mc.PONTO.VALOR.COM_SEMBANCO.COMIEC.qu = pt.CmdDuracao;
-    mc.PONTO.VALOR.COM_SEMBANCO.COMIEC.se = pt.CmdSBO;
-    }
-
-  return EnviaComando( &mc );
-  }
-
-return 3; // nao encontrado
-}
-
-int MyBDTR::MandaComandoAna(int nponto, float val)
-{
-if ( BDTR_ENVIA_COMANDOS == 0 )
-  return 1;
-
-bool found;
-TPonto &pt = BL.GetRefPonto(nponto, found);
-
-if (found)
-  {
-  msg_com mc;
-  float temp;
-
-  if ( BL.ComandoIntertravado( nponto ) ) // só mando se não estiver intertravado
-     return 4;
-
-  mc.COD = T_COM;
-  mc.ORIG = MEU_END;
-  mc.PONTO.ID = pt.Endereco;
-  mc.PONTO.STATUS = ANALOGICO;
-
-  switch ( pt.CmdASDU )
-    {
-    case 48: // C_SE_NA_1 Set-point normalized
-    case 61: // C_SE_TA_1 Set-point normalized w/ time
-      mc.TVAL = T_NORM;
-      if ( pt.KConv1 != 0 )
-        {
-        temp = ((val - pt.KConv2) / pt.KConv1) * 32767;
-        // limit possible values
-        if ( temp > 32767 )
-          temp = 32767;
-        if ( temp < -32768 )
-          temp = -32768;
-        mc.PONTO.VALOR.NRM = temp;
-        }
-      else
-        return 5;
-      break;
-
-    case 49: // C_SE_NB_1 Set-point scaled
-    case 62: // C_SE_TB_1 Set-point scaled w/ time
-      mc.TVAL = T_ANA;
-      temp = val * pow10(pt.CasaDecimal);
-      // limit possible values
-      if ( temp > 32767 )
-        temp = 32767;
-      if ( temp < -32768 )
-        temp = -32768;
-      mc.PONTO.VALOR.ANA = temp;
-      break;
-
-    default:
-    case 50: // C_SE_NC_1 Set-point short floating point
-    case 63: // C_SE_TC_1 Set-point short floating point w/ time
-      mc.TVAL = T_FLT;
-      mc.PONTO.VALOR.FLT = val;
-      break;
-    }
-
-  // se o varredor é conversor (104, DNP, sem banco), formato o valor especificando os parametros devidos
-  if ( VarredorEhConversor() )
-    {
-    mc.PONTO.VALOR.COM_SEMBANCOANA.UTR = pt.UTR;
-    mc.PONTO.VALOR.COM_SEMBANCOANA.ASDU = pt.CmdASDU;
-    mc.PONTO.VALOR.COM_SEMBANCOANA.COMIEC.dcs = 0;
-    mc.PONTO.VALOR.COM_SEMBANCOANA.COMIEC.qu = 0;
-    mc.PONTO.VALOR.COM_SEMBANCOANA.COMIEC.se = pt.CmdSBO;
-    switch ( pt.CmdASDU )
-      {
-      case 48: // C_SE_NA_1 Set-point normalized
-      case 61: // C_SE_TA_1 Set-point normalized w/ time
-        if ( pt.KConv1 != 0 )
-          {
-          temp = ((val - pt.KConv2) / pt.KConv1) * 32767;
-          // limit possible values
-          if ( temp > 32767 )
-            temp = 32767;
-          if ( temp < -32768 )
-            temp = -32768;
-          mc.PONTO.VALOR.COM_SEMBANCOANA.NRM = temp;
-          }
-        else
-          return 5;
-        break;
-
-      case 49: // C_SE_NB_1 Set-point scaled
-      case 62: // C_SE_TB_1 Set-point scaled w/ time
-        temp = val * pow10(pt.CasaDecimal);
-        // limit possible values
-        if ( temp > 32767 )
-          temp = 32767;
-        if ( temp < -32768 )
-          temp = -32768;
-        mc.PONTO.VALOR.COM_SEMBANCOANA.ANA = temp;
-        break;
-
-      default:
-      case 50: // C_SE_NC_1 Set-point short floating point
-      case 63: // C_SE_TC_1 Set-point short floating point w/ time
-        mc.PONTO.VALOR.COM_SEMBANCOANA.FLT = val;
-        break;
-      }
-    }
-
-  return EnviaComando( &mc );
-  }
-
-return 3; // nao encontrado
-}
-
-int MyBDTR::EscrevePonto(int EndPonto, float valor, unsigned char qualif, int calculo, int usakconv, int temtagtmp, int espontaneo)
-{
-// converte endereço físico para nponto
-int nponto = BL.NPontoPorEndUTR( EndPonto, 0 );
-if ( nponto == 0 )
-  return 0;
-
-int ret = BL.EscrevePonto(nponto, valor, qualif, calculo, usakconv, temtagtmp);
-
-// Se o ponto é de comando, verifica se está consistente o estado do bloqueio do comando entre BDTR e IHM.
-// Se não estiver, preserva o bloqueio onde houver e bloqueando onde não estiver bloqueado.
-// No BDTR o bloqueio é informado pelo bit q setado no ponto de comando difundido na GI
-// No IHM o bloqueio do comando é dado pela anotação do PONTO SUPERVISIONADO.
-bool foundcmd = false;
-TPonto &ptc = BL.GetRefPonto(nponto, foundcmd);
-if ( foundcmd )
-if ( ptc.EhComando() && (qualif & CONTROLE) && (temtagtmp == 0) )  // só interessa ponto de controle na GI (sem tag)
-   {
-   bool foundsup = false;
-   TPonto &pts = BL.GetRefPonto(ptc.PontoSupCmd, foundsup);
-
-   if ( foundsup )
-     {
-//     if (Logar) // se o form é visível, mostra um log
-//       logaln((string)"Recebeu estado de ponto de comando: " + ((String)nponto).c_str());
-
-     if ( pts.ComandoBloqueado() ^ (bool)(qualif & IMPOSTO) )
-       { // inconsistência
-        if (Logar) // se o form é visível, mostra um log
-          logaln((string)"Inconsistencia em bloqueio de ponto de comando: " + ((String)nponto).c_str());
-
-       if ( pts.ComandoBloqueado() )
-         { // está bloqueado na IHM e não no concentrador
-         if ( EhPrincipal() )
-           {
-           BlkComando(ptc.Endereco, 1); // bloqueia comando no BDTR, se for principal
-           if (Logar) // se o form é visível, mostra um log
-            logaln((string)"Envio bloqueio ao BDTR do ponto: " + ((String)nponto).c_str());
-           }
-         }
-       else
-         { // está bloqueado no concentrador e não na IHM
-         pts.SetAnotacao("Comando bloqueado no concentrador.");
-         if (Logar) // se o form é visível, mostra um log
-          logaln((string)"Setando anotação no ponto: " + ((String)nponto).c_str());
-         }
-       }
-     }
-   }
-   
-return ret;
+*/
 }
 
 void MyBDTR::envia_udp(char * IP, int porta, char * buf, int sz)
@@ -588,14 +306,14 @@ else
   fmBDTR->IdUDPServer1->Active = false;
 
 // atualiza o ponto de operação local
-if ( PONTO_OPERACAO != 0 )  
-  {
-  BL.EscrevePonto(PONTO_OPERACAO, FA_ESTFASIM_ON, ESTDUP_ON);
-  // envia estado ON aos BDTR e ao outro IHM, se existirem
-  bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_ON, bdtr.IP_BDTR1, BDTR_PORTA_CMD);
-  bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_ON, bdtr.IP_BDTR2, BDTR_PORTA_CMD);
-  bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_ON, IHMRED_IP_OUTRO_IHM.c_str(), BDTR_PORTA);
-  }
+//if ( PONTO_OPERACAO != 0 )
+//  {
+//  BL.EscrevePonto(PONTO_OPERACAO, FA_ESTFASIM_ON, ESTDUP_ON);
+//  // envia estado ON aos BDTR e ao outro IHM, se existirem
+//  bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_ON, bdtr.IP_BDTR1, BDTR_PORTA_CMD);
+//  bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_ON, bdtr.IP_BDTR2, BDTR_PORTA_CMD);
+//  bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_ON, IHMRED_IP_OUTRO_IHM.c_str(), BDTR_PORTA);
+//  }
 
 // prepara as primeira
 Timer1->Interval = 10000;
@@ -607,19 +325,9 @@ Timer1->Enabled = true;
 // Força uma no inicio (10s) mesmo se reserva e depois segue pelo tempo configurado
 void __fastcall TfmBDTR::Timer1Timer(TObject *Sender)
 {
-  bdtr.Sol_Integridade(BDTR::integridade_forcada); // faz a primeira integridade, forcada (mesmo se reserva)
-  bdtr.SetaPeriodoIntegridade(T_INTEGRIDADE);
+//  bdtr.Sol_Integridade(BDTR::integridade_forcada); // faz a primeira integridade, forcada (mesmo se reserva)
+//  bdtr.SetaPeriodoIntegridade(T_INTEGRIDADE);
   Timer1->Enabled = false;
-}
-//---------------------------------------------------------------------------
-
-void __fastcall TfmBDTR::btIntgrClick(TObject *Sender)
-{
-bdtr.Sol_Integridade(BDTR::integridade_forcada); // integridade, forcada (mesmo se reserva)
-
-// se está no modo mestre, manda a integridade
-if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
-  EnviaIntegridadeEscravosBDTR();
 }
 //---------------------------------------------------------------------------
 
@@ -629,13 +337,11 @@ static unsigned int cntsec = 0;
 
 if ( IHM_EstaFinalizando() ) return;
 
-//int tickini=::GetTickCount();
-//unsigned tckitm=0;
-
 cntsec++;
 
 bdtr.ontimerseg();
 
+/*
 // vê se passou 1 minuto desde a última chamada
 if ( !(cntsec % 60) )
   {
@@ -647,8 +353,7 @@ if ( !(cntsec % 60) )
     bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_ON, IHMRED_IP_OUTRO_IHM.c_str(), BDTR_PORTA);
     }
   }
-
-// tckitm=::GetTickCount()-tickini;
+*/
 
 // envio periódico de acerto de hora ao ihm redundante
 if ( bdtr.EhPrincipal() )
@@ -656,6 +361,7 @@ if ( IHMRED_PERIODO_ENVIO_ACERTO_HORA && IHMRED_IP_OUTRO_IHM != "" )
 if ( ! (cntsec % IHMRED_PERIODO_ENVIO_ACERTO_HORA) )
   bdtr.EnviaHora(IHMRED_IP_OUTRO_IHM.c_str(), bdtr.ORIG_DUAL); // aviso ao outro
 
+/*
 // envio periódico de acerto de hora ao BDTR
 if ( BDTR_PERIODO_ENVIO_ACERTO_HORA > 0 )
   if ( ! (cntsec % BDTR_PERIODO_ENVIO_ACERTO_HORA) )
@@ -671,6 +377,7 @@ if ( BDTR_PERIODO_ENVIO_ACERTO_HORA > 0 )
 if ( BL.GetSimulacao() == SIMULMOD_MESTRE )
 if ( !(cntsec % 300) )
   EnviaIntegridadeEscravosBDTR();
+*/
 
 // conta tempo sem keep-alive para ficar principal
 bdtr.CNT_SEG_SEMKA++;
@@ -723,6 +430,7 @@ if ( bdtr.CNT_SEG_SEMKA > (IHMRED_PERIODO_ENVIO_ACERTO_HORA * 2 + 2) )
 
 void TfmBDTR::FinalizandoAplicacao()
 {
+/*
 // envia estado operacional do IHM (saindo)
 if ( PONTO_OPERACAO != 0 )
   { // envia estado ON aos BDTR e ao outro IHM, se existirem
@@ -730,6 +438,7 @@ if ( PONTO_OPERACAO != 0 )
   bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_OFF, bdtr.IP_BDTR2, BDTR_PORTA_CMD);
   bdtr.EnviaPontoDig(PONTO_OPERACAO, ESTDUP_OFF, IHMRED_IP_OUTRO_IHM.c_str(), BDTR_PORTA);
   }
+*/
 }
 //---------------------------------------------------------------------------
 
@@ -749,9 +458,9 @@ if (IHM_EstaFinalizando()) return;
 
 // vê se o endereço é conhecido
 if (
-     strcmp ( ABinding->PeerIP.c_str(), bdtr.IP_BDTR1.c_str() ) == 0 ||
-     strcmp ( ABinding->PeerIP.c_str(), bdtr.IP_BDTR2.c_str() ) == 0  ||
-     strcmp ( ABinding->PeerIP.c_str(), "127.0.0.1" ) == 0 ||
+     //strcmp ( ABinding->PeerIP.c_str(), bdtr.IP_BDTR1.c_str() ) == 0 ||
+     //strcmp ( ABinding->PeerIP.c_str(), bdtr.IP_BDTR2.c_str() ) == 0  ||
+     //strcmp ( ABinding->PeerIP.c_str(), "127.0.0.1" ) == 0 ||
      strcmp ( ABinding->PeerIP.c_str(), IHMRED_IP_OUTRO_IHM.c_str() ) == 0 ||
      BL.HaSimulacao() // aceito os dados quando há simulação, podem estar vindo em broadcast, inclusive da própria máquina
    )
@@ -763,6 +472,7 @@ if (
 
   fmVeDados->PulseBDTR(clRed);
 
+/*
   try
     {
     // sinaliza que a comunicação com o BDTR está ok
@@ -781,6 +491,7 @@ if (
   catch (char * p)
     {
     }
+*/
 
   bdtr.recebe_udp(ABinding->PeerIP.c_str());
   }
@@ -798,26 +509,6 @@ void __fastcall TfmBDTR::cbLogaClick(TObject *Sender)
 bdtr.LogaEmArq = cbLoga->Checked;
 }
 //---------------------------------------------------------------------------
-
-void TfmBDTR::EnviaEscravosBDTR (char * msg, int size)
-{
-for (int i=0; i<MAX_ESCRAVOS_SIMUL ; i++)
-  {
-  if ( LISTA_ESCRAVOS_SIMUL[i] == "" )
-    break;
-  bdtr.envia_udp( LISTA_ESCRAVOS_SIMUL[i].c_str(), PORT_BDTR, msg, size );
-  }
-}
-
-void TfmBDTR::EnviaHoraEscravosBDTR ()
-{
-for (int i=0; i<MAX_ESCRAVOS_SIMUL ; i++)
-  {
-  if ( LISTA_ESCRAVOS_SIMUL[i] == "" )
-    break;
-  bdtr.EnviaHora(LISTA_ESCRAVOS_SIMUL[i].c_str(), END_IHM);
-  }
-}
 
 void TfmBDTR::TagBDTR_HoraAtual(A_tag * ptag)
 {

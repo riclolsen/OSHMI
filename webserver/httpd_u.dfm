@@ -1,8 +1,8 @@
 object fmMicroHttpd: TfmMicroHttpd
-  Left = 224
-  Top = 131
+  Left = 251
+  Top = 40
   Width = 690
-  Height = 811
+  Height = 702
   Caption = 'fmMicroHttpd'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -23,9 +23,9 @@ object fmMicroHttpd: TfmMicroHttpd
   end
   object mmLog: TMemo
     Left = 8
-    Top = 56
+    Top = 48
     Width = 617
-    Height = 632
+    Height = 585
     Anchors = [akLeft, akTop, akRight, akBottom]
     Lines.Strings = (
       'mmLog')

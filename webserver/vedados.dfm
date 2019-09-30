@@ -1,6 +1,6 @@
 object fmVeDados: TfmVeDados
-  Left = 581
-  Top = 182
+  Left = 515
+  Top = 199
   Width = 900
   Height = 609
   BorderIcons = [biMinimize, biMaximize]
@@ -156,7 +156,7 @@ object fmVeDados: TfmVeDados
     OnDblClick = Image2DblClick
   end
   object shBDTR: TShape
-    Left = 191
+    Left = 179
     Top = 18
     Width = 14
     Height = 14
@@ -172,25 +172,18 @@ object fmVeDados: TfmVeDados
     Caption = 'lbTime'
   end
   object shSDE: TShape
-    Left = 319
+    Left = 307
     Top = 18
     Width = 14
     Height = 14
     Shape = stCircle
   end
   object shWeb: TShape
-    Left = 455
+    Left = 443
     Top = 18
     Width = 14
     Height = 14
     Shape = stCircle
-  end
-  object Label2: TLabel
-    Left = 184
-    Top = 0
-    Width = 30
-    Height = 13
-    Caption = 'BDTR'
   end
   object Label3: TLabel
     Left = 316
@@ -200,14 +193,14 @@ object fmVeDados: TfmVeDados
     Caption = 'SDE'
   end
   object shI104: TShape
-    Left = 255
+    Left = 243
     Top = 18
     Width = 14
     Height = 14
     Shape = stCircle
   end
   object shDumpDB: TShape
-    Left = 513
+    Left = 501
     Top = 18
     Width = 25
     Height = 14
@@ -221,7 +214,7 @@ object fmVeDados: TfmVeDados
     Caption = 'IEC104'
   end
   object shJSON: TShape
-    Left = 384
+    Left = 372
     Top = 18
     Width = 14
     Height = 14
@@ -303,7 +296,7 @@ object fmVeDados: TfmVeDados
     OnClick = btBuscaPontoClick
   end
   object btBDTR: TButton
-    Left = 171
+    Left = 159
     Top = 0
     Width = 55
     Height = 17
@@ -312,7 +305,7 @@ object fmVeDados: TfmVeDados
     OnClick = btBDTRClick
   end
   object btSDE: TButton
-    Left = 299
+    Left = 287
     Top = 0
     Width = 55
     Height = 17
@@ -321,7 +314,7 @@ object fmVeDados: TfmVeDados
     OnClick = btSDEClick
   end
   object btWebServ: TButton
-    Left = 435
+    Left = 423
     Top = 0
     Width = 55
     Height = 17
@@ -340,7 +333,7 @@ object fmVeDados: TfmVeDados
     OnChange = edtPasswdChange
   end
   object btDumpdb: TButton
-    Left = 499
+    Left = 487
     Top = 0
     Width = 55
     Height = 17
@@ -349,7 +342,7 @@ object fmVeDados: TfmVeDados
     OnClick = btDumpdbClick
   end
   object btClose: TButton
-    Left = 743
+    Left = 731
     Top = 0
     Width = 55
     Height = 17
@@ -358,7 +351,7 @@ object fmVeDados: TfmVeDados
     OnClick = btCloseClick
   end
   object btSimul: TButton
-    Left = 560
+    Left = 548
     Top = 0
     Width = 55
     Height = 17
@@ -367,7 +360,7 @@ object fmVeDados: TfmVeDados
     OnClick = btSimulClick
   end
   object btScript: TButton
-    Left = 622
+    Left = 610
     Top = 0
     Width = 55
     Height = 17
@@ -376,7 +369,7 @@ object fmVeDados: TfmVeDados
     OnClick = btScriptClick
   end
   object btIEC104: TButton
-    Left = 235
+    Left = 223
     Top = 0
     Width = 55
     Height = 17
@@ -385,7 +378,7 @@ object fmVeDados: TfmVeDados
     OnClick = btIEC104Click
   end
   object btHist: TButton
-    Left = 682
+    Left = 670
     Top = 0
     Width = 55
     Height = 17
@@ -394,7 +387,7 @@ object fmVeDados: TfmVeDados
     OnClick = btHistClick
   end
   object btJSON: TButton
-    Left = 360
+    Left = 348
     Top = 0
     Width = 65
     Height = 17
