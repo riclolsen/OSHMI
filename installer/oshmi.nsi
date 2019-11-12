@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.8"
-!define VERSION_ "6.8.0.0"
+!define VERSION "v.6.9"
+!define VERSION_ "6.9.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -100,10 +100,14 @@ Section "" ; empty string makes it hidden, so would starting with -
   nsExec::Exec 'net stop OSHMI_iccp'
   nsExec::Exec 'net stop OSHMI_dnp3'
   nsExec::Exec 'net stop OSHMI_modbus'
+  nsExec::Exec 'net stop OSHMI_opc'
+  nsExec::Exec 'net stop OSHMI_s7'
   nsExec::Exec 'c:\oshmi\bin\stop_all.bat'
   nsExec::Exec 'taskkill /F /IM mon_proc.exe'
   nsExec::Exec 'taskkill /F /IM procexp.exe'
   nsExec::Exec 'taskkill /F /IM iccp_client.exe'
+  nsExec::Exec 'taskkill /F /IM s7client.exe'
+  nsExec::Exec 'taskkill /F /IM opc_client.exe'
   nsExec::Exec 'taskkill /F /IM QTester104.exe'
   nsExec::Exec 'taskkill /F /IM dnp3.exe'
   nsExec::Exec 'taskkill /F /IM modbus.exe'
@@ -223,6 +227,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\bin\*.dll"
   File /a "..\bin\*.vbs"
   File /a "..\bin\*.bat"
+  ;File /a "..\bin\*.json"
 
   SetOutPath $INSTDIR\bin\platforms
   File /a "..\bin\platforms\*.dll"
@@ -387,6 +392,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\docs\oshmi_modbus_config-en_us.pdf"
   File /a "..\docs\oshmi_opc_client_config-en_us.odt"
   File /a "..\docs\oshmi_opc_client_config-en_us.pdf"
+  File /a "..\docs\oshmi_s7_client_config-en_us.odt"
+  File /a "..\docs\oshmi_s7_client_config-en_us.pdf"
   File /a "..\docs\lua_reference_manual.pdf"
   File /a "..\docs\inkscape-shortcuts1.svg"
   File /a "..\docs\inkscape-shortcuts2.svg"
@@ -434,6 +441,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\conf_templates\dnp3.ini"  
   File /a "..\conf_templates\modbus_queue.ini"
   File /a "..\conf_templates\opc_client.conf"
+  File /a "..\conf_templates\s7client.ini"
   File /a "..\conf_templates\hmi.ini"
   File /a "..\conf_templates\hmishell.ini"
   File /a "..\conf_templates\mon_proc.ini"
@@ -668,6 +676,8 @@ Section "Uninstall"
   nsExec::Exec 'net stop OSHMI_iccp'
   nsExec::Exec 'net stop OSHMI_dnp3'
   nsExec::Exec 'net stop OSHMI_modbus'
+  nsExec::Exec 'net stop OSHMI_opc'
+  nsExec::Exec 'net stop OSHMI_s7'
   nsExec::Exec 'c:\oshmi\bin\stop_all.bat'
   nsExec::Exec 'c:\oshmi\nginx_php\stop_nginx_php.bat'
   nsExec::Exec `wmic PROCESS WHERE "COMMANDLINE LIKE '%c:\\oshmi\\bin\\%'" CALL TERMINATE`
@@ -696,6 +706,10 @@ Section "Uninstall"
   SimpleFC::RemoveApplication  "$INSTDIR\nginx_php\nginx.exe"
   Pop $0 ; return error(1)/success(0)
   SimpleFC::RemoveApplication "$INSTDIR\nginx_php\php\php-cgi.exe"
+  Pop $0 ; return error(1)/success(0)
+  SimpleFC::RemoveApplication "$INSTDIR\opc_client.exe"
+  Pop $0 ; return error(1)/success(0)
+  SimpleFC::RemoveApplication "$INSTDIR\s7client.exe"
   Pop $0 ; return error(1)/success(0)
 
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OSHMI"

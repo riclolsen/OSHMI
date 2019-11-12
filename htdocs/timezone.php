@@ -7,13 +7,13 @@
 // Change value in c:\oshmi\conf\hmi.ini [webserver]/TIMEZONE=
 //
 
-$tz = 'America/Sao_Paulo';
+$tz = 'America/Recife';
 $match = [];
 $ini = @file_get_contents("../conf/hmi.ini");
 if ($ini === false)
   $ini = file_get_contents("../../conf/hmi.ini");
 preg_match('/^TIMEZONE=(.*)$/m', $ini, $match);
 if ( count($match) > 0 )
-  $tz = $match[1];
+  $tz = trim(trim($match[1]),"'\"");
 date_default_timezone_set($tz); 
 ?>

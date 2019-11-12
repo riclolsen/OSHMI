@@ -268,8 +268,8 @@ void BDTR::recebe_udp(char * IP)
 FILE * fp=NULL;
 unsigned char nrpt;
 unsigned char orig;
-bool Convertido;
-bool Espontaneo;
+//bool Convertido;
+//bool Espontaneo;
 bool Ciclico;
 unsigned char Cod;
 int szrd;
@@ -315,8 +315,8 @@ try
     }
 
   Cod = Buff[0] & T_MASC;
-  Convertido = Buff[0] & T_CONV;
-  Espontaneo = Buff[0] & T_SPONT;
+  // Convertido = Buff[0] & T_CONV;
+  // Espontaneo = Buff[0] & T_SPONT;
   // Ciclico = Buff[0] & T_CIC;
 
   switch (Cod) // vai pelo tipo da mensagem (COD)

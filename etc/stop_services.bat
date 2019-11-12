@@ -8,3 +8,5 @@ c:\oshmi\bin\nssm stop OSHMI_iec104
 c:\oshmi\bin\nssm stop OSHMI_dnp3
 c:\oshmi\bin\nssm stop OSHMI_modbus
 c:\oshmi\bin\nssm stop OSHMI_iccp
+c:\oshmi\bin\nssm stop OSHMI_s7
+c:\oshmi\bin\nssm stop OSHMI_opc

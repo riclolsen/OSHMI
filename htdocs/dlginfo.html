@@ -20,7 +20,7 @@
 <script src="images.js"></script>
 <script>
 
-// OSHMI/Open Substation HMI - Copyright 2008-2014 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2019 - Ricardo L. Olsen
 
 /*global clearInterval: false, clearTimeout: false, document: false, event: false, frames: false, history: false, Image: false, location: false, name: false, navigator: false, Option: false, parent: false, screen: false, setInterval: false, setTimeout: false, window: false, XMLHttpRequest: false */
 /*global opener: false, self: false */
@@ -186,8 +186,8 @@ $( init );
   <input id='CBALRIN' type='checkbox'><span id='ALRINTXT'>?</span><br>
   </div><br>
   <div id='LIMCTRLS' style="display:none;">
-  &nbsp;&nbsp;<span id='SPLIMSUP'>?</span><input type='number' id='LIMSUP' size='10' autofocus >&nbsp;<br>
-  &nbsp;&nbsp;<span id='SPLIMINF'>?</span><input type='number' id='LIMINF' size='10'>&nbsp;<br>
+  &nbsp;&nbsp;<span id='SPLIMSUP'>?</span><input type='number' min="-999999" max="999999" id='LIMSUP' size='10' autofocus >&nbsp;<br>
+  &nbsp;&nbsp;<span id='SPLIMINF'>?</span><input type='number' min="-999999" max="999999" id='LIMINF' size='10'>&nbsp;<br>
   &nbsp;&nbsp;<span id='SPLIMHIS'>?</span><input type='number' step="0.1" id='HISTER' size='10'>&nbsp;<br>
   </div>
   <div id='DIVALTVALOR' style='display:none; color:red;'>

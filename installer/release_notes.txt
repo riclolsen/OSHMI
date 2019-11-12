@@ -27,6 +27,7 @@ Acknowledgements:
   Opendnp3 - https://www.automatak.com/opendnp3/
   Libmodbus - http://libmodbus.org/
   H-OPC - https://github.com/hylasoft-usa/h-opc
+  SNAP7/SHARP7 Project by Davide Nardella - http://snap7.sourceforge.net/
   QT - http://www.qt.io
   Lua Language - https://www.lua.org
   GNU Libmicrohttpd: https://www.gnu.org/software/libmicrohttpd
@@ -165,7 +166,7 @@ Webserver, HMIShell, Mon_Proc and Sim_TR:
  - Indy 9 Components (for C++ Builder 5)- http://www.indyproject.org/download/Files/Indy9.html.
 
 QTester104:
- - QT 5.9.2 or newer.
+ - QT 5.13 or newer.
 
 DNP3 and Modbus Drivers:
  - Visual Studio Community (2015 or newer).
@@ -174,9 +175,32 @@ DNP3 and Modbus Drivers:
 OPC Driver:
  - Visual Studio Community (2015 or newer).
  - Forked H-OPC library https://github.com/riclolsen/h-opc.
+ - DOTNET framework 4.7.2 or later.
+
+S7 Driver:
+ - Visual Studio Community (2019 or newer).
+ - DOTNET Core 3.0 framework.
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 6.9:
+
+S7 Client:
+ - Initial version of S7 client protocol driver (for Siemens PLCs).
+
+Webserver:
+ - Fixed limits checking when limits are fully open.
+ - Do not check limits when zeroed limits superior and inferior (variable always normal).
+
+Events Viewer.
+ - Fixed timezone setting problem.
+ - Changed default timezone to "America/Recife" for PHP scripts.
+
+SQLite:
+ - Updated to version 3.30.1.
 
 -------------------------------------------------------------------
 

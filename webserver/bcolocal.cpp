@@ -1400,9 +1400,9 @@ if ( ((*it).second).CntAtu >= 0 )
    ((*it).second).CntAltEst++;
 
   if ( !((*it).second).AlrIn && // se alarme não está inibido
-       ((*it).second).Qual.Tipo == TIPO_ANALOGICO  &&  // se é analógico e
-       ! ( ((*it).second).LimInf == 0 && ((*it).second).LimSup == 0 ) &&
-       ! ( ((*it).second).LimInf <= LIMINFMIN && ((*it).second).LimSup >= LIMSUPMAX )
+       ((*it).second).Qual.Tipo == TIPO_ANALOGICO  // se é analógico e
+       // && ! ( ((*it).second).LimInf == 0 && ((*it).second).LimSup == 0 )
+       // && ! ( ((*it).second).LimInf <= LIMINFMIN && ((*it).second).LimSup >= LIMSUPMAX )
      )
     { // testa limites
     rg = ((*it).second).RegiaoAlmLimite;
@@ -1438,6 +1438,13 @@ if ( ((*it).second).CntAtu >= 0 )
       else
       if( valor > ((*it).second).LimSup + ((*it).second).Hister )
         { rg = RGLIM_ALMSUP; }
+      }
+
+    // se limites estão abertos ou zerados, considera região normal  
+    if ( ( ((*it).second).LimInf <= LIMINFMIN && ((*it).second).LimSup >= LIMSUPMAX ) ||
+         ( ((*it).second).LimInf == 0 && ((*it).second).LimSup == 0) )
+      {
+      rg = RGLIM_NORMAL;
       }
 
     // se não esta violando, desliga o alarme

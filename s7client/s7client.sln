@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "s7client", "s7client\s7client.csproj", "{EA467EF1-227F-48BA-AAA6-7D75E19C4139}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA467EF1-227F-48BA-AAA6-7D75E19C4139}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA467EF1-227F-48BA-AAA6-7D75E19C4139}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA467EF1-227F-48BA-AAA6-7D75E19C4139}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA467EF1-227F-48BA-AAA6-7D75E19C4139}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FA906CC7-8ECA-4FB3-AE6D-8BA5B9A20ECA}
+	EndGlobalSection
+EndGlobal
