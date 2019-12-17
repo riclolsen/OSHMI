@@ -155,12 +155,15 @@ function Animate( elem, animtype, params )
       }
     }
 
-  elem.appendChild( animation );
-  if ( typeof( animation.beginElement ) != "undefined" )
+  setTimeout( function()
     {
-    animation.endElement();
-    animation.beginElement();
-    }
+    elem.appendChild( animation );
+    if ( typeof( animation.beginElement ) != "undefined" )
+      {
+      animation.endElement();
+      animation.beginElement();
+      }
+    }, 100);
 }
 
 function ShowHideTranslate( idorobj, xd, yd )
@@ -363,7 +366,7 @@ return DCRS[tagornumber] || DCRS[NPTS[tagornumber]] || "";
 // Return alarm time from tag or number
 getTime: function ( tagornumber )
 {
-return T[tagornumber] || T[NPTS[tagornumber]] || 0;
+return T[tagornumber] || T[NPTS[tagornumber]] || "";
 },
 
 init_svg: function (filename) {
@@ -1582,6 +1585,7 @@ valorTagueado: function ( tag, obj )
       t = tag.substr(4).trim();
       if ( isNaN( parseInt(t) ) ) // if not a number, converts it to a number
          t = NPTS[t];
+      f = WebSAGE.getFlags(t);      
       if ( typeof( f ) === 'undefined' )
         {
           return 0; 
@@ -1599,9 +1603,10 @@ valorTagueado: function ( tag, obj )
 
   if ( tag.indexOf("!ALM") === 0 ) 
     {
-      t = tag.substr(3).trim();
+      t = tag.substr(4).trim();
       if ( isNaN( parseInt(t) ) ) // if not a number, converts it to a number
          t = NPTS[t];
+      f = WebSAGE.getFlags(t);      
       if ( typeof( f ) === 'undefined' )
         {
           return 0; 
@@ -1616,44 +1621,16 @@ valorTagueado: function ( tag, obj )
           return 0; 
         }
     }
-/*
-  if ( tag.indexOf("ALM") === 0 ) 
-    {
-      t = tag.substr(3).trim();
-      if ( isNaN( parseInt(t) ) ) // if not a number, converts it to a number
-         t = NPTS[t];
-      if ( typeof( f ) === 'undefined' )
-        { 
-          return 0; 
-        }
 
-      if ( (f & 0x800) || (f & 0x100) )      
-        { 
-          return 1; 
-        }
-      else
-        { 
-          return 0; 
-        }
-    }
-*/
   if ( tag.indexOf("!TMP") === 0 ) 
     {
-      t = tag.substr(3).trim();
+      t = tag.substr(4).trim();
       if ( isNaN( parseInt(t) ) ) // if not a number, converts it to a number
          t = NPTS[t];
 
-      return getTime(t);
+      return WebSAGE.getTime(t);
     }
-/*
-  if ( tag.indexOf("TMP") === 0 ) 
-    {
-      t = tag.substr(3).trim();
-      if ( isNaN( parseInt(t) ) ) // if not a number, converts it to a number
-         t = NPTS[t];
-      return getTime(t);
-    }
-*/
+
   if ( tag.indexOf("!EVAL") === 0 ) 
     {
       t = tag.substr(5).trim();
@@ -1995,10 +1972,24 @@ setPreview : function ( item, url, width, height )
     winsz = winsz + "window.document.getElementById('previewframe').height = " + height + ";";
     }
 
-  // when mouse over the item, after a timeout, show the preview page
+  // when mouse over the item, after a timeout, show the preview page (on the other corner of mouse coords)
   item.setAttributeNS( 
      null, 
-     "onmouseover", 
+       "onmouseover", 
+       "if (evt.x > window.window.innerWidth/2) {" + 
+       "window.document.getElementById('previewdiv').style.left='5px';" +
+       "window.document.getElementById('previewdiv').style.right='';" +
+       "} else {" +
+       "window.document.getElementById('previewdiv').style.left='';" +
+       "window.document.getElementById('previewdiv').style.right='5px';" +
+       "}" +
+       "if (evt.y > window.window.innerHeight/2) {" + 
+       "window.document.getElementById('previewdiv').style.top='5px';" +
+       "window.document.getElementById('previewdiv').style.bottom='';" +
+       "} else {" +
+       "window.document.getElementById('previewdiv').style.top='';" +
+       "window.document.getElementById('previewdiv').style.bottom='5px';" +
+       "}" +
        "clearTimeout(window.WebSAGE.g_timerPreviewID); " + 
        "if ( window.document.getElementById('timemachinecontrols').style.display != 'none') { return; } " + // don't show if timemichine mode activated
        winsz +
@@ -3482,6 +3473,7 @@ var mudou_dig = WebSAGE.g_sha1ant_dig=='' || WebSAGE.g_sha1ant_dig!=Sha1Dig;
                       var i, j, val, vt, mudou_dig, mudou_ana = null;
                       return eval(src);
                       }
+                    evalprot( 'var thisobj=document.getElementById("' + WebSAGE.InkSage[i].parent.id + '"); ' + WebSAGE.InkSage[i].list[j].param );
                     }
                   catch( err )
                     {
@@ -4811,17 +4803,17 @@ if ( typeof(xPlain) == "undefined" )
   // prepares the begining of real time data tranfers
   WebSAGE.g_toutID = setTimeout( WebSAGE.callServer, 10 );
   
-  // Manipula eventos de rolagem do mouse para dar zoom
-  $(SVGDoc).bind('mousewheel wheel DOMMouseScroll', function(event){
-        if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0 || event.originalEvent.deltaY < 0) {
-            // scroll up
+  // Mouse wheel event to zoom in/out graphics
+  SVGDoc.addEventListener('wheel', function(event){
+        if (event.wheelDelta > 0 || event.detail < 0 || event.deltaY < 0) {
+            // zoom out
             WebSAGE.zoomPan( 8 );
         }
         else {
-            // scroll down
+            // zoom in
             WebSAGE.zoomPan( 2 ); 
         }
-  });
+  }, {passive: true});
                            
   // arraste do mouse para mover a tela
   $(SVGDoc).bind('mousedown', function(event){

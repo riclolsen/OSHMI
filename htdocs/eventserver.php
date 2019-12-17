@@ -108,7 +108,6 @@ else
   {
   $SQL_COUNTNPONTO = " COUNT(NPT) AS CNT ";
   $SQL_GROUPBY = " GROUP BY NPT ";
-  $ORDER2 = " ASC ";
   }   
 
 $TIPO_ANALOGICO = 1;

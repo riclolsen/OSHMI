@@ -94,10 +94,10 @@ msg_intertrav = "Bloqueio automatico por intertravamento"
 
 -- Números dos pontos de supervisão dos estados de DJ e SC
 -- Point numbers of breaker and switches
-pts52_1 = 16249
-pts89_4 = 16250
-pts89_6 = 16252
-pts89_8 = 16251
+pts52_1 = 5582
+pts89_2 = 5583
+pts89_4 = 5584
+pts89_6 = 5585
 
 -- Começa considerando estado indeterminidado para o DJ
 -- Begins with invalid state
@@ -122,14 +122,14 @@ function ScriptCycle()
   if va52_1 ~= v52_1 then
  
     if  v52_1 == CLOSED then
+      hmi_blkpoint( pts89_2,  msg_intertrav ) 
       hmi_blkpoint( pts89_4,  msg_intertrav ) 
-      hmi_blkpoint( pts89_6,  msg_intertrav ) 
       hmi_print("Blocking")
     end
     
     if  v52_1 == OPEN then
+      hmi_unblkpoint( pts89_2, msg_intertrav ) 
       hmi_unblkpoint( pts89_4, msg_intertrav ) 
-      hmi_unblkpoint( pts89_6, msg_intertrav ) 
       hmi_print("Unblocking")
     end
     

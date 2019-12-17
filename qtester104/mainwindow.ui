@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>961</width>
+    <width>968</width>
     <height>465</height>
    </rect>
   </property>
@@ -104,7 +104,7 @@
     <item row="2" column="5">
      <widget class="QLabel" name="label_8">
       <property name="text">
-       <string>Command Duration</string>
+       <string>Command Duration / KPA</string>
       </property>
      </widget>
     </item>
@@ -112,22 +112,47 @@
      <widget class="QComboBox" name="cbCmdDuration">
       <item>
        <property name="text">
-        <string>0 = no additional definition</string>
+        <string>0 = QU:no additional definition</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>1 = short pulse</string>
+        <string>1 = QU:short pulse</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>2 = long pulse</string>
+        <string>2 = QU:long pulse</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>3 = persistent output</string>
+        <string>3 = QU:persistent output</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>0 = KPA:unused</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>1 = KPA:threshold</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>2 = KPA:filter</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>3 = KPA:lolimit</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>4 = KPA:hilimit</string>
        </property>
       </item>
      </widget>
@@ -237,6 +262,16 @@
       </item>
       <item>
        <property name="text">
+        <string>101: Counter Interrogation Command - C_CI_NA_1 *NOT IMPL</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>102: Read Command - C_RD_NA_1 *NOT IMPL</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>103: Clock Syncronization - C_CS_NA_1</string>
        </property>
       </item>
@@ -252,12 +287,22 @@
       </item>
       <item>
        <property name="text">
-        <string>101: Counter Interrogation Command - C_CI_NA_1 *NOT IMPL</string>
+        <string>110: Parameter of measured normalized value - P_ME_NA_1</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>102: Read Command - C_RD_NA_1 *NOT IMPL</string>
+        <string>111: Parameter of measured scaled value - P_ME_NB_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>112: Parameter of measured short floating point value - P_ME_NC_1</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>113: Parameter activation - P_AC_NA_1</string>
        </property>
       </item>
      </widget>
@@ -382,14 +427,36 @@ If empty will use remote link address.</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>961</width>
-     <height>17</height>
+     <width>968</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>pbConnect</tabstop>
+  <tabstop>pbGI</tabstop>
+  <tabstop>leIPRemoto</tabstop>
+  <tabstop>lePort</tabstop>
+  <tabstop>leLinkAddress</tabstop>
+  <tabstop>leMasterAddress</tabstop>
+  <tabstop>pbSendCommandsButton</tabstop>
+  <tabstop>leCmdAddress</tabstop>
+  <tabstop>leCmdValue</tabstop>
+  <tabstop>leASDUAddr</tabstop>
+  <tabstop>cbCmdAsdu</tabstop>
+  <tabstop>cbCmdDuration</tabstop>
+  <tabstop>cbSBO</tabstop>
+  <tabstop>cbLog</tabstop>
+  <tabstop>cbAutoScroll</tabstop>
+  <tabstop>pbCopyClipb</tabstop>
+  <tabstop>pbCopyVals</tabstop>
+  <tabstop>cbPointMap</tabstop>
+  <tabstop>lwLog</tabstop>
+  <tabstop>twPontos</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

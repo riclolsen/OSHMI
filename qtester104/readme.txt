@@ -1,4 +1,4 @@
-QTester104 Copyright Â© 2010-2019 Ricardo L. Olsen.
+QTester104 Copyright © 2010-2019 Ricardo L. Olsen.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ IEC 60870-5-104 is a commonly used protocol for data acquisition and control of 
 
 Directories:
 src - multiplatform qt sources, compile with QT 5.13.1 or later on any supported platform.
-bin - win32 binaries built with QT 5.13.1
+bin - win32 binaries built with QT 5.13.1.
 conf - configuration file
 
 Can be used to poll substation data and issuing commands.
@@ -34,7 +34,7 @@ on / off / tra (double point transition) / ind (double point indefinite) / bl (b
 
 An optional configuration file can be used to store basic parameters, in the form of a INI file (qtester104.ini):
 
-[I104M]
+[BDTR]
 ; 0 (default): Normal operation mode
 ; 1: Force to be primary when in redundant mode
 ; FORCE_PRIMARY=0
@@ -43,9 +43,9 @@ An optional configuration file can be used to store basic parameters, in the for
 PRIMARY_ADDRESS=1        ; link address of the primary station (computer)
 
 [RTU1]                   ; communicates with only one RTU in this version
-SECONDARY_ADDRESS=1      ; protocol link address of the RTU
-IP_ADDRESS=10.63.1.201   ; IP address of the RTU
-; IP_ADDRESS_BACKUP=10.63.1.202   ; IP address of the BACKUP RTU
+SECONDARY_ADDRESS=2      ; protocol link address of the RTU
+IP_ADDRESS=192.168.1.1   ; IP address of the RTU
+; IP_ADDRESS_BACKUP=192.168.1.2   ; IP address of the BACKUP RTU
 ALLOW_COMMANDS=1         ; 1=allow sending commands, 0=don't permit commands
 ; PORT=2404              ; Protocol port (default=2404)
 ; GI_PERIOD = 330        ; time period in seconds for general interrogations (default=330s)

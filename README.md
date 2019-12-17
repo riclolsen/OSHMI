@@ -10,7 +10,7 @@ This project exists because we believe that by combining existing open source pr
 - Strong focus on UX and High Performance HMI / ISA101 compatible graphics.
 - Redundant mode of operation, dual server/ ?n? clients. Unlimited points, clients, monitors and viewers.
 - Easy configuration with plain text files.
-- IEC 60870-5-104 (QTester104), DNP3, MODBUS, OPC UA/DA and ICCP protocol drivers. Can connect to IEC61850 devices using protocol converters.
+- IEC 60870-5-104 (QTester104), DNP3, MODBUS, OPC UA/DA, Siemens S7 and ICCP protocol drivers. Can connect to IEC61850 devices using protocol converters.
 - The client web interface can be accessed by modern IOS, Android devices or by an HTML5 browser.
 - Please notice that OSHMI does NOT function by itself as a protocol gateway!
 
