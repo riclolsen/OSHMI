@@ -6,9 +6,13 @@
 
 // Parameters:
 //
-// &N=POINTNUM &W=WRITE
+// &N=POINTNUM &W=WRITE &FILTAG &FILCONTENT
 // POINTNUM : point number
 // WRITE : 1 = write 
+//
+// OR
+// FILTAG : tag filter
+// FILCONTENT : content filter
 
 // insert into notes (ERASED, OPENED, POINTNUM, CONTENT, TSCREATE, TSERASE) values (0,0,11388,"teste nota",0,0);
 
@@ -24,7 +28,7 @@ require_once 'timezone.php';
 
 extract($_REQUEST, EXTR_PREFIX_ALL|EXTR_SKIP, 'p');
 
-if ( ! isset( $p_N ) )
+if ( ! ( isset( $p_N ) || isset( $p_FILTAG ) || isset( $p_FILCONTENT ) ) )
   return;
 
 $pointnum = intval($p_N);
@@ -32,6 +36,14 @@ $pointnum = intval($p_N);
 $write = 0;
 if ( isset( $p_W ) )
   $write = $p_W ? 1 : 0;
+
+$filtag = "";
+if ( isset( $p_FILTAG ) )
+  $filtag = $p_FILTAG;
+
+$filcontent = "";
+if ( isset( $p_FILCONTENT ) )
+  $filcontent = $p_FILCONTENT;
 
 if ( $write && isset( $p_CONTENT ) )
   {
@@ -51,61 +63,109 @@ if ( $write && isset( $p_CONTENT ) )
     {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL,"http://$otherhmiip:$port/htdocs/annotation.php?N=$p_N&W=$p_W");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array('CONTENT' => $p_CONTENT)));
-    curl_exec ($ch);
-    curl_close ($ch);      
+    curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1000);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 500);
+    curl_exec($ch);
+    curl_close($ch);      
     }
   }
 
 try {
-    $pdo = new PDO( 'sqlite:../db/notes.sl3' );
-    $pdo->exec ( "PRAGMA synchronous = NORMAL" );
-    $pdo->exec ( "PRAGMA journal_mode = WAL" );
-    $pdo->exec ( "PRAGMA locking_mode = NORMAL" );
-    $pdo->exec ( "PRAGMA cache_size = 5000" );
-    $pdo->exec ( "PRAGMA temp_store = MEMORY" );
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    if ( $write ) 
+      {
+      $pdo = new PDO( 'sqlite:../db/notes.sl3','','', [
+        PDO::ATTR_TIMEOUT => 5,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ] );
+      $pdo->exec ( "PRAGMA synchronous=NORMAL" );
+      $pdo->exec ( "PRAGMA journal_mode=WAL" );
+      $pdo->exec ( "PRAGMA locking_mode=NORMAL" );
+      $pdo->exec ( "PRAGMA cache_size=5000" );
+      $pdo->exec ( "PRAGMA temp_store=MEMORY" );
+      }
+    else
+      {
+      $pdo = new PDO( 'sqlite:../db/notes.sl3','','', [
+        PDO::ATTR_TIMEOUT => ($filtag!="" || $filcontent!="")?0:5,
+        PDO::SQLITE_ATTR_OPEN_FLAGS => PDO::SQLITE_OPEN_READONLY,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ] );
+      $pdo->exec ( "PRAGMA query_only=TRUE" );
+      $pdo->exec ( "PRAGMA synchronous=NORMAL" );
+      $pdo->exec ( "PRAGMA journal_mode=WAL" );
+      $pdo->exec ( "PRAGMA locking_mode=NORMAL" );
+      $pdo->exec ( "PRAGMA cache_size=10000" );
+      $pdo->exec ( "PRAGMA temp_store=MEMORY" );
+      if ($filtag!="" || $filcontent!="")
+        $pdo->exec ( "ATTACH DATABASE '../db/dumpdb.sl3' as DBPONTOS" );
+      }  
 
     if ( $write )
       {
+      $pdo->query("BEGIN TRANSACTION");
       $now_tm = time();
       $qry = "update notes set ERASED = 1, TSERASE = :now_tm where POINTNUM = :pointnum and ERASED = 0";
       $stmt = $pdo->prepare( $qry );
       $stmt->execute(array( 'pointnum' => $pointnum,
-		                    'now_tm' => $now_tm
+		                        'now_tm' => $now_tm
                           ));
       if ( $p_CONTENT != "" )
         {
         $rmt_ip =  $_SERVER['REMOTE_ADDR'];  
         $qry = "insert into notes (ERASED, OPENED, POINTNUM, CONTENT, TSCREATE, TSERASE, USER) values (0, 0, :pointnum, :content, :now_tm, 0, :rmt_ip)";
-		$stmt = $pdo->prepare( $qry );
+		    $stmt = $pdo->prepare( $qry );
         $stmt->execute(array( 'pointnum' => $pointnum,
 		                      'content' => $p_CONTENT,
-							  'now_tm' => $now_tm,
-							  'rmt_ip' => $rmt_ip
+							            'now_tm' => $now_tm,
+						           	  'rmt_ip' => $rmt_ip
                           ));
         }
+      $pdo->query("COMMIT");
       }
     else
       {  
-      $stmt = $pdo->prepare(
-        "SELECT 
-           n.ID as REGNUM, 
-           n.POINTNUM as POINTNUM, 
-           n.CONTENT as CONTENT, 
-           n.TSCREATE as TSCREATE
-         FROM notes n
-         WHERE 
-           n.POINTNUM = :pointnum and 
-           n.ERASED = 0
-         ORDER BY n.ID DESC  
-         LIMIT 1          
-        ");
-      
-      $stmt->setFetchMode(PDO::FETCH_ASSOC);
-      $stmt->execute(array('pointnum' => $pointnum                   
-                          ));
+ 
+      if ($filtag!="" or $filcontent!="")
+		  {
+		  $stmt = $pdo->prepare(
+			"SELECT 
+			   n.ID as REGNUM, 
+			   n.POINTNUM as POINTNUM, 
+			   n.CONTENT as CONTENT, 
+			   n.TSCREATE as TSCREATE
+			 FROM notes n
+			 JOIN dumpdb d on n.POINTNUM = d.NPONTO and n.ERASED = 0
+			 WHERE 
+			   d.id like :filtag and n.CONTENT like :filcontent 
+			 ORDER BY n.ID DESC  
+			");
+		  $stmt->setFetchMode(PDO::FETCH_ASSOC);
+		  $stmt->execute( array('filtag' => $filtag."%",
+				                'filcontent' => "%".$filcontent."%" 
+						 ) );
+		  }
+	  else
+		  {
+		  $stmt = $pdo->prepare(
+			"SELECT 
+			   n.ID as REGNUM, 
+			   n.POINTNUM as POINTNUM, 
+			   n.CONTENT as CONTENT, 
+			   n.TSCREATE as TSCREATE
+			 FROM notes n
+			 WHERE 
+			   n.POINTNUM = :pointnum and 
+			   n.ERASED = 0
+			 ORDER BY n.ID DESC  
+			 LIMIT 1          
+			");
+		  $stmt->setFetchMode(PDO::FETCH_ASSOC);
+		  $stmt->execute(array('pointnum' => $pointnum ));
+		  }
       
       $arr = array(); 
       foreach ($stmt as $row)  

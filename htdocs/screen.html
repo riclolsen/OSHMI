@@ -204,6 +204,9 @@ tela = tela.replace(/%2F/g,'/');
 <div id='previewdiv' style='display:none;position:absolute;left:5px;top:5px;z-index:3;opacity:.95;box-shadow: 2px 2px 2px #888888;' onclick='evt.stopPropagation();evt.preventDefault();'>
 <iframe id='previewframe' width='700' height='480' frameborder='2'></iframe>
 </div>
+<div id='pinnedannotations_outer' style='position:absolute;right:5px;bottom:5px;max-height:80vh;overflow-y:auto;'>
+<div id='pinnedannotations' style='display:none;justify-content:flex-end;flex-flow:column;white-space:pre-line;font-family:tahoma;font-size:12px;padding:5px;opacity:1;position:relative;width:300px;'></div>
+</div>
 <div id='VEGACHARTS' style='display:none'></div>
 <script>
 

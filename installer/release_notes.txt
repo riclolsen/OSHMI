@@ -186,6 +186,23 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.12:
+
+Screen Viewer:
+ - Pinned annotations (#PIN on documental annotations).
+ - Fixed timeout problem writing annotations to redundant machine when down.
+
+PHP:
+ - Updated to version 7.4.1 x86 NTS.
+
+Linux:
+ - Added example of init.d script to run OSHMI as a Linux Daemon (background service).
+
+Chromium:
+ - Updated to version 79.0.3945.88 x86.
+
+-------------------------------------------------------------------
+
 Notes for version 6.11:
 
 QTester104:
@@ -212,7 +229,7 @@ PHP:
  - Updated php.ini to newest template.
 
 Events Viewer:
- - Fixed order of aggregated events for updated PHP 7.4.
+ - Fixed order of aggregated events for updated PHP 7.4 w/SQLite >= 3.30.
 
 Chromium:
  - Updated to version 78.0.3904.108.

@@ -62,6 +62,7 @@ var NUM_VAR_ANT = 0; // estado anterior da variável NUM_VAR | last state of NUM
 var SVGDoc = null; // documento SVG (DOM) | SVG Document
 var SVGSnap = null; // SVG Snap surface object
 var hvalues = [];
+var ScreenTagFilter = ""; // filter for alarm box and pinned annotations
 
 // variáveis para os diálogos de info/comando | variables to communicate with point access/command diaglogs
 var NPTO = 0, ID, ESTACAO, MODULO, DESC, ST_ON, ST_OFF, CNPTO, CID, CDESC, CST_ON, CST_OFF;
@@ -2174,6 +2175,7 @@ if ( typeof( inksage_labeltxt ) != 'undefined' )
                if ( inksage_labelvec[lbv].src != "" )
                if ( document.getElementById("almiframe").src == "" )          
                  {
+                 ScreenTagFilter = inksage_labelvec[lbv].src;
                  document.getElementById("almiframe").src = "almbox.html?SUBST=" + inksage_labelvec[lbv].src;
                  document.getElementById('almiframe').style.display = '';
                  } 
@@ -4444,6 +4446,94 @@ makeDraggable: function( obj )
     });  
 },
 
+pinnedAnnotations: function()
+  {  
+    if ( ScreenTagFilter.trim() === "" )
+      return;
+    var elem = document.getElementById("pinnedannotations");
+    if ( elem !== null)
+	  {	
+    var container = document.getElementById("pinnedannotations_outer");
+    elem.style.overflowX="hidden";
+    elem.style.width = ScreenViewer_PinnedAnnotationsWidth;
+    container.addEventListener("click" ,
+      function() 
+      {
+        if (this.style.maxHeight!='35px') 
+          {
+          this.style.maxHeight='35px'; 
+          this.style.overflowY="hidden";
+          elem.style.width = "28px";          
+        }
+        else 
+          {
+          this.style.maxHeight='80vh'; 
+          this.style.overflowY="auto";
+          elem.style.width = ScreenViewer_PinnedAnnotationsWidth;
+          }
+        this.scrollTop=0;
+        getPinnedAnnotations();
+      });
+    var getPinnedAnnotations = function ()
+	    {	
+		  fetch("annotation.php?FILTAG="+ScreenTagFilter+"&FILCONTENT=%23PIN").
+        then(function (response) {
+          return response;		  
+        }).
+        then(response => response.json()).
+          then(data => 
+            {
+            if ( data.length === 0 )
+              {
+                elem.style.display = "none";
+                return;
+              }
+
+            var text = "", html = "";
+            var anotstyle = "flex:1;flex-shrink:1;flex-grow:0;white-space:pre-line;margin:2px" +
+                            ";font-family:" + ScreenViewer_PinnedAnnotationsFont +
+                            ";font-size:12px" + ScreenViewer_PinnedAnnotationsFontSize +
+                            ";background-color:" + ScreenViewer_PinnedAnnotationsBGColor + 
+                            ";color:" + ScreenViewer_PinnedAnnotationsTextColor + 
+                            ";border:" + ScreenViewer_PinnedAnnotationsBorder +
+                            ";box-shadow: 2px 2px 4px gray " + 
+                            ";padding:4px;position:relative;";
+            html = html + "<div id='PINANNOT_COUNT" + "' style='text-align:center;" + anotstyle + ";border-radius:12px;'></div>";                            
+            data.forEach(function (val, key) 
+            {
+              html = html + "<div id='PINANNOT_" + val.POINTNUM + "' style='" + anotstyle + ";border-radius:5px;'></div>";
+            })
+            if (elem.innerHTML !== html)
+              elem.innerHTML = html;
+            elem.style.display="flex";
+            data.forEach(function (val, key) 
+            {
+              text = "";
+              if ( typeof TAGS[val.POINTNUM] == "string" )
+                text = text + ":: " + SUBS[val.POINTNUM] + " " + BAYS[val.POINTNUM] + " " + DCRS[val.POINTNUM] + "\n";
+              text = text + val.CONTENT.replace("#PIN", "") + "\n";
+              if (document.getElementById("PINANNOT_" + val.POINTNUM).textContent !== text)
+                document.getElementById("PINANNOT_" + val.POINTNUM).textContent = text;
+            })                        
+            if (document.getElementById("PINANNOT_COUNT").textContent !== data.length)
+              document.getElementById("PINANNOT_COUNT").textContent = data.length;
+            if ( container.style.maxHeight === '35px')
+              {
+                document.getElementById("PINANNOT_COUNT").style.display = "";
+              }
+            else  
+              document.getElementById("PINANNOT_COUNT").style.display = "none";
+            }).
+            catch(function (error) 
+              {
+              console.log(error);
+              });
+		}        
+	setTimeout(getPinnedAnnotations, 2000);
+	setInterval(getPinnedAnnotations, 15000);	
+	} 
+},
+
 init: function()
   {
   var i;  
@@ -4837,8 +4927,10 @@ if ( typeof(xPlain) == "undefined" )
       window.drgObject = null;
       }       
     });
-   
-  } // init
+	
+  WebSAGE.pinnedAnnotations();
+
+  } // init  
   
 }; // WebSAGE
 

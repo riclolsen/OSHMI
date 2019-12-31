@@ -4,7 +4,7 @@
 var Msg =
 {
 NomeProduto: 'OSHMI',
-VersaoProduto: '6.11',
+VersaoProduto: '6.12',
 
 NomeVisorTelas:       'Visor de Telas',
 NomeVisorEventos:     'Visor de Eventos',
