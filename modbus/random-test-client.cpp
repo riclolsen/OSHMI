@@ -1,5 +1,5 @@
 /* This software implements a Modbus driver for OSHMI.
- * Copyright - 2015-2017 - Ricardo Lastra Olsen
+ * Copyright - 2015-2020 - Ricardo Lastra Olsen
  * Derived from libmodbus project:
  * Copyright © 2001-2010 Stéphane Raimbault <stephane.raimbault@gmail.com>
  *
@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define VERSION "OSHMI Modbus Driver v.1.07 - Copyright 2015-2020 Ricardo L. Olsen"
+
 #include <stdio.h>
 #include <conio.h>
 #include <vector>
@@ -31,10 +33,9 @@
 #include <errno.h>
 
 #include "../src/modbus.h"
-#include "inifile.h"
+#include "cpp/INIReader.h"
 #include "oshmi_types.h"
 
-//#define MODBUSINI "c:\\oshmi\\conf\\modbus_queue.ini"
 #define MODBUSINI "c:\\oshmi\\conf\\modbus_queue.ini"
 #define OSHMIINI "c:\\oshmi\\conf\\hmi.ini"
 #define MAX_RTU 128
@@ -52,8 +53,6 @@
 
 #if defined(_WIN32)
 #define PLATFORM PLATFORM_WINDOWS
-#elif defined(__APPLE__)
-#define PLATFORM PLATFORM_MAC
 #else
 #define PLATFORM PLATFORM_UNIX
 #endif
@@ -70,6 +69,7 @@
 #include <fcntl.h>
 
 #endif
+#include <time.h>
 
 #if PLATFORM == PLATFORM_WINDOWS
 #pragma comment( lib, "wsock32.lib" )
@@ -93,12 +93,15 @@ struct mb_read
 
 struct mb_rturead
 {
-	modbus_t * ctx;
-	string ip;
-	int port;
-	int delay;
+	modbus_t * ctx = nullptr;
+	string ip = "";
+	int port = 502;
+	int slave_id = -1;
+	int delay = 0;
+	int timeout_ms = 500;
 	vector <mb_read> readhr;
 	vector <mb_read> readhr_float; // read consecutive 16 bit values as floats (assume 1st byte=exp, 2nd=MSB mant, 3rd=middle mant, 4=LSB mant so intel 2,3,0,1 order) 
+	vector <mb_read> readhr_bitstr; // read consecutive 16 bit values as 16 digital statuses to be converted to 16 digital points
 	vector <mb_read> readir;
 	vector <mb_read> readis;
 	vector <mb_read> readcs;
@@ -110,7 +113,7 @@ class OSHMIHandler
 {
 
 public:
-	int shandle;
+	int shandle = 0;
 	sockaddr_in address;
 	sockaddr_in saddress; // socket address
 	sockaddr_in saddress_red_driver; // socket address for redundant driver (different port from hmi)
@@ -167,9 +170,8 @@ public:
 	bool Initialize()
 	{
 
-		CIniFile hmi_iniFile(OSHMIINI);
-		hmi_iniFile.ReadFile();
-		IPAddrRed = hmi_iniFile.GetValue("REDUNDANCY", "OTHER_HMI_IP"); // ip address of redundant hmi
+		INIReader reader(OSHMIINI);
+		IPAddrRed = reader.Get("REDUNDANCY", "OTHER_HMI_IP", "");
 		SetRedundantHMIAddress(IPAddrRed.c_str());
 
 #if PLATFORM == PLATFORM_WINDOWS
@@ -309,7 +311,7 @@ public:
 		}
 	}
 
-	int receiveCommands(int * asdu, int * address, int * val, int * slave)
+	int receiveCommands(int * asdu, int * address, int * val, int * slave, int * bit )
 	{
 		unsigned char packet_data[1500];
 		unsigned int max_packet_size =
@@ -409,7 +411,7 @@ public:
 
 						*asdu = pmsg->tipo;
 						*address = pmsg->endereco;
-						*val = pmsg->setpoint;
+						*val = (int)pmsg->setpoint;
 						*slave = pmsg->utr;
 						return 1;
 					}
@@ -431,10 +433,33 @@ public:
 
 						*asdu = pmsg->tipo;
 						*address = pmsg->endereco;
-						*val = pmsg->setpoint;
+						*val = (int)pmsg->setpoint;
 						*slave = pmsg->utr;
 						return 1;
 					    }
+					break;
+					case 64: // 32bit bitstring command
+					   {
+						// returns confirmation of asdu upwards
+						t_msgsup msg;
+						msg.causa = 0x00;
+						msg.endereco = pmsg->endereco;
+						msg.tipo = pmsg->tipo;
+						msg.prim = 1;
+						msg.sec = pmsg->utr;
+						msg.signature = MSGSUP_SIG;
+						msg.taminfo = sizeof(int);
+						*(int*)msg.info = pmsg->onoff;
+						int packet_size = sizeof(int) * 7 + sizeof(int);
+						SendOSHMI(&msg, packet_size);
+
+						*asdu = pmsg->tipo;
+						*address = pmsg->endereco;
+						*val = pmsg->onoff;
+						*slave = pmsg->utr;
+						*bit = pmsg->sbo; // bit number in sbo
+						return 1;
+					   }
 					break;
 					} // switch
 				}
@@ -445,74 +470,94 @@ public:
 };
 
 // send a modbus command according to data received  from OSHMI
-void mb_command(int asdu, int address, int val, int slave)
+void mb_command(int asdu, int address, int val, int slave, int bit)
 {
 	// slave 1 means the first from queue of modbus.ini (RTU_1)
 	if (slave <= 0) // default slave is the first
 		slave = 1;
 	switch (asdu)
 		{
-		case 45:
+		case 45: // digital single -> write bit
 			modbus_write_bit(mb_queue[slave - 1].ctx, address, val);
-			printf("WRITE modbus_write_bit RTU:%d ADDR=%d VAL=%d\n", slave - 1, address, val);
+			printf("WRITE modbus_write_bit RTU:%d ADDR=%d VAL=%d\n", slave, address, val);
 			break;
-		case 46:
+		case 46: // digital double -> write 2 bits
 			uint8_t src[2];
 			src[0] = (val & 0x01) ? 1 : 0;
 			src[1] = (val & 0x02) ? 1 : 0;
 			modbus_write_bits(mb_queue[slave - 1].ctx, address, 2, src);
-			printf("WRITE modbus_write_bit RTU:%d ADDR=%d VAL=%d\n", slave - 1, address, val);
+			printf("WRITE modbus_write_bit RTU:%d ADDR=%d VAL=%d\n", slave, address, val);
 			break;
-		case 48:
+		case 48: // analog 16 bit -> write holding register
 		case 49:
 			modbus_write_register(mb_queue[slave - 1].ctx, address, val);
-			printf("WRITE modbus_write_register RTU:%d ADDR=%d VAL=%d\n", slave - 1, address, val);
+			printf("WRITE modbus_write_register RTU:%d ADDR=%d VAL=%d\n", slave, address, val);
+			break;
+		case 64: // 32bit bitstring (1st bit of bitstring at some bit position) -> read holding register, shift and mask bit and write back to the same holding register
+			uint16_t sval, one = 1;
+			modbus_read_registers(mb_queue[slave - 1].ctx, address, 1, &sval);
+			if (val == 0)
+				sval = sval & ~(one << bit); // reset bit
+			else
+				sval = sval | (one << bit); // raise bit
+			modbus_write_register(mb_queue[slave - 1].ctx, address, sval);
+			printf("WRITE modbus_write_register bitstring RTU:%d ADDR=%d VAL=%d BIT=%d\n", slave, address, val, bit);
 			break;
 		}
 }
 
-/* At each loop, the program works in the range ADDRESS_START to
- * ADDRESS_END then ADDRESS_START + 1 to ADDRESS_END and so on.
- */
 int main(void)
 {
-    modbus_t *ctx;
     int rc;
-
-    int nb_fail;
-    int nb_loop;
-    int addr;
-    int nb;
-    uint8_t *tab_rq_bits;
-    uint8_t *tab_rp_bits;
-    uint16_t *tab_rq_registers;
-    uint16_t *tab_rw_rq_registers;
-    uint16_t *tab_rp_registers;
-
-	cout << "OSHMI Modbus Driver v.1.01" << endl;
+	
+	cout << VERSION << endl;
 
 	OSHMIHandler oh;
 	oh.Initialize();
 
-	CIniFile mb_iniFile(MODBUSINI);
-	if ( mb_iniFile.ReadFile() )
+	INIReader reader(MODBUSINI);
+
 	for (int i = 0; i < MAX_RTU; i++)
 	{
 		string rtun = (string)"RTU_" + std::to_string(i+1);
-		if (mb_iniFile.FindKey( rtun ) == CIniFile::noID )
+		if (!reader.HasSection(rtun))
 		  break;
 		mb_rturead rtu;
-		rtu.ip = mb_iniFile.GetValue(rtun, "IP");
-		rtu.port = mb_iniFile.GetValueI(rtun, "PORT");
-		rtu.delay = mb_iniFile.GetValueI(rtun, "DELAY");
-		rtu.ctx = modbus_new_tcp(rtu.ip.c_str(), rtu.port);
-		modbus_set_debug(rtu.ctx, TRUE);
-		modbus_connect(rtu.ctx);
+		rtu.ip = reader.GetString(rtun, "IP", "127.0.0.1");
+		rtu.port = reader.GetInteger(rtun, "PORT", 502);
+		rtu.slave_id = reader.GetInteger(rtun, "SLAVE_ID", -1);
+		rtu.timeout_ms = reader.GetInteger(rtun, "TIMEOUT", 500);
+		rtu.delay = reader.GetInteger(rtun, "DELAY", 0);
+
+		if (i > 0 &&  mb_queue[i - 1].ip == rtu.ip && mb_queue[i - 1].port == rtu.port)
+			rtu.ctx = mb_queue[i - 1].ctx; // same previous IP and PORT, reuse connection
+		else
+		{
+			rtu.ctx = modbus_new_tcp(rtu.ip.c_str(), rtu.port);
+			modbus_set_debug(rtu.ctx, TRUE);
+			modbus_connect(rtu.ctx);
+			if (rtu.slave_id != -1)
+				modbus_set_slave(rtu.ctx, rtu.slave_id);
+			modbus_set_response_timeout(rtu.ctx, rtu.timeout_ms/1000 , (rtu.timeout_ms%1000) * 1000);
+			uint32_t old_response_to_sec;
+			uint32_t old_response_to_usec;
+			modbus_get_response_timeout(rtu.ctx, &old_response_to_sec, &old_response_to_usec);
+			printf("-------------------------------\n");
+			printf("RTU %d\n", i + 1);
+			printf("IP %s PORT %d\n", rtu.ip.c_str(), rtu.port);
+			if (rtu.slave_id == -1)
+				printf("SLAVE_ID [default]\n");
+			else
+			    printf("SLAVE_ID %d\n", rtu.slave_id);
+			printf("DELAY %d ms\n", rtu.delay);
+			printf ("TIMEOUT %d s : %d us \n", old_response_to_sec, old_response_to_usec);
+			printf("-------------------------------\n");
+		}
 
 		for (int j = 0; j < MAX_INPREAD; j++)
 		{
 			string key = (string)"READHR_" + std::to_string(j+1);
-			string aCnCp = mb_iniFile.GetValue(rtun, key);
+			string aCnCp = reader.GetString(rtun, key, "");
 			if (aCnCp == "")
 				break;
 			mb_read mbr;
@@ -525,7 +570,7 @@ int main(void)
 		for (int j = 0; j < MAX_INPREAD; j++)
 		{
 			string key = (string)"READHR_FLOAT_" + std::to_string(j + 1);
-			string aCnCp = mb_iniFile.GetValue(rtun, key);
+			string aCnCp = reader.GetString(rtun, key, "");
 			if (aCnCp == "")
 				break;
 			mb_read mbr;
@@ -537,8 +582,21 @@ int main(void)
 		}
 		for (int j = 0; j < MAX_INPREAD; j++)
 		{
+			string key = (string)"READHR_BITSTR_" + std::to_string(j + 1);
+			string aCnCp = reader.GetString(rtun, key, "");
+			if (aCnCp == "")
+				break;
+			mb_read mbr;
+			mbr.i104addr = 0;
+			sscanf(aCnCp.c_str(), "%d %d %d", &mbr.mbaddress, &mbr.numreg, &mbr.i104addr);
+			if (mbr.i104addr == 0)
+				mbr.i104addr = mbr.mbaddress;
+			rtu.readhr_bitstr.push_back(mbr);
+		}
+		for (int j = 0; j < MAX_INPREAD; j++)
+		{
 			string key = (string)"READIR_" + std::to_string(j+1);
-			string aCnCp = mb_iniFile.GetValue(rtun, key);
+			string aCnCp = reader.GetString(rtun, key, "");
 			if (aCnCp == "")
 				break;
 			mb_read mbr;
@@ -551,7 +609,7 @@ int main(void)
 		for (int j = 0; j < MAX_INPREAD; j++)
 		{
 			string key = (string)"READIS_" + std::to_string(j+1);
-			string aCnCp = mb_iniFile.GetValue(rtun, key);
+			string aCnCp = reader.GetString(rtun, key, "");
 			if (aCnCp == "")
 				break;
 			mb_read mbr;
@@ -564,7 +622,7 @@ int main(void)
 		for (int j = 0; j < MAX_INPREAD; j++)
 		{
 			string key = (string)"READCS_" + std::to_string(j+1);
-			string aCnCp = mb_iniFile.GetValue(rtun, key);
+			string aCnCp = reader.GetString(rtun, key, "");
 			if (aCnCp == "")
 				break;
 			mb_read mbr;
@@ -584,7 +642,7 @@ int main(void)
 
 	time_t timeant = 0;
 
-	int asdu, address, val, slave;
+	int asdu, address, val, slave, bit;
 
 	while (!_kbhit())
 	for (unsigned  i = 0; i < mb_queue.size(); i++)
@@ -602,8 +660,9 @@ int main(void)
 		}
 
 		// verify if there is commands to execute from OSHMI
-		if (oh.receiveCommands(&asdu, &address, &val, &slave))
-        	mb_command(asdu, address, val, slave);
+		bit = 0;
+		if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+        	mb_command(asdu, address, val, slave, bit);
 
 		t_msgsupsq msg;
 		msg.signature = MSGSUPSQ_SIG;
@@ -616,20 +675,28 @@ int main(void)
 		for (unsigned j = 0; j < mb_queue[i].readhr.size(); j++)
 		{
 			// verify if there is commands to execute from OSHMI
-			if (oh.receiveCommands(&asdu, &address, &val, &slave))
-				mb_command(asdu, address, val, slave);
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
 
 			max_pointspkt = PKTANA_MAXPOINTS;
+
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
 
 			uint16_t *tabreg = (uint16_t *)malloc(mb_queue[i].readhr[j].numreg * sizeof(uint16_t));
 			memset(tabreg, 0, mb_queue[i].readhr[j].numreg * sizeof(uint16_t));
 			rc = modbus_read_registers(mb_queue[i].ctx, mb_queue[i].readhr[j].mbaddress, mb_queue[i].readhr[j].numreg, tabreg);
 
 			if (rc != mb_queue[i].readhr[j].numreg) {
-				printf("ERROR modbus_read_registers (%d)\n", rc);
+				printf("RTU_%d ERROR modbus_read_registers (%d)\n", i+1, rc);
+				printf("%s\n", modbus_strerror(errno));
 				// printf("Address = %d\n", addr);
 				// nb_fail++;
 				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
+				Sleep(mb_queue[i].delay);
 				modbus_connect(mb_queue[i].ctx);
 				break;
 			}
@@ -637,7 +704,7 @@ int main(void)
 			count = 0;
 			for (int k = 0; k < mb_queue[i].readhr[j].numreg; k++)
 			{
-				printf("RTU: %s, Input %d = %d\n", mb_queue[i].ip.c_str(), mb_queue[i].readhr[j].mbaddress + k, (short)tabreg[k]);
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %d\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readhr[j].mbaddress + k, (short)tabreg[k]);
 
 				unsigned int * paddr = (unsigned int *)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(analogico_seq)));
 				*paddr = mb_queue[i].readhr[j].i104addr + k; // point number
@@ -667,20 +734,28 @@ int main(void)
 		for (unsigned j = 0; j < mb_queue[i].readir.size(); j++)
 		{
 			// verify if there is commands to execute from OSHMI
-			if (oh.receiveCommands(&asdu, &address, &val, &slave))
-				mb_command(asdu, address, val, slave);
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
 
 			max_pointspkt = PKTANA_MAXPOINTS;
+
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
 
 			uint16_t *tabreg = (uint16_t *)malloc(mb_queue[i].readir[j].numreg * sizeof(uint16_t));
 			memset(tabreg, 0, mb_queue[i].readir[j].numreg * sizeof(uint16_t));
 			rc = modbus_read_input_registers(mb_queue[i].ctx, mb_queue[i].readir[j].mbaddress, mb_queue[i].readir[j].numreg, tabreg);
 
 			if (rc != mb_queue[i].readir[j].numreg) {
-				printf("ERROR modbus_read_input_registers (%d)\n", rc);
+				printf("RTU_%d ERROR modbus_read_input_registers (%d)\n", i + 1, rc);
+				printf("%s\n", modbus_strerror(errno));
 				// printf("Address = %d\n", addr);
 				// nb_fail++;
 				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
+				Sleep(mb_queue[i].delay);
 				modbus_connect(mb_queue[i].ctx);
 				break;
 			}
@@ -688,7 +763,7 @@ int main(void)
 			count = 0;
 			for (int k = 0; k < mb_queue[i].readir[j].numreg; k++)
 			{
-				printf("RTU: %s, Input %d = %d\n", mb_queue[i].ip.c_str(), mb_queue[i].readir[j].mbaddress + k, (short)tabreg[k]);
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %d\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readir[j].mbaddress + k, (short)tabreg[k]);
 
 				unsigned int * paddr = (unsigned int *)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(analogico_seq)));
 				*paddr = mb_queue[i].readir[j].i104addr + k; // point number
@@ -715,6 +790,7 @@ int main(void)
 			Sleep(mb_queue[i].delay);
 		}
 		
+		// holding register as 32 bit floats
 		msg.signature = MSGSUPSQ_SIG;
 		msg.prim = 1;
 		msg.sec = i + 1; // RTU order or end of IP
@@ -725,20 +801,28 @@ int main(void)
 		for (unsigned j = 0; j < mb_queue[i].readhr_float.size(); j++) // each 2 16 bit holding registers as a float
 		{
 			// verify if there is commands to execute from OSHMI
-			if (oh.receiveCommands(&asdu, &address, &val, &slave))
-				mb_command(asdu, address, val, slave);
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
 
 			max_pointspkt = PKTFLT_MAXPOINTS;
 
-			uint16_t *tabreg = (uint16_t *)malloc(2 * mb_queue[i].readhr_float[j].numreg * sizeof(uint16_t));
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
+
+			uint16_t* tabreg = (uint16_t*)malloc(2 * mb_queue[i].readhr_float[j].numreg * sizeof(uint16_t));
 			memset(tabreg, 0, 2 * mb_queue[i].readhr_float[j].numreg * sizeof(uint16_t));
 			rc = modbus_read_registers(mb_queue[i].ctx, mb_queue[i].readhr_float[j].mbaddress, mb_queue[i].readhr_float[j].numreg * 2, tabreg);
 
 			if (rc != mb_queue[i].readhr_float[j].numreg * 2) {
-				printf("ERROR modbus_read_registers (%d)\n", rc);
+				printf("RTU_%d ERROR modbus_read_registers (%d)\n", i + 1, rc);
+				printf("%s\n", modbus_strerror(errno));
 				// printf("Address = %d\n", addr);
 				// nb_fail++;
 				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
+				Sleep(mb_queue[i].delay);
 				modbus_connect(mb_queue[i].ctx);
 				break;
 			}
@@ -751,13 +835,13 @@ int main(void)
 				u.bt[1] = tabreg[k];
 				u.bt[0] = tabreg[k + 1];
 
-				printf("RTU: %s, Input %d = %f\n", mb_queue[i].ip.c_str(), mb_queue[i].readhr_float[j].mbaddress + k, u.f);
+				printf("RTU_5d: %s, Port: %d, ID: %d  Input %d = %f\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readhr_float[j].mbaddress + k, u.f);
 
-				unsigned int * paddr = (unsigned int *)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(flutuante_seq)));
+				unsigned int* paddr = (unsigned int*)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(flutuante_seq)));
 				*paddr = mb_queue[i].readhr_float[j].i104addr + k / 2; // point number
 
 				// value and quality
-				flutuante_seq * obj = (flutuante_seq *)(paddr + 1);
+				flutuante_seq* obj = (flutuante_seq*)(paddr + 1);
 				obj->qds = 0;
 				obj->fr = u.f;
 
@@ -769,9 +853,69 @@ int main(void)
 					oh.SendOSHMI(&msg, packet_size);
 				}
 			}
+		}
+
+		// holding registers as 16 bit bitstrings
+		msg.signature = MSGSUPSQ_SIG;
+		msg.prim = 1;
+		msg.sec = i + 1; // RTU order or end of IP
+		msg.causa = 20;
+		msg.tipo = 151; // reserved for user ASDU number means 16bit bitstring
+		msg.taminfo = sizeof(analogico_seq); // value size for the type (not counting the 4 byte address)
+
+		for (unsigned j = 0; j < mb_queue[i].readhr_bitstr.size(); j++) // each 16 bit holding registers as bitstring
+		{
+			// verify if there is commands to execute from OSHMI
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
+
+			max_pointspkt = PKTFLT_MAXPOINTS;
+
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
+
+			uint16_t* tabreg = (uint16_t*)malloc(mb_queue[i].readhr_bitstr[j].numreg * sizeof(uint16_t));
+			memset(tabreg, 0, mb_queue[i].readhr_bitstr[j].numreg * sizeof(uint16_t));
+			rc = modbus_read_registers(mb_queue[i].ctx, mb_queue[i].readhr_bitstr[j].mbaddress, mb_queue[i].readhr_bitstr[j].numreg, tabreg);
+
+			if (rc != mb_queue[i].readhr_bitstr[j].numreg) {
+				printf("RTU_%d ERROR modbus_read_registers (%d)\n", i + 1, rc);
+				printf("%s\n", modbus_strerror(errno));
+				// printf("Address = %d\n", addr);
+				// nb_fail++;
+				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
+				Sleep(mb_queue[i].delay);
+				modbus_connect(mb_queue[i].ctx);
+				break;
+			}
+
+			count = 0;
+			for (int k = 0; k < mb_queue[i].readhr_bitstr[j].numreg; k++)
+			{					
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %d\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readhr_bitstr[j].mbaddress + k, tabreg[k]);
+
+				unsigned int* paddr = (unsigned int*)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(analogico_seq)));
+				*paddr = mb_queue[i].readhr_bitstr[j].i104addr + k; // point number
+
+				// value and quality
+				analogico_seq* obj = (analogico_seq*)(paddr + 1);
+				obj->qds = 0;
+				obj->sva = tabreg[k];
+
+				count++;
+				if (!((count + 1) % max_pointspkt)) // if next from packet send now (se a proxima eh do proximo pacote, manda agora)
+				{
+					msg.numpoints = count % max_pointspkt;
+					packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(analogico_seq));
+					oh.SendOSHMI(&msg, packet_size);
+				}
+			}
 
 			msg.numpoints = count % max_pointspkt;
-			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
+			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(analogico_seq));
 			oh.SendOSHMI(&msg, packet_size);
 
 			free(tabreg);
@@ -788,20 +932,27 @@ int main(void)
 		for (unsigned j = 0; j < mb_queue[i].readcs.size(); j++)
 		{
 			// verify if there is commands to execute from OSHMI
-			if (oh.receiveCommands(&asdu, &address, &val, &slave))
-				mb_command(asdu, address, val, slave);
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
 
 			max_pointspkt = PKTDIG_MAXPOINTS;
+
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
 
 			uint8_t *tabreg = (uint8_t *)malloc(mb_queue[i].readcs[j].numreg * sizeof(uint8_t));
 			memset(tabreg, 0, mb_queue[i].readcs[j].numreg * sizeof(uint8_t));
 			rc = modbus_read_bits(mb_queue[i].ctx, mb_queue[i].readcs[j].mbaddress, mb_queue[i].readcs[j].numreg, tabreg);
 
 			if (rc != mb_queue[i].readcs[j].numreg) {
-				printf("ERROR modbus_read_bits (%d)\n", rc);
+				printf("RTU_%d ERROR modbus_read_bits (%d)\n", i + 1, rc);
+				printf("%s\n", modbus_strerror(errno));
 				// printf("Address = %d\n", addr);
 				// nb_fail++;
 				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
 				modbus_connect(mb_queue[i].ctx);
 				break;
 			}
@@ -809,7 +960,7 @@ int main(void)
 			count = 0;
 			for (int k = 0; k < mb_queue[i].readcs[j].numreg; k++)
 			{
-				printf("RTU: %s, Input %d = %d\n", mb_queue[i].ip.c_str(), mb_queue[i].readcs[j].mbaddress + k, tabreg[k]);
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %d\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readcs[j].mbaddress + k, tabreg[k]);
 
 				unsigned int * paddr = (unsigned int *)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(digital_notime_seq)));
 				*paddr = mb_queue[i].readcs[j].i104addr + k; // point number
@@ -835,23 +986,37 @@ int main(void)
 			Sleep(mb_queue[i].delay);
 		}
 
+		msg.signature = MSGSUPSQ_SIG;
+		msg.prim = 1;
+		msg.sec = i + 1; // RTU order or end of IP
+		msg.causa = 20;
+		msg.tipo = 1;
+		msg.taminfo = sizeof(digital_notime_seq); // value size for the type (not counting the 4 byte address)
+
 		for (unsigned j = 0; j < mb_queue[i].readis.size(); j++)
 		{
 			// verify if there is commands to execute from OSHMI
-			if (oh.receiveCommands(&asdu, &address, &val, &slave))
-				mb_command(asdu, address, val, slave);
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
 
 			max_pointspkt = PKTDIG_MAXPOINTS;
+
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
 
 			uint8_t *tabreg = (uint8_t *)malloc(mb_queue[i].readis[j].numreg * sizeof(uint8_t));
 			memset(tabreg, 0, mb_queue[i].readis[j].numreg * sizeof(uint8_t));
 			rc = modbus_read_input_bits(mb_queue[i].ctx, mb_queue[i].readis[j].mbaddress, mb_queue[i].readis[j].numreg, tabreg);
 
 			if (rc != mb_queue[i].readis[j].numreg) {
-				printf("ERROR modbus_read_input_status (%d)\n", rc);
+				printf("RTU_%d ERROR modbus_read_input_bits (%d)\n", i + 1, rc);
+				printf("%s\n", modbus_strerror(errno));
 				// printf("Address = %d\n", addr);
 				// nb_fail++;
 				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
 				modbus_connect(mb_queue[i].ctx);
 				break;
 			}
@@ -859,7 +1024,7 @@ int main(void)
 			count = 0;
 			for (int k = 0; k < mb_queue[i].readis[j].numreg; k++)
 			{
-				printf("RTU: %s, Input %d = %d\n", mb_queue[i].ip.c_str(), mb_queue[i].readis[j].mbaddress + k, tabreg[k]);
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %d\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readis[j].mbaddress + k, tabreg[k]);
 
 				unsigned int * paddr = (unsigned int *)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(digital_notime_seq)));
 				*paddr = mb_queue[i].readis[j].i104addr + k; // point number
@@ -891,221 +1056,6 @@ int main(void)
 		modbus_close(mb_queue[i].ctx);
 		modbus_free(mb_queue[i].ctx);
 	}
-
-
-    // RTU 
-/*
-    ctx = modbus_new_rtu("/dev/ttyUSB0", 19200, 'N', 8, 1);
-    modbus_set_slave(ctx, SERVER_ID);
-*/
-	/*
-
-    // TCP 
-    ctx = modbus_new_tcp("127.0.0.1", 502);
-    modbus_set_debug(ctx, TRUE);
-
-    if (modbus_connect(ctx) == -1) {
-        fprintf(stderr, "Connection failed: %s\n",
-                modbus_strerror(errno));
-        modbus_free(ctx);
-        return -1;
-    }
-	
-
-	uint16_t inpreg;
-	while (!_kbhit())
-	{
-		rc = modbus_read_registers(ctx, 30001, 1, &inpreg);
-		if (rc != 1) {
-			printf("ERROR modbus_read_registers single (%d)\n", rc);
-			// printf("Address = %d\n", addr);
-			// nb_fail++;
-			modbus_flush(ctx);
-			modbus_connect(ctx);
-		}
-		else {
-			printf("Input 30001=%d\n", inpreg);
-		}
-		Sleep(400);
-	}
-
-	/*
-	// Allocate and initialize the different memory spaces
-	nb = ADDRESS_END - ADDRESS_START;
-
-	tab_rq_bits = (uint8_t *) malloc(nb * sizeof(uint8_t));
-	memset(tab_rq_bits, 0, nb * sizeof(uint8_t));
-
-	tab_rp_bits = (uint8_t *) malloc(nb * sizeof(uint8_t));
-	memset(tab_rp_bits, 0, nb * sizeof(uint8_t));
-
-	tab_rq_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
-	memset(tab_rq_registers, 0, nb * sizeof(uint16_t));
-
-	tab_rp_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
-	memset(tab_rp_registers, 0, nb * sizeof(uint16_t));
-
-	tab_rw_rq_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
-	memset(tab_rw_rq_registers, 0, nb * sizeof(uint16_t));
-
-	nb_loop = nb_fail = 0;
-	while (nb_loop++ < LOOP) {
-        for (addr = ADDRESS_START; addr <= ADDRESS_END; addr++) {
-            int i;
-
-            // Random numbers (short) 
-            for (i=0; i<nb; i++) {
-                tab_rq_registers[i] = (uint16_t) (65535.0*rand() / (RAND_MAX + 1.0));
-                tab_rw_rq_registers[i] = ~tab_rq_registers[i];
-                tab_rq_bits[i] = tab_rq_registers[i] % 2;
-            }
-            nb = ADDRESS_END - addr;
-
-            // WRITE BIT 
-            rc = modbus_write_bit(ctx, addr, tab_rq_bits[0]);
-            if (rc != 1) {
-                printf("ERROR modbus_write_bit (%d)\n", rc);
-                printf("Address = %d, value = %d\n", addr, tab_rq_bits[0]);
-                nb_fail++;
-            } else {
-                rc = modbus_read_bits(ctx, addr, 1, tab_rp_bits);
-                if (rc != 1 || tab_rq_bits[0] != tab_rp_bits[0]) {
-                    printf("ERROR modbus_read_bits single (%d)\n", rc);
-                    printf("address = %d\n", addr);
-                    nb_fail++;
-                }
-            }
-
-            // MULTIPLE BITS 
-            rc = modbus_write_bits(ctx, addr, nb, tab_rq_bits);
-            if (rc != nb) {
-                printf("ERROR modbus_write_bits (%d)\n", rc);
-                printf("Address = %d, nb = %d\n", addr, nb);
-                nb_fail++;
-            } else {
-                rc = modbus_read_bits(ctx, addr, nb, tab_rp_bits);
-                if (rc != nb) {
-                    printf("ERROR modbus_read_bits\n");
-                    printf("Address = %d, nb = %d\n", addr, nb);
-                    nb_fail++;
-                } else {
-                    for (i=0; i<nb; i++) {
-                        if (tab_rp_bits[i] != tab_rq_bits[i]) {
-                            printf("ERROR modbus_read_bits\n");
-                            printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
-                                   addr, tab_rq_bits[i], tab_rq_bits[i],
-                                   tab_rp_bits[i], tab_rp_bits[i]);
-                            nb_fail++;
-                        }
-                    }
-                }
-            }
-
-            // SINGLE REGISTER 
-            rc = modbus_write_register(ctx, addr, tab_rq_registers[0]);
-            if (rc != 1) {
-                printf("ERROR modbus_write_register (%d)\n", rc);
-                printf("Address = %d, value = %d (0x%X)\n",
-                       addr, tab_rq_registers[0], tab_rq_registers[0]);
-                nb_fail++;
-            } else {
-                rc = modbus_read_registers(ctx, addr, 1, tab_rp_registers);
-                if (rc != 1) {
-                    printf("ERROR modbus_read_registers single (%d)\n", rc);
-                    printf("Address = %d\n", addr);
-                    nb_fail++;
-                } else {
-                    if (tab_rq_registers[0] != tab_rp_registers[0]) {
-                        printf("ERROR modbus_read_registers single\n");
-                        printf("Address = %d, value = %d (0x%X) != %d (0x%X)\n",
-                               addr, tab_rq_registers[0], tab_rq_registers[0],
-                               tab_rp_registers[0], tab_rp_registers[0]);
-                        nb_fail++;
-                    }
-                }
-            }
-
-            // MULTIPLE REGISTERS 
-            rc = modbus_write_registers(ctx, addr, nb, tab_rq_registers);
-            if (rc != nb) {
-                printf("ERROR modbus_write_registers (%d)\n", rc);
-                printf("Address = %d, nb = %d\n", addr, nb);
-                nb_fail++;
-            } else {
-                rc = modbus_read_registers(ctx, addr, nb, tab_rp_registers);
-                if (rc != nb) {
-                    printf("ERROR modbus_read_registers (%d)\n", rc);
-                    printf("Address = %d, nb = %d\n", addr, nb);
-                    nb_fail++;
-                } else {
-                    for (i=0; i<nb; i++) {
-                        if (tab_rq_registers[i] != tab_rp_registers[i]) {
-                            printf("ERROR modbus_read_registers\n");
-                            printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
-                                   addr, tab_rq_registers[i], tab_rq_registers[i],
-                                   tab_rp_registers[i], tab_rp_registers[i]);
-                            nb_fail++;
-                        }
-                    }
-                }
-            }
-            // R/W MULTIPLE REGISTERS 
-            rc = modbus_write_and_read_registers(ctx,
-                                                 addr, nb, tab_rw_rq_registers,
-                                                 addr, nb, tab_rp_registers);
-            if (rc != nb) {
-                printf("ERROR modbus_read_and_write_registers (%d)\n", rc);
-                printf("Address = %d, nb = %d\n", addr, nb);
-                nb_fail++;
-            } else {
-                for (i=0; i<nb; i++) {
-                    if (tab_rp_registers[i] != tab_rw_rq_registers[i]) {
-                        printf("ERROR modbus_read_and_write_registers READ\n");
-                        printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
-                               addr, tab_rp_registers[i], tab_rw_rq_registers[i],
-                               tab_rp_registers[i], tab_rw_rq_registers[i]);
-                        nb_fail++;
-                    }
-                }
-
-                rc = modbus_read_registers(ctx, addr, nb, tab_rp_registers);
-                if (rc != nb) {
-                    printf("ERROR modbus_read_registers (%d)\n", rc);
-                    printf("Address = %d, nb = %d\n", addr, nb);
-                    nb_fail++;
-                } else {
-                    for (i=0; i<nb; i++) {
-                        if (tab_rw_rq_registers[i] != tab_rp_registers[i]) {
-                            printf("ERROR modbus_read_and_write_registers WRITE\n");
-                            printf("Address = %d, value %d (0x%X) != %d (0x%X)\n",
-                                   addr, tab_rw_rq_registers[i], tab_rw_rq_registers[i],
-                                   tab_rp_registers[i], tab_rp_registers[i]);
-                            nb_fail++;
-                        }
-                    }
-                }
-            }
-        }
-
-        printf("Test: ");
-        if (nb_fail)
-            printf("%d FAILS\n", nb_fail);
-        else
-            printf("SUCCESS\n");
-    }
-
-	// Free the memory 
-free(tab_rq_bits);
-free(tab_rp_bits);
-free(tab_rq_registers);
-free(tab_rp_registers);
-free(tab_rw_rq_registers);
-
-
-    // Close the connection 
-    modbus_close(ctx);
-    modbus_free(ctx);
-	*/
 
     return 0;
 }

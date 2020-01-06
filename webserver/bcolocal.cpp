@@ -454,39 +454,22 @@ if (fp)
       break;
 
     int cnterr = 0;
+    nf = sscanf(buff, "%d %d %s %c %s %d %d %d %d %c %d %d %f %f %d %d %d %lf", &nponto, &endereco, tag, &tipo, alarme, &ocr, &tpeq, &info, &origem, &c, &utr, &asdu, &kconv1, &kconv2, &nponto_sup, &estalm, &prior, &valor_tipico);
+    cntline++;
+    if ( nf < 16 )
+       {
+       if ( cnterr == 0 )
+         Loga( (String)"Error in point list! Line with insufficient parameters: " + cntline );
+       cnterr++;
+       continue;
+       }
 
-    /*
-    if ( versao <= 1 )
-      { // versao 1
-      nf = sscanf(buff, "%d %s %c %s %d %d %d %d %c %d %d %f %f %d %d %d", &nponto, tag, &tipo, alarme, &ocr, &tpeq, &info, &origem, &c, &utr, &asdu, &kconv1, &kconv2, &nponto_sup, &estalm, &prior);
-      cntline++;
-      if ( nf < 14 )
-         {
-         if ( cnterr == 0 )
-           Loga( (String)"Error in point list! Line with insuficient parameters: " + cntline );
-         cnterr++;
-         continue;
-         }
-      endereco = nponto; // não tem na versao 1
-      valor_tipico = 0;  // não tem na versao 1
-      }
-    else
-    */
-      { // versao 2 ou maior
-      nf = sscanf(buff, "%d %d %s %c %s %d %d %d %d %c %d %d %f %f %d %d %d %lf", &nponto, &endereco, tag, &tipo, alarme, &ocr, &tpeq, &info, &origem, &c, &utr, &asdu, &kconv1, &kconv2, &nponto_sup, &estalm, &prior, &valor_tipico);
-      cntline++;
-      if ( nf < 16 )
-         {
-         if ( cnterr == 0 )
-           Loga( (String)"Error in point list! Line with insufficient parameters: " + cntline );
-         cnterr++;
-         continue;
-         }
+    if ( endereco == 0 ) // address=0 means point number = address
+      endereco = nponto; // endereco==0 significa que é o endereco físico do protocolo é igual ao nponto
 
-      if ( endereco == 0 )
-        endereco = nponto; // endereco==0 significa que é o endereco físico do protocolo é igual ao nponto
-      }
-
+    if ( origem == CODORIGEM_COMANDO && endereco==-1 ) // address=-1 means address=0 (for commands)
+      endereco = 0;
+                                                                                                   
     // descarta ponto de comando sem supervisionado associado
     if ( origem == CODORIGEM_COMANDO && nponto_sup<=0 )
       {
@@ -537,23 +520,29 @@ if (fp)
     // quando programado utr = 0, aceitará o ponto vindo de qualquer utr
     endereco = endereco & 0x00FFFFFF; // endereco com 3 bytes
     int findpt;
-    String SIP_BDTR1 = pIniIHM->ReadString("BDTR","IP_BDTR1", "").Trim();
-    if ( SIP_BDTR1 == "" ) // se não tem bdtr, mapeia pelo endereço e utr
-      {
-      findpt = (utr << 24) | endereco;
-      }
-    else // se o protocolo é bdtr, mapeia somente pelo endereço
-      {
-      findpt = endereco;
-      }
+    // String SIP_BDTR1 = pIniIHM->ReadString("BDTR","IP_BDTR1", "").Trim();
+    //if ( SIP_BDTR1 == "" ) // se não tem bdtr, mapeia pelo endereço e utr
+    //  {
 
-    if ( NPontoPorEndUTR( endereco, utr ) != 0 )
+    findpt = (utr << 24) | endereco;
+
+    //  }
+    //else // se o protocolo é bdtr, mapeia somente pelo endereço
+    //  {
+    //  findpt = endereco;
+    //  }
+
+    if ( NPontoPorEndUTR( endereco, utr ) != 0 &&
+         origem != CODORIGEM_COMANDO &&  // command can replicate addreses
+         asdu != 151 ) // bistring statuses can have the same addresses
       { // já tem endereço cadastrado
       Loga( (String)"Error in point list! Duplicated address: " + endereco );
       cnterr++;
       continue;
       }
-    MapNPontoPorEndUTR[ findpt ] = nponto;
+
+    if( NPontoPorEndUTR( endereco, utr ) == 0 ) // map only the first point
+      MapNPontoPorEndUTR[ findpt ] = nponto;
 
     strncpy( descricao, strchr(buff, '\"') + 1, sizeof(descricao) - 1 );
     char * endquoteptr = strchr(descricao, '\"');
@@ -717,28 +706,8 @@ if (fp)
         Loga( (String)"Missing '/' in point state message! Line: " + cntline );
         }
       }
-    /*
-    // determina ESTACAO, MODULO E DESCRICAO conforme a versão do arquivo
-    if ( versao < 3 )
-      { // deduz SE pelo ID, MODULO pelo início da DESCRICAO
-      strncpy( Pontos[nponto].Estacao, tag, 4);
-      Pontos[nponto].Estacao[4] = 0;
-      if ( Pontos[nponto].Estacao[3] == '-' )
-        Pontos[nponto].Estacao[3] = 0;
 
-      pch = strchr(descricao, '-');
-      if ( pch != NULL )
-        {
-        strncpy( Pontos[nponto].Modulo, descricao, pch-descricao );
-        Pontos[nponto].Modulo[pch-descricao] = 0;
-
-        strncpy( Pontos[nponto].Descricao, pch + 1, sizeof(Pontos[nponto].Descricao) );
-        Pontos[nponto].Descricao[sizeof(Pontos[nponto].Descricao) - 1] = 0;
-        }
-      }
-    else
-    */
-      { // da versão 3 em diante muda a descrição, onde vem os 3 campos SE~VAO~DESCRICAO separados pelo ~
+      // da versão 3 em diante muda a descrição, onde vem os 3 campos SE~VAO~DESCRICAO separados pelo ~
       pch = strchr(descricao, '~');
 
       if ( pch != NULL )
@@ -758,7 +727,6 @@ if (fp)
           Pontos[nponto].Descricao[sizeof(Pontos[nponto].Descricao)-1] = 0;
           }
         }
-      }
 
     if ( tipo == 'D' && tpeq==CODTPEQ_DJ && info==0 && origem!=CODORIGEM_COMANDO && ocr==2 ) // se é estado de disjuntor
       { // relaciona o estado do DJ com o módulo (para uso do simulador)
@@ -918,14 +886,14 @@ strcpy(Pontos[NPONTO_ACERTO_HORA].EstadoOff,"TIME_NOT_SYNC");
 strcpy(Pontos[NPONTO_ACERTO_HORA].EstadoOn,"TIME_SYNC");
 strcpy(Pontos[NPONTO_ACERTO_HORA].Descricao,"Time Adjust");
 
-EscrevePonto(NPONTO_COMUNIC_BDTR, 1, 0x01, 1);
-Pontos[NPONTO_COMUNIC_BDTR].TipoAD = 'D';
-Pontos[NPONTO_COMUNIC_BDTR].Endereco = NPONTO_COMUNIC_BDTR;
-strcpy(Pontos[NPONTO_COMUNIC_BDTR].Estacao,"HMIX");
-strcpy(Pontos[NPONTO_COMUNIC_BDTR].Tag,"HMIX-BDTR_COMM_ST");
-strcpy(Pontos[NPONTO_COMUNIC_BDTR].EstadoOff,"NO_COMM");
-strcpy(Pontos[NPONTO_COMUNIC_BDTR].EstadoOn,"NORMAL");
-strcpy(Pontos[NPONTO_COMUNIC_BDTR].Descricao,"BDTR comm status");
+//EscrevePonto(NPONTO_COMUNIC_BDTR, 1, 0x01, 1);
+//Pontos[NPONTO_COMUNIC_BDTR].TipoAD = 'D';
+//Pontos[NPONTO_COMUNIC_BDTR].Endereco = NPONTO_COMUNIC_BDTR;
+//strcpy(Pontos[NPONTO_COMUNIC_BDTR].Estacao,"HMIX");
+//strcpy(Pontos[NPONTO_COMUNIC_BDTR].Tag,"HMIX-BDTR_COMM_ST");
+//strcpy(Pontos[NPONTO_COMUNIC_BDTR].EstadoOff,"NO_COMM");
+//strcpy(Pontos[NPONTO_COMUNIC_BDTR].EstadoOn,"NORMAL");
+//strcpy(Pontos[NPONTO_COMUNIC_BDTR].Descricao,"BDTR comm status");
 
 EscrevePonto(NPONTO_COMUNIC_I104, 1, 0x01, 1);
 Pontos[NPONTO_COMUNIC_I104].TipoAD = 'D';
@@ -2133,7 +2101,7 @@ int bp;
     if ( ((*it).first)>=NPONTO_SIST_MIN        &&  // se for ponto de sistema, não processa timeout
          ((*it).first)<=NPONTO_SIST_MAX        &&
          ((*it).first)!=NPONTO_COMUNIC_I104    &&  // exceto estes do 104, BDTR e acerto de hora
-         ((*it).first)!=NPONTO_COMUNIC_BDTR    &&
+         // ((*it).first)!=NPONTO_COMUNIC_BDTR    &&
          ((*it).first)!=NPONTO_ACERTO_HORA )
       continue;
 
@@ -2145,7 +2113,9 @@ int bp;
       if ( ((*it).second).TagTempo + ((*it).second).Timeout < dt.CurrentDateTime() )
         {
         // para dar falha de comunicação do protocolo quando não é atualizado por tempo maior que a integridade
-        if (((*it).first)==NPONTO_COMUNIC_I104 || ((*it).first)==NPONTO_COMUNIC_BDTR || ((*it).first)==NPONTO_ACERTO_HORA)
+        if (((*it).first)==NPONTO_COMUNIC_I104 ||
+            // ((*it).first)==NPONTO_COMUNIC_BDTR ||
+            ((*it).first)==NPONTO_ACERTO_HORA)
           {
           ((*it).second).QualAnt.Byte=((*it).second).Qual.Byte;
           ((*it).second).Qual.Byte=ESTDUP_OFF;
@@ -2778,6 +2748,31 @@ try
           }
           break;
 
+      case 151: // 16 bit bitstring (user reserved ASDU)
+          {
+          analogico_seq * ana = (analogico_seq *) ptinfo;
+          short intval = ana->sva;
+          for ( int i=0; i<16; i++ )
+            {
+            TPonto &pto = BL.GetRefPonto( nponto, found );
+            if (found && pto.TipoAD == 'D')
+              {
+              if (intval & 0x0001)
+                qual.Byte = 0x02;
+              else
+                qual.Byte = 0x01;
+              EscrevePonto( nponto, qual.Estado, qual.Byte, 0 , 1, temtag, causa == 3 || causa == 11 || causa == 12 );
+              }
+            else
+              {
+              return 0;
+              }
+            intval = intval >> 1;
+            nponto++;
+            }
+          fmVeDados->PulseI104(); // pulse IEC 104 LED
+          }
+          return 0;
       // retorno (ack/nack) dos comandos
 
       // digitals

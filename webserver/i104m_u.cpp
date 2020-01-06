@@ -5,7 +5,7 @@
 //
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2019 - Ricardo L. Olsen
+	Copyright 2008-2020 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,7 +76,10 @@ else
   {
   msgcmd.endereco = pt.Endereco;
   msgcmd.tipo = pt.CmdASDU;
-  msgcmd.sbo = pt.CmdSBO;
+  if (pt.CmdASDU == 64) // for bitstring ASDU, indicate the bit in SBO
+    msgcmd.sbo = (int)pt.KConv1;
+  else
+    msgcmd.sbo = pt.CmdSBO;
   msgcmd.qu = pt.CmdDuracao;
   msgcmd.utr = pt.UTR;
   }
@@ -108,7 +111,7 @@ IncluiEvento( nponto,
               0 );
 
 if ( cbLog->Checked )
-   logaln( (String)"< CMD Type:" + (String)msgcmd.tipo +
+   logaln( (String)"< CMD ASDU Type:" + (String)msgcmd.tipo +
            (String)" Address:" + (String)msgcmd.endereco +
            (String)" RTU:" + (String)msgcmd.utr +
            (String)" SBO:" + (String)msgcmd.sbo +
@@ -317,7 +320,7 @@ try
     if ( cbLog->Checked )
        {
        logaln( (String)"> From:" + ABinding->PeerIP );
-       logaln( (String)"> Type:" + (String)pmsgsup->tipo +
+       logaln( (String)"> ASDU Type:" + (String)pmsgsup->tipo +
                (String)" Address:" + (String)pmsgsup->endereco +
                (String)" Sec:" + (String)pmsgsup->sec +
                (String)" Cause:" + (String)pmsgsup->causa +
@@ -362,6 +365,9 @@ try
           break;
         case 15:
           incinfo = 4 + 5;
+          break;
+        case 151: // 16 bit bistring
+          incinfo = 4 + 3;
           break;
         default:
           cntPacktDisc++;

@@ -656,7 +656,9 @@ callServer : function()
                    '&G=' + WebSAGE.g_gpstime + 
                    "&F=" + filtro + 
                    "&B=cbf_F",
-                   WebSAGE.g_timeOutFalha
+				   null,
+                   WebSAGE.g_timeOutFalha,
+				   2
 					       );
         WebSAGE.g_pass++;
         

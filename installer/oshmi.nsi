@@ -1,6 +1,6 @@
 ; oshmi.nsi
 ; OSHMI installer script
-; Copyright 2008-2019 - Ricardo L. Olsen
+; Copyright 2008-2020 - Ricardo L. Olsen
 
 ; NSIS (Nullsoft Scriptable Install System) - http://nsis.sourceforge.net/Main_Page
 
@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.12"
-!define VERSION_ "6.12.0.0"
+!define VERSION "v.6.13"
+!define VERSION_ "6.13.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -46,7 +46,7 @@ VIProductVersion ${VERSION_}
 VIAddVersionKey ProductName "OSHMI (Open Substation HMI)"
 VIAddVersionKey Comments "SCADA HMI Software"
 VIAddVersionKey CompanyName "Ricardo Olsen"
-VIAddVersionKey LegalCopyright "Copyright 2008-2019 Ricardo L. Olsen"
+VIAddVersionKey LegalCopyright "Copyright 2008-2020 Ricardo L. Olsen"
 VIAddVersionKey FileDescription "OSHMI Installer"
 VIAddVersionKey FileVersion ${VERSION}
 VIAddVersionKey ProductVersion ${VERSION}
@@ -362,8 +362,9 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\extprogs\vcredist_x86.exe"
   File /a "..\extprogs\vcredist_x86-2012.exe"
   File /a "..\extprogs\vcredist_x86-2013.exe"
-  File /a "..\extprogs\vcredist_x86-2015.exe"
-  File /a "..\extprogs\vcredist_x86-2017.exe"
+  ;File /a "..\extprogs\vcredist_x86-2015.exe"
+  ;File /a "..\extprogs\vcredist_x86-2017.exe"
+  File /a "..\extprogs\vcredist_x86-15-17-19.exe"
 
   SetOutPath $INSTDIR\browser
   File /a /r "..\browser\*.*"
@@ -470,8 +471,9 @@ Section "" ; empty string makes it hidden, so would starting with -
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86.exe" /q'
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2012.exe" /q'
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2013.exe" /q'
-  nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2015.exe" /q'
-  nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2017.exe" /q'
+  ;nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2015.exe" /q'
+  ;nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2017.exe" /q'
+  nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-15-17-19.exe" /q'
 
 ;  MessageBox MB_YESNO "Wish to substitute Windows Shell by the HMIShell? \nWARNING: ANSWERING YES WILL BLOCK THE MACHINE FOR THE OPERATOR" IDNO InstFim 
 ; LabelShell:

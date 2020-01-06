@@ -1,5 +1,5 @@
 OSHMI - Open Substation HMI
-    Copyright 2008-2019 - Ricardo L. Olsen 
+    Copyright 2008-2020 - Ricardo L. Olsen 
     (https://www.linkedin.com/in/ricardo-olsen/)
 
     This program is free software: you can redistribute it and/or modify
@@ -183,6 +183,29 @@ S7 Driver:
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 6.13:
+
+Modbus client driver:
+ - Updated to version 1.07.
+ - Libmodbus updated to version 3.1.6.
+ - Shared connection to repeated IP/Port.
+ - Fixed problem with RTU reconnection.
+ - Supported setting of Slave ID.
+ - Supported holding registers as 16 bit bitstrings of digital statuses for read and write.
+ - Supported setting of timeouts for each slave.
+ - Better ini file reader.
+ - Better logs.
+ - Built with Visual Studio 2019. 
+
+Webserver.exe:
+ - I104M transport now supports ASDU 151(16 bit bitstring) and 64 (32 bit bitstring command).
+ - Allows to write commands to address 0 (zero) of MODBUS using address = "-1" (minus one).
+
+Events Viewer:
+ - Fixed timeout and retries on Ajax call of events list.
 
 -------------------------------------------------------------------
 
