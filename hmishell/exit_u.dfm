@@ -27,10 +27,10 @@ object fmSair: TfmSair
   object lbVersion: TLabel
     Left = 40
     Top = 0
-    Width = 194
+    Width = 200
     Height = 13
     Alignment = taCenter
-    Caption = 'OSHMI SHELL V6.0 © 2008-2019 - RLO'
+    Caption = 'OSHMI SHELL V6.14 © 2008-2020 - RLO'
   end
   object lbSenha: TLabel
     Left = 24

@@ -186,6 +186,46 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.15:
+
+Screen Viewer:
+ - Better error handling for documental annotations.
+
+Webserver.exe:
+ - Change component that do some GET HTTP requests (redundancy only).
+
+-------------------------------------------------------------------
+
+Notes for version 6.14:
+
+HMI Shell:
+ - Updated to version 6.14.
+ - Do not try to close Webserver directly when logoff/restart/turnoff (leave to etc/do_*.bat scripts).
+
+Modbus client:
+ - Updated to version 1.09.
+ - Fixed memory leak.
+ - New config option to change/disable I104M listen TCP port.
+ - Can be combined with other protocol drivers in monitor only mode (no commands).
+ 
+DNP3 client:
+ - Updated to version 0.72.
+ - OpenDNP3 library updated to version 2.3.2.
+ - Better ini file reader.
+ - New config option to change/disable I104M listen TCP port.
+ - Can be combined with other protocol drivers in monitor only mode (no commands).
+
+Chromium:
+ - Updated to version 80.0.3987.87.
+
+PHP:
+ - Updated to version 7.4.2 x86 NTS.
+
+SQLite:
+ - Updated to version 3.31.1.
+
+-------------------------------------------------------------------
+
 Notes for version 6.13:
 
 Modbus client driver:

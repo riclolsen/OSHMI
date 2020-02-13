@@ -23,6 +23,7 @@
 #include <sstream>
 #include <time.h> 
 #include "MySOEHandler.h"
+#include "cpp/INIReader.h"
 
 using namespace std;
 
@@ -49,62 +50,66 @@ namespace opendnp3
 {
 MySOEHandler::MySOEHandler()
 {
-	InitializeSockets();
-
-	sockaddr_in address;
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons((unsigned short)I104M_LISTENUDPPORT);
-
-	if (shandle == 0)
-	{
-		shandle = socket(AF_INET,
-			SOCK_DGRAM,
-			IPPROTO_UDP);
-		
-		if (shandle <= 0)
-		{
-			std::cout << "Failed to create socket" << std::endl;
-			exit(21);
-		}
-
-		if (bind(shandle,
-			(const sockaddr*)&address,
-			sizeof(sockaddr_in)) < 0)
-		{
-			std::cout << "Failed to bind socket" << std::endl;
-			exit(22);
-		}
-
-	}
-#if PLATFORM == PLATFORM_MAC || PLATFORM == PLATFORM_UNIX
-
-	int nonBlocking = 1;
-	if (fcntl(handle,
-		F_SETFL,
-		O_NONBLOCK,
-		nonBlocking) == -1)
-	{
-		std::cout << "Failed to set non-blocking" << std::endl;
-		exit(23);
-	}
-
-#elif PLATFORM == PLATFORM_WINDOWS
-
-	DWORD nonBlocking = 1;
-	if (ioctlsocket(shandle,
-		FIONBIO,
-		&nonBlocking) != 0)
-	{
-		std::cout << "Failed to set non-blocking" << std::endl;
-		exit(23);
-	}
-
-#endif
-
 	saddress.sin_family = AF_INET;
 	saddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	saddress.sin_port = htons((unsigned short)I104M_WRITEUDPPORT);
+
+	if (shandle == 0)
+        Init();
+}
+
+void MySOEHandler::Init() 
+{
+    InitializeSockets();
+
+	sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons((unsigned short)I104MListenPort);
+
+    if (shandle == 0)
+    {
+        INIReader reader(DNP3INI);
+        I104MListenPort = reader.GetInteger("I104M", "UDP_PORT_LISTEN", I104M_LISTENUDPPORT_DEFAULT);
+        if (I104MListenPort == 0)
+            cout << "DISABLED I104M UDP PORT FOR LISTEN (NO OSHMI COMMANDS)!" << endl;
+        else
+            cout << "I104M LISTEN UDP PORT (OSHMI COMMANDS) = " << I104MListenPort << endl;
+
+		shandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+        if (shandle <= 0)
+        {
+            std::cout << "Failed to create socket" << std::endl;
+            exit(21);
+        }
+
+        if (I104MListenPort != 0)
+            if (bind(shandle, (const sockaddr*)&address, sizeof(sockaddr_in)) < 0)
+            {
+                std::cout << "Failed to bind socket" << std::endl;
+                exit(22);
+            }
+    }
+#if PLATFORM == PLATFORM_MAC || PLATFORM == PLATFORM_UNIX
+
+    int nonBlocking = 1;
+    if (fcntl(handle, F_SETFL, O_NONBLOCK, nonBlocking) == -1)
+    {
+        std::cout << "Failed to set non-blocking" << std::endl;
+        exit(23);
+    }
+
+#elif PLATFORM == PLATFORM_WINDOWS
+
+    DWORD nonBlocking = 1;
+    if (ioctlsocket(shandle, FIONBIO, &nonBlocking) != 0)
+    {
+        std::cout << "Failed to set non-blocking" << std::endl;
+        exit(23);
+    }
+
+#endif
 }
 
 unsigned char MySOEHandler::xlatequalif(int qdnp)

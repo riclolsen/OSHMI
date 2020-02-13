@@ -160,7 +160,7 @@ int nponto;
 
 void __fastcall TfmWebServ::NMHTTP1Success(CmdType Cmd)
 {
-  logaln( "R< GET OK" );
+  logaln( "R< NMHTTP1 GET OK" );
 
   if ( NMHTTP1->RemoteIP != IHMRED_IP_OUTRO_IHM ) // só aceita resposta do outro IHM
     return;
@@ -301,7 +301,7 @@ if ( IHMRED_IP_OUTRO_IHM != "" )
 void __fastcall TfmWebServ::NMHTTP1Status(TComponent *Sender,
       AnsiString Status)
 {
-logaln( (String)"I: NMHTTP Status - " + Status );
+logaln( (String)"I: NMHTTP1 Status - " + Status );
 }
 //---------------------------------------------------------------------------
 
@@ -333,12 +333,13 @@ void __fastcall TfmWebServ::Timer3Timer(TObject *Sender)
 
   if ( IHMRED_IP_OUTRO_IHM != "" )
     {
-    if ( !BL.lstHTTPReq_OutroIHM_writepoint.empty() ) // enquanto houver consulta
+    if ( !BL.lstHTTPReq_OutroIHM_writepoint.empty() ) // se houver consulta
         {
          String S;
          S = BL.lstHTTPReq_OutroIHM_writepoint.front();   // pega o primeiro da fila
          BL.lstHTTPReq_OutroIHM_writepoint.pop_front();   // retira da fila
          try {
+             /*
              IdHTTP1->Host = IHMRED_IP_OUTRO_IHM;
              IdHTTP1->Port = HTTP_PORTA;
              IdHTTP1->ReadTimeout = 200;
@@ -348,12 +349,22 @@ void __fastcall TfmWebServ::Timer3Timer(TObject *Sender)
                          S;
              logaln( (String)"R> Req.HMI WP " + Rq );
              IdHTTP1->Get( Rq );
+             */
+             NMHTTP2->Host = IHMRED_IP_OUTRO_IHM;
+             NMHTTP2->Port = HTTP_PORTA;
+             NMHTTP2->TimeOut = 300;
+             String Rq = (String)"http://" +
+                         (String)IHMRED_IP_OUTRO_IHM + (String)":" +
+                         (String)HTTP_PORTA + (String)"/" +
+                         S;
+             logaln( (String)"R> Req.HMI WP " + Rq );
+             NMHTTP2->Get( Rq );
              } catch ( Exception &E ) { logaln ( "E: 0-" + E.Message ); }
 
-        Timer3->Interval = 300;
+        Timer3->Interval = 400;
         }
-
-    if ( !BL.lstHTTPReq_OutroIHM.empty() ) // enquanto houver consulta
+    else
+    if ( !BL.lstHTTPReq_OutroIHM.empty() ) // se houver consulta
         {
          String S;
          S = BL.lstHTTPReq_OutroIHM.front();   // pega o primeiro da fila
@@ -361,7 +372,7 @@ void __fastcall TfmWebServ::Timer3Timer(TObject *Sender)
          try {
              NMHTTP1->Host = IHMRED_IP_OUTRO_IHM;
              NMHTTP1->Port = HTTP_PORTA;
-             NMHTTP1->TimeOut = 200;
+             NMHTTP1->TimeOut = 300;
              String Rq = (String)"http://" +
                          (String)IHMRED_IP_OUTRO_IHM + (String)":" +
                          (String)HTTP_PORTA + (String)"/" +
@@ -370,10 +381,16 @@ void __fastcall TfmWebServ::Timer3Timer(TObject *Sender)
              NMHTTP1->Get( Rq );
              } catch ( Exception &E ) { logaln ( "E: 0-" + E.Message ); }
 
-        Timer3->Interval = 300;
+        Timer3->Interval = 400;
         }
    else
-      Timer3->Interval = 2000;
+        {
+        Timer3->Interval = 1000;
+        }
+   }
+   else
+   {
+      Timer3->Enabled = false;
    }
 }
 //---------------------------------------------------------------------------
@@ -386,4 +403,18 @@ logaln( (String)"E: 16-" + AException->Message );
 //---------------------------------------------------------------------------
 
 
+
+
+void __fastcall TfmWebServ::NMHTTP2Success(CmdType Cmd)
+{
+  logaln( "R< NMHTTP2 GET OK" );
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfmWebServ::NMHTTP2Status(TComponent *Sender,
+      AnsiString Status)
+{
+logaln( (String)"I: NMHTTP1 Status - " + Status );
+}
+//---------------------------------------------------------------------------
 

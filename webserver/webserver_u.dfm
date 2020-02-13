@@ -114,4 +114,18 @@ object fmWebServ: TfmWebServ
     Left = 416
     Top = 16
   end
+  object NMHTTP2: TNMHTTP
+    Port = 0
+    TimeOut = 1
+    ReportLevel = 0
+    OnStatus = NMHTTP2Status
+    Body = 'Default.htm'
+    Header = 'Head.txt'
+    InputFileMode = False
+    OutputFileMode = False
+    OnSuccess = NMHTTP2Success
+    ProxyPort = 0
+    Left = 448
+    Top = 48
+  end
 end

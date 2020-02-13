@@ -1,5 +1,8 @@
+#pragma pack(push)
+#pragma pack(1) // membros das estruturas alinhados em byte
 
-#define I104M_LISTENUDPPORT 8098
+#define I104M_LISTENUDPPORT_MB 8097
+#define I104M_LISTENUDPPORT_DEFAULT 8098
 #define I104M_WRITEUDPPORT 8099
 
 #define MSGKA_SIG 0x5a5a5a5a
@@ -43,9 +46,6 @@ typedef struct
 	unsigned int qu;
 	unsigned int utr;
 } t_msgcmd;
-
-#pragma pack(push)
-#pragma pack(1) // membros das estruturas alinhados em byte
 
 typedef struct {
         unsigned short nponto; // numero do ponto
@@ -109,5 +109,17 @@ typedef struct {
         float fr;      		// valor em ponto flutuante
         unsigned char qds; 	// qualificador do ponto
 } flutuante_seq;
+
+typedef struct {
+    unsigned short nponto; // point address 1st & 2nd bytes
+    unsigned char nponto3; // point address 3rd byte
+    uint32_t bcr;      // valor binary counter reading
+    unsigned char qds;     // qualifier
+} integrated;
+
+typedef struct {
+    uint32_t bcr;   // value binary counter reading
+    unsigned char qds;  // qualifies
+} integrated_seq;
    
 #pragma pack(pop)

@@ -26,6 +26,9 @@
 #include <iostream>
 #include <sstream>
 
+#define DNP3INI "c:\\oshmi\\conf\\dnp3.ini"
+#define OSHMIINI "c:\\oshmi\\conf\\hmi.ini"
+
 // platform detection
 #define PLATFORM_WINDOWS  1
 #define PLATFORM_MAC      2
@@ -92,6 +95,7 @@ public:
 	bool NoDataState = false;
 	int NoDataTimeout = 0;
 	int SlaveNo = -1;
+    int I104MListenPort = I104M_LISTENUDPPORT_DEFAULT;
 	
 	void SetSlaveNo(int no)
 	{
@@ -145,7 +149,7 @@ public:
 
 		saddress_red_driver.sin_family = AF_INET;
 		saddress_red_driver.sin_addr.s_addr = inet_addr(ipaddr);
-		saddress_red_driver.sin_port = htons((unsigned short)I104M_LISTENUDPPORT);
+		saddress_red_driver.sin_port = htons((unsigned short)I104MListenPort);
 
 		redundant_hmi = true;
 	}
@@ -165,7 +169,8 @@ public:
 	void Process(const HeaderInfo& info, const ICollection<Indexed<SecurityStat>>& values) override final {};
 	void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) override final {};
 
-	unsigned char xlatequalif(int qdnp);
+    void Init();
+    unsigned char xlatequalif(int qdnp);
 	void SendKeepAlive();
 	void SendOSHMI(void * pmsg, int packet_size);
 	void SendOSHMIChannelStatePoint(bool channel_ok);

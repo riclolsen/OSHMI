@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define VERSION "OSHMI Modbus Driver v.1.07 - Copyright 2015-2020 Ricardo L. Olsen"
+#define VERSION "OSHMI Modbus Driver v.1.09 - Copyright 2015-2020 Ricardo L. Olsen"
 
 #include <stdio.h>
 #include <conio.h>
@@ -99,8 +99,10 @@ struct mb_rturead
 	int slave_id = -1;
 	int delay = 0;
 	int timeout_ms = 500;
+	int endianness = 0;
 	vector <mb_read> readhr;
 	vector <mb_read> readhr_float; // read consecutive 16 bit values as floats (assume 1st byte=exp, 2nd=MSB mant, 3rd=middle mant, 4=LSB mant so intel 2,3,0,1 order) 
+	vector <mb_read> readhr_long; // read consecutive 16 bit values as a long (32 bit integer=DWORD)
 	vector <mb_read> readhr_bitstr; // read consecutive 16 bit values as 16 digital statuses to be converted to 16 digital points
 	vector <mb_read> readir;
 	vector <mb_read> readis;
@@ -119,6 +121,7 @@ public:
 	sockaddr_in saddress_red_driver; // socket address for redundant driver (different port from hmi)
 	bool redundant_hmi = false; // there is redundant hmi?
 	string IPAddrRed;
+	int I104MPort = I104M_LISTENUDPPORT_DEFAULT;
 
 	void SendKeepAlive()
 	{
@@ -162,7 +165,7 @@ public:
 		{
 			saddress_red_driver.sin_family = AF_INET;
 			saddress_red_driver.sin_addr.s_addr = inet_addr(ipaddr);
-			saddress_red_driver.sin_port = htons((unsigned short)I104M_LISTENUDPPORT);
+			saddress_red_driver.sin_port = htons((unsigned short)I104MPort);
 			redundant_hmi = true;
 		}
 	}
@@ -182,7 +185,7 @@ public:
 #endif
 		address.sin_family = AF_INET;
 		address.sin_addr.s_addr = INADDR_ANY;
-		address.sin_port = htons((unsigned short)I104M_LISTENUDPPORT);
+		address.sin_port = htons((unsigned short)I104MPort);
 
 		shandle = socket(AF_INET,
 			SOCK_DGRAM,
@@ -190,15 +193,16 @@ public:
 
 		if (shandle <= 0)
 		{
-			printf("failed to create socket\n");
+			printf("Failed to create socket!\n");
 			exit(21);
 		}
 
+		if ( I104MPort != 0 )
 		if (bind(shandle,
 			(const sockaddr*)&address,
 			sizeof(sockaddr_in)) < 0)
 		{
-			printf("failed to bind socket\n");
+			printf("Failed to bind socket!\n");
 			exit(22);
 		}
 
@@ -210,7 +214,7 @@ public:
 			O_NONBLOCK,
 			nonBlocking) == -1)
 		{
-			printf("failed to set non-blocking\n");
+			printf("Failed to set non-blocking!\n");
 			exit(23);
 		}
 
@@ -221,7 +225,7 @@ public:
 			FIONBIO,
 			&nonBlocking) != 0)
 		{
-			printf("failed to set non-blocking\n");
+			printf("Failed to set non-blocking!\n");
 			exit(23);
 		}
 
@@ -509,13 +513,17 @@ void mb_command(int asdu, int address, int val, int slave, int bit)
 int main(void)
 {
     int rc;
-	
+	OSHMIHandler oh;
+
 	cout << VERSION << endl;
 
-	OSHMIHandler oh;
-	oh.Initialize();
-
 	INIReader reader(MODBUSINI);
+	oh.I104MPort = reader.GetInteger("I104M", "UDP_PORT_LISTEN", I104M_LISTENUDPPORT_DEFAULT);
+	if (oh.I104MPort == 0)
+		cout << "DISABLED I104M UDP PORT FOR LISTEN (NO OSHMI COMMANDS)!" << endl;
+	else
+		cout << "I104M UDP PORT = " << oh.I104MPort << endl;
+	oh.Initialize();
 
 	for (int i = 0; i < MAX_RTU; i++)
 	{
@@ -528,6 +536,7 @@ int main(void)
 		rtu.slave_id = reader.GetInteger(rtun, "SLAVE_ID", -1);
 		rtu.timeout_ms = reader.GetInteger(rtun, "TIMEOUT", 500);
 		rtu.delay = reader.GetInteger(rtun, "DELAY", 0);
+		rtu.endianness = reader.GetInteger(rtun, "ENDIANNESS", 0); // for 32 bit 0=BIG 1=MIDDLE LITTLE
 
 		if (i > 0 &&  mb_queue[i - 1].ip == rtu.ip && mb_queue[i - 1].port == rtu.port)
 			rtu.ctx = mb_queue[i - 1].ctx; // same previous IP and PORT, reuse connection
@@ -579,6 +588,19 @@ int main(void)
 			if (mbr.i104addr == 0)
 				mbr.i104addr = mbr.mbaddress;
 			rtu.readhr_float.push_back(mbr);
+		}
+		for (int j = 0; j < MAX_INPREAD; j++)
+		{
+			string key = (string)"READHR_LONG_" + std::to_string(j + 1);
+			string aCnCp = reader.GetString(rtun, key, "");
+			if (aCnCp == "")
+				break;
+			mb_read mbr;
+			mbr.i104addr = 0;
+			sscanf(aCnCp.c_str(), "%d %d %d", &mbr.mbaddress, &mbr.numreg, &mbr.i104addr);
+			if (mbr.i104addr == 0)
+				mbr.i104addr = mbr.mbaddress;
+			rtu.readhr_long.push_back(mbr);
 		}
 		for (int j = 0; j < MAX_INPREAD; j++)
 		{
@@ -835,7 +857,7 @@ int main(void)
 				u.bt[1] = tabreg[k];
 				u.bt[0] = tabreg[k + 1];
 
-				printf("RTU_5d: %s, Port: %d, ID: %d  Input %d = %f\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readhr_float[j].mbaddress + k, u.f);
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %f\n", i+1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readhr_float[j].mbaddress + k, u.f);
 
 				unsigned int* paddr = (unsigned int*)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(flutuante_seq)));
 				*paddr = mb_queue[i].readhr_float[j].i104addr + k / 2; // point number
@@ -853,6 +875,95 @@ int main(void)
 					oh.SendOSHMI(&msg, packet_size);
 				}
 			}
+
+			msg.numpoints = count % max_pointspkt;
+			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
+			oh.SendOSHMI(&msg, packet_size);
+
+			free(tabreg);
+			Sleep(mb_queue[i].delay);
+		}
+
+		// holding pairs of 16 bit registers as 32 bit integers
+		msg.signature = MSGSUPSQ_SIG;
+		msg.prim = 1;
+		msg.sec = i + 1; // RTU order or end of IP
+		msg.causa = 20;
+		msg.tipo = 15;
+		msg.taminfo = sizeof(integrated_seq); // value size for the type (not counting the 4 byte address)
+
+		for (unsigned j = 0; j < mb_queue[i].readhr_long.size(); j++) // each 2 16 bit holding registers as a 32 bit word
+		{
+			// verify if there is commands to execute from OSHMI
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
+
+			max_pointspkt = PKTFLT_MAXPOINTS;
+
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
+
+			uint16_t* tabreg = (uint16_t*)malloc(2 * mb_queue[i].readhr_long[j].numreg * sizeof(uint16_t));
+			memset(tabreg, 0, 2 * mb_queue[i].readhr_long[j].numreg * sizeof(uint16_t));
+			rc = modbus_read_registers(mb_queue[i].ctx, mb_queue[i].readhr_long[j].mbaddress, mb_queue[i].readhr_long[j].numreg * 2, tabreg);
+
+			if (rc != mb_queue[i].readhr_long[j].numreg * 2) {
+				printf("RTU_%d ERROR modbus_read_registers (%d)\n", i + 1, rc);
+				printf("%s\n", modbus_strerror(errno));
+				// printf("Address = %d\n", addr);
+				// nb_fail++;
+				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
+				Sleep(mb_queue[i].delay);
+				modbus_connect(mb_queue[i].ctx);
+				break;
+			}
+
+			count = 0;
+			for (int k = 0; k < mb_queue[i].readhr_long[j].numreg * 2; k += 2)
+			{
+				union { int32_t i32; unsigned short bt[2]; } u;				 
+
+				switch (mb_queue[i].endianness)
+				{
+				case 1: // MIDDLE LITTLE ENDIAN
+					u.bt[0] = tabreg[k];
+					u.bt[1] = tabreg[k + 1];
+					break;
+				case 0: // BIG ENDIAN
+				default:
+					u.bt[1] = tabreg[k];
+					u.bt[0] = tabreg[k + 1];
+					break;
+				}
+
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %ld\n", i + 1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readhr_long[j].mbaddress + k, u.i32);
+
+				unsigned int* paddr = (unsigned int*)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(integrated_seq)));
+				*paddr = mb_queue[i].readhr_long[j].i104addr + k / 2; // point number
+
+				// value and quality
+				integrated_seq* obj = (integrated_seq*)(paddr + 1);
+				obj->qds = 0;
+				obj->bcr = u.i32;
+
+				count++;
+				if (!((count + 1) % max_pointspkt)) // if next from packet send now (se a proxima eh do proximo pacote, manda agora)
+				{
+					msg.numpoints = count % max_pointspkt;
+					packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(integrated_seq));
+					oh.SendOSHMI(&msg, packet_size);
+				}
+			}
+
+			msg.numpoints = count % max_pointspkt;
+			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(integrated_seq));
+			oh.SendOSHMI(&msg, packet_size);
+
+			free(tabreg);
+			Sleep(mb_queue[i].delay);
 		}
 
 		// holding registers as 16 bit bitstrings

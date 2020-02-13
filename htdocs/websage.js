@@ -12,7 +12,7 @@
 // Com os valores obtidos dos pontos são atualizados os objetos (DJ, SC e medidas) no SVG.
 // DEPENDENCIAS : util.js, jquery.js, jquery.ui, core.js, shortcut.js, messages.js, config_viewers.js  (todas devem estar incluidas antes deste script)  
 
-// OSHMI/Open Substation HMI - Copyright 2008-2019 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright 2008-2020 - Ricardo L. Olsen
 
 /*jslint browser: true, bitwise: true, devel: true */
 /*jslint white: true */
@@ -984,12 +984,19 @@ try
     WebSAGE.mostraDestaqPonto( NPTO );
   
     // get nonblocking annotation
+    // avoid write back empty when there is a read error by disabling the data entry
+    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').disabled = true;
+    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').style.backgroundColor = "gray";
     getJSON( WebSAGE.g_docAnnotationServer + "?N=" + NPTO, 
              function(data) {
-                 if ( data[0] && data[0].hasOwnProperty('CONTENT') )
-                   WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = data[0].CONTENT;
-                 else
-                   WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = "";
+                 if ( !data.hasOwnProperty('error') ) {	 
+                    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').disabled = false;
+                    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').style.backgroundColor = 
+                      WebSAGE.g_win_cmd.document.getElementById('ANOTACAO').style.backgroundColor
+                    }
+                 if ( data[0] && data[0].hasOwnProperty('CONTENT') ) {	 
+                    WebSAGE.g_win_cmd.document.getElementById('ANOTACAODOC').value = data[0].CONTENT;
+                    }
                  }
            );  
     Core.addEventListener( WebSAGE.g_win_cmd.document.getElementById("ANOTACAODOC"), "blur",  WebSAGE.writeAnnotDoc );
@@ -1277,7 +1284,7 @@ writeParams : function()
          );  
 },
 
-// write non blocking annootation
+// write non blocking annotation
 writeAnnotDoc : function()
 {
   getJSON( WebSAGE.g_docAnnotationServer + "?W=1&N=" + NPTO,
@@ -1650,6 +1657,7 @@ valorTagueado: function ( tag, obj )
   return WebSAGE.g_retnok;
 },
 
+// format value of point using extended printf convention
 // imprime valor do ponto formatado padrão printf extendido, com código para setas direcionais
 interpretaFormatoC: function( fmt, tag, obj )
 {
@@ -4475,14 +4483,19 @@ pinnedAnnotations: function()
         getPinnedAnnotations();
       });
     var getPinnedAnnotations = function ()
-	    {	
-		  fetch("annotation.php?FILTAG="+ScreenTagFilter+"&FILCONTENT=%23PIN").
-        then(function (response) {
-          return response;		  
-        }).
-        then(response => response.json()).
+       {	
+       fetch(WebSAGE.g_docAnnotationServer + "?FILTAG="+ScreenTagFilter+"&FILCONTENT=%23PIN").
+          then(function (response) {
+            return response;		  
+            }).
+       then(response => response.json()).
           then(data => 
             {
+            if ( data.hasOwnProperty("error") )
+              {
+                return;
+              }
+
             if ( data.length === 0 )
               {
                 elem.style.display = "none";

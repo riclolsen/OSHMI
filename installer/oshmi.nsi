@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.13"
-!define VERSION_ "6.13.0.0"
+!define VERSION "v.6.15"
+!define VERSION_ "6.15.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -199,6 +199,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   CreateDirectory "$INSTDIR\inkscape"
   CreateDirectory "$INSTDIR\fonts"
   CreateDirectory "$INSTDIR\linux"
+  CreateDirectory "$INSTDIR\linux\iptables"
   CreateDirectory "$INSTDIR\linux\nginx"
   CreateDirectory "$INSTDIR\linux\nginx\conf"
   CreateDirectory "$INSTDIR\linux\nginx\conf\sites-available"
@@ -251,6 +252,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   SetOutPath $INSTDIR\linux
   File /a "..\linux\*.*"
   File /a "..\linux\QTester104"
+  SetOutPath $INSTDIR\linux\iptables
+  File /a "..\linux\iptables\rules.v4"
   SetOutPath $INSTDIR\linux\nginx\conf
   File /a "..\linux\nginx\conf\nginx.conf"
   SetOutPath $INSTDIR\linux\nginx\conf\sites-available

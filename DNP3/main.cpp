@@ -22,7 +22,7 @@
  *
  */
 
-#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.71 (Based on Open DNP3 2.2.0) - Copyright 2016-2018 - Ricardo Lastra Olsen"
+#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.72 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
 
 #include <asiodnp3/DNP3Manager.h>
 #include <asiodnp3/PrintingSOEHandler.h>
@@ -42,11 +42,8 @@
 #include <iostream>
 #include <conio.h>
 
-#include "IniFile.h"
+#include "cpp/INIReader.h"
 #include "MySOEHandler.h"
-
-#define DNP3INI "c:\\oshmi\\conf\\dnp3.ini"
-#define OSHMIINI "c:\\oshmi\\conf\\hmi.ini"
 
 #define KEEP_ALIVE_TIME 5
 #define MAX_SLAVES 50
@@ -56,7 +53,6 @@ using namespace openpal;
 using namespace asiopal;
 using namespace asiodnp3;
 using namespace opendnp3;
-
 
 class MyChannelListener final : public IChannelListener, private openpal::Uncopyable
   {
@@ -165,14 +161,12 @@ int main(int argc, char* argv[])
 
 	std::cout << DRIVER_VERSION << std::endl;
 
-	CIniFile hmi_iniFile(OSHMIINI);
-	hmi_iniFile.ReadFile();
-	string IPAddrRed = hmi_iniFile.GetValue("REDUNDANCY", "OTHER_HMI_IP"); // ip address of redundant hmi
+	INIReader reader_hmi(OSHMIINI);
+    string IPAddrRed = reader_hmi.GetString("REDUNDANCY", "OTHER_HMI_IP", ""); // ip address of redundant hmi
 
-	CIniFile iniFile(DNP3INI);
-	iniFile.ReadFile();
+	INIReader reader(DNP3INI);
 
-	masterAddress = iniFile.GetValueI("MASTER", "LINK_ADDRESS", 1);
+	masterAddress = reader.GetInteger("MASTER", "LINK_ADDRESS", 1);
 	if (masterAddress > 65534)
 		exit(1);
 
@@ -198,23 +192,23 @@ int main(int argc, char* argv[])
 	string range_scan3;
 	string range_scan4;
 
-	while ((slaveAddress = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS", 65535)) <= 65534)
+	while ((slaveAddress = reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS", 65535)) <= 65534)
 	{
-		IPAddr = iniFile.GetValue(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "IP_ADDRESS");
-		IPPort = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "IP_PORT", 20000);
-		int enable_unsolicited = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "ENABLE_UNSOLICITED", 1);
-		int integrity_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "INTEGRITY_SCAN", 180);
-		int class0_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS0_SCAN", 8);
-		int class1_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS1_SCAN", 5);
-		int class2_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS2_SCAN", 17);
-		int class3_scan = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS3_SCAN", 29);
-		int response_timeout = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "RESPONSE_TIMEOUT", 2);
-		int time_sync = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "TIME_SYNC", 1);
-		int nodata_timeout = iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "NODATA_TIMEOUT", 300);
-		string range_scan1 = iniFile.GetValue(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_1");
-		string range_scan2 = iniFile.GetValue(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_2");
-		string range_scan3 = iniFile.GetValue(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_3");
-		string range_scan4 = iniFile.GetValue(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_4");
+        IPAddr = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "IP_ADDRESS", "");
+        IPPort = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "IP_PORT", 20000);
+        int enable_unsolicited = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "ENABLE_UNSOLICITED", 1);
+        int integrity_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "INTEGRITY_SCAN", 180);
+        int class0_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS0_SCAN", 8);
+        int class1_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS1_SCAN", 5);
+        int class2_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS2_SCAN", 17);
+        int class3_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS3_SCAN", 29);
+		int response_timeout = reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "RESPONSE_TIMEOUT", 2);
+        int time_sync = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "TIME_SYNC", 1);
+		int nodata_timeout = reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "NODATA_TIMEOUT", 300);
+        string range_scan1 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_1", "");
+        string range_scan2 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_2", "");
+        string range_scan3 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_3", "");
+        string range_scan4 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_4", "");
 
 		if (IPAddr == "")
 			exit(2);
@@ -384,7 +378,7 @@ int main(int argc, char* argv[])
 		cntslaves++;
 
 		// when no more slaves found
-		if (iniFile.GetValueI(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS") == 0)
+		if (reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS", -1) == -1)
 		{
 			time_t timeant = 0;
 
@@ -718,125 +712,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-/*
-	// Connect via a TCPClient socket to a outstation
-	auto channel = manager.AddTCPClient("tcpclient", FILTERS, ChannelRetry::Default(), "127.0.0.1", "0.0.0.0", 20000, PrintingChannelListener::Create());
-
-	// The master config object for a master. The default are
-	// useable, but understanding the options are important.
-	MasterStackConfig stackConfig;
-
-	// you can override application layer settings for the master here
-	// in this example, we've change the application layer timeout to 2 seconds
-	stackConfig.master.responseTimeout = TimeDuration::Seconds(2);
-	stackConfig.master.disableUnsolOnStartup = true;
-
-	// You can override the default link layer settings here
-	// in this example we've changed the default link layer addressing
-	stackConfig.link.LocalAddr = 1;
-	stackConfig.link.RemoteAddr = 10;
-
-	// Create a new master on a previously declared port, with a
-	// name, log level, command acceptor, and config info. This
-	// returns a thread-safe interface used for sending commands.
-	auto master = channel->AddMaster(
-	                  "master",											// id for logging
-		              spSoehVec[cntslaves],    		   				    // callback for data processing
-	                  asiodnp3::DefaultMasterApplication::Create(),		// master application instance
-	                  stackConfig										// stack configuration
-	              );
-
-
-	// do an integrity poll (Class 3/2/1/0) once per minute
-	auto integrityScan = master->AddClassScan(ClassField::AllClasses(), TimeDuration::Minutes(1));
-
-	// do a Class 1 exception poll every 5 seconds
-	auto exceptionScan = master->AddClassScan(ClassField(ClassField::CLASS_1), TimeDuration::Seconds(2));
-
-	// Enable the master. This will start communications.
-	master->Enable();
-
-	bool channelCommsLoggingEnabled = true;
-	bool masterCommsLoggingEnabled = true;
-
-	while (true)
-	{
-		std::cout << "Enter a command" << std::endl;
-		std::cout << "x - exits program" << std::endl;
-		std::cout << "a - performs an ad-hoc range scan" << std::endl;
-		std::cout << "i - integrity demand scan" << std::endl;
-		std::cout << "e - exception demand scan" << std::endl;
-		std::cout << "d - disable unsolicited" << std::endl;
-		std::cout << "r - cold restart" << std::endl;
-		std::cout << "c - send crob" << std::endl;
-		std::cout << "t - toggle channel logging" << std::endl;
-		std::cout << "u - toggle master logging" << std::endl;
-
-		char cmd;
-		std::cin >> cmd;
-		switch(cmd)
-		{
-		case('a') :
-			master->ScanRange(GroupVariationID(1, 2), 0, 3);
-			break;
-		case('d') :
-			master->PerformFunction("disable unsol", FunctionCode::DISABLE_UNSOLICITED,
-			{ Header::AllObjects(60, 2), Header::AllObjects(60, 3), Header::AllObjects(60, 4) }
-			                       );
-			break;
-		case('r') :
-			{
-				auto print = [](const RestartOperationResult & result)
-				{
-					if(result.summary == TaskCompletion::SUCCESS)
-					{
-						std::cout << "Success, Time: " << result.restartTime.GetMilliseconds() << std::endl;
-					}
-					else
-					{
-						std::cout << "Failure: " << TaskCompletionToString(result.summary) << std::endl;
-					}
-				};
-				master->Restart(RestartType::COLD, print);
-				break;
-			}
-		case('x'):
-			// C++ destructor on DNP3Manager cleans everything up for you
-			return 0;
-		case('i'):
-			integrityScan->Demand();
-			break;
-		case('e'):
-			exceptionScan->Demand();
-			break;
-		case('c'):
-			{
-				ControlRelayOutputBlock crob(ControlCode::LATCH_ON);
-				master->SelectAndOperate(crob, 0, PrintingCommandCallback::Get());
-				break;
-			}
-		case('t') :
-			{
-				channelCommsLoggingEnabled = !channelCommsLoggingEnabled;
-				auto levels = channelCommsLoggingEnabled ? levels::ALL_COMMS : levels::NORMAL;
-				channel->SetLogFilters(levels);
-				std::cout << "Channel logging set to: " << levels << std::endl;
-				break;
-			}
-		case('u') :
-			{
-				masterCommsLoggingEnabled = !masterCommsLoggingEnabled;
-				auto levels = masterCommsLoggingEnabled ? levels::ALL_COMMS : levels::NORMAL;
-				master->SetLogFilters(levels);
-				std::cout << "Master logging set to: " << levels << std::endl;
-				break;
-			}
-		default:
-			std::cout << "Unknown action: " << cmd << std::endl;
-			break;
-		}
-	}
-*/
 	return 0;
 }
 

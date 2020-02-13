@@ -206,6 +206,7 @@ try {
     }
 catch( PDOException $e )
     {
+    echo "{\"error\":\"Error reading database!\"}";
     // echo "Erro: ".$e->getMessage();
     // print_r($dbsde->errorInfo());
     }

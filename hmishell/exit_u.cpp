@@ -172,12 +172,12 @@ try
 
 Sleep(250);
 
-try
-  {
-  fmShell->NMHTTP1->Host = "127.0.0.1";
-  fmShell->NMHTTP1->TimeOut = 0;
-  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
-  } catch ( Exception &E ) {}
+//try
+//  {
+//  fmShell->NMHTTP1->Host = "127.0.0.1";
+//  fmShell->NMHTTP1->TimeOut = 0;
+//  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
+//  } catch ( Exception &E ) {}
 
 WinExec( "hidec.exe do_turnoff.bat", SW_HIDE );
 Sleep(250);
@@ -228,12 +228,12 @@ try
 
 Sleep(250);
 
-try
-  {
-  fmShell->NMHTTP1->Host = "127.0.0.1";
-  fmShell->NMHTTP1->TimeOut = 0;
-  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
-  } catch ( Exception &E ) {}
+//try
+//  {
+//  fmShell->NMHTTP1->Host = "127.0.0.1";
+//  fmShell->NMHTTP1->TimeOut = 0;
+//  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
+//  } catch ( Exception &E ) {}
 
 WinExec( "hidec.exe do_reboot.bat", SW_HIDE );
 Sleep(250);
@@ -284,12 +284,12 @@ try
 
 Sleep(250);
 
-try
-  {
-  fmShell->NMHTTP1->Host = "127.0.0.1";
-  fmShell->NMHTTP1->TimeOut = 0;
-  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
-  } catch ( Exception &E ) {}
+//try
+//  {
+//  fmShell->NMHTTP1->Host = "127.0.0.1";
+//  fmShell->NMHTTP1->TimeOut = 0;
+//  fmShell->NMHTTP1->Get( (String)"/" + (String)SHELLAPIURL + (String)"?Y=1" );
+//  } catch ( Exception &E ) {}
 
 WinExec( "hidec.exe do_logout.bat", SW_HIDE );
 Sleep(250);

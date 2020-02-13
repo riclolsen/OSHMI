@@ -35,6 +35,7 @@ __published:	// IDE-managed Components
         TLabel *lbReset;
         TLabel *Label1;
         TIdHTTP *IdHTTP1;
+        TNMHTTP *NMHTTP2;
         //void __fastcall NMUDP1DataReceived(TComponent *Sender,
         // int NumberBytes, AnsiString FromIP, int Port);
         //void __fastcall Timer1Timer(TObject *Sender);
@@ -47,6 +48,9 @@ __published:	// IDE-managed Components
         void __fastcall Timer3Timer(TObject *Sender);
         void __fastcall IdHTTPServer1Exception(TIdPeerThread *AThread,
           Exception *AException);
+        void __fastcall NMHTTP2Success(CmdType Cmd);
+        void __fastcall NMHTTP2Status(TComponent *Sender,
+          AnsiString Status);
 private:	// User declarations
         void logaln(String msg);
         int cntDownNoHTTPReq; // count down time with no HTTP Requests, when reached 0 resets server
