@@ -22,7 +22,7 @@
  *
  */
 
-#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.72 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
+#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.74 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
 
 #include <asiodnp3/DNP3Manager.h>
 #include <asiodnp3/PrintingSOEHandler.h>
@@ -256,6 +256,9 @@ int main(int argc, char* argv[])
 		// in this example, we've change the application layer timeout to 2 seconds
 		stackConfigVec[cntslaves].master.responseTimeout = TimeDuration::Seconds(response_timeout);
 		stackConfigVec[cntslaves].master.disableUnsolOnStartup = !enable_unsolicited;
+        if (!enable_unsolicited)
+          stackConfigVec[cntslaves].master.unsolClassMask = ClassField(false, false, false, false);
+
 		if ( time_sync == 1 )
           stackConfigVec[cntslaves].master.timeSyncMode = TimeSyncMode::NonLAN;
 		else

@@ -139,8 +139,8 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 	msg.causa = info.isEventVariation ? 3 : 20;
 
 	int count = 0;
-
-	if ( info.gv != GroupVariation::Group2Var2 ) // event without time
+	
+	if (info.gv != GroupVariation::Group2Var2 && info.gv != GroupVariation::Group2Var3) // event without time
 	{
 		msg.tipo = 1;
 		msg.taminfo = sizeof(digital_notime_seq); // value size for the type (not counting the 4 byte address)
@@ -240,7 +240,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 
 	int count = 0;
 
-	if ( info.gv != GroupVariation::Group2Var2 )  // event without time
+	if (info.gv != GroupVariation::Group4Var2 && info.gv != GroupVariation::Group4Var3) // event without time
 	{
 		msg.tipo = 3;
 		msg.taminfo = sizeof(digital_notime_seq); // value size for the type (not counting the 4 byte address)

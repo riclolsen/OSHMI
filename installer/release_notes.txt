@@ -186,13 +186,28 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.16:
+
+Events Viewer:
+ - Avoid table display problem on large width (ultra-wide) monitors.
+
+DNP3 Client Driver:
+ - Updated to version 0.74.
+ - Fixed problem disabling unsolicited.
+ - Fixed problem with digital with relative time SOE (group 2 var 3).
+
+SQLite:
+ - Updated to version 3.32.2.
+
+-------------------------------------------------------------------
+
 Notes for version 6.15:
 
 Screen Viewer:
  - Better error handling for documental annotations.
 
 Webserver.exe:
- - Change component that do some GET HTTP requests (redundancy only).
+ - Changed component that do some GET HTTP requests (redundancy only).
 
 -------------------------------------------------------------------
 
