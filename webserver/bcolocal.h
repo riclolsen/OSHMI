@@ -103,6 +103,8 @@ using namespace std;
 #define COD_FORMULA_ESCOLHA_ANA 51
 #define COD_FORMULA_ESTCOMUNIC  52
 #define COD_FORMULA_DISTMAXMIN  53
+#define COD_FORMULA_DUPLO       54
+#define COD_FORMULA_DIV         55
 
 #define RGLIM_NORMAL 0
 #define RGLIM_ALMINF 1

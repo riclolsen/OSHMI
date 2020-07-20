@@ -186,6 +186,21 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.17:
+
+Webserver.exe:
+ - New formula (54) for creating a double digital point from 2 single digitals.
+ - New formula (55) for division of 2 parcels (P1/P2).
+
+DNP3 Client Driver:
+ - Updated to version 0.75.
+ - Fixed problem with double bit binary.
+
+SQLite:
+ - Updated to version 3.32.3.
+
+-------------------------------------------------------------------
+
 Notes for version 6.16:
 
 Events Viewer:

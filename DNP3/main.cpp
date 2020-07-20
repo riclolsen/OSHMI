@@ -22,7 +22,7 @@
  *
  */
 
-#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.74 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
+#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.75 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
 
 #include <asiodnp3/DNP3Manager.h>
 #include <asiodnp3/PrintingSOEHandler.h>

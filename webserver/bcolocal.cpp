@@ -22,6 +22,7 @@ OSHMI - Open Substation HMI
 
 #include <vcl.h>
 #pragma hdrstop
+#include <limits>
 #include <inifiles.hpp>
 #include <math.h>
 #include "bcolocal.h"
@@ -2379,6 +2380,92 @@ try
         r = max - min;
         q.Tipo = TIPO_ANALOGICO;
         }
+        break;
+    case COD_FORMULA_DUPLO:
+        {
+         // double bit from 2 single bit
+        double tag;
+
+        r = Pontos[(*it).second.Parcelas[0]].Valor;
+        q.Byte = Pontos[(*it).second.Parcelas[0]].Qual.Byte;
+
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_ON &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_OFF)
+           {
+           q.Duplo = ESTDUP_ON;
+           r = FA_ESTFASIM_ON;
+           }
+        else
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_OFF &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_ON)
+           {
+           q.Duplo = ESTDUP_OFF;
+           r = FA_ESTFASIM_OFF;
+           }
+        else
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_ON &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_ON)
+           {
+           q.Duplo = ESTDUP_INVALIDO;
+           r = FA_ESTFASIM_ON;
+           }
+        else
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_OFF &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_OFF)
+           {
+           q.Duplo = ESTDUP_INDETERMINADO;
+           r = FA_ESTFASIM_OFF;
+           }    
+
+        q.Falha =  Pontos[(*it).second.Parcelas[0]].Qual.Falha | Pontos[(*it).second.Parcelas[1]].Qual.Falha;
+
+        // get time from latest
+        if (Pontos[(*it).second.Parcelas[0]].TagTempoEvento > Pontos[(*it).second.Parcelas[1]].TagTempoEvento)
+          tag = Pontos[(*it).second.Parcelas[0]].TagTempoEvento;
+        else
+          tag = Pontos[(*it).second.Parcelas[1]].TagTempoEvento;
+
+        // changed state: insert timstamp from source
+        if ( (*it).second.Qual.Duplo != q.Duplo )
+           if ( !(*it).second.AlarmeInibido() )
+              {
+              TDateTime dt=tag;
+
+              unsigned short year; unsigned short month; unsigned short day;
+              unsigned short hour; unsigned short min; unsigned short sec; unsigned short msec;
+              dt.DecodeDate(&year, &month, &day);
+              dt.DecodeTime(&hour, &min, &sec, &msec);
+
+              IncluiEvento( nponto,
+                            SDE_UTREVGERADO,
+                            q.Byte,
+                            year,
+                            month,
+                            day,
+                            hour,
+                            min,
+                            sec,
+                            msec
+                            );
+              temtagtmp = 1;
+              }
+        }
+        break;
+    case COD_FORMULA_DIV:
+         if (Pontos[(*it).second.Parcelas[1]].Valor == 0 )
+           {
+           if ( Pontos[(*it).second.Parcelas[0]].Valor > 0)
+             r = DBL_MAX;
+           else if ( Pontos[(*it).second.Parcelas[0]].Valor < 0)
+             r = -DBL_MAX;
+           else if ( Pontos[(*it).second.Parcelas[0]].Valor == 0)
+             r = 0;
+           }
+         else
+           r = Pontos[(*it).second.Parcelas[0]].Valor / Pontos[(*it).second.Parcelas[1]].Valor;
+         q.Falha = Pontos[(*it).second.Parcelas[0]].Qual.Falha |
+                   Pontos[(*it).second.Parcelas[1]].Qual.Falha;
+         q.Tipo = TIPO_ANALOGICO;
         break;
     default:
         q.Tipo = TIPO_ANALOGICO;

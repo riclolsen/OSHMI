@@ -253,7 +253,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 			// valor e qualidade
 			digital_notime_seq * obj = (digital_notime_seq *)(paddr + 1);
 			obj->iq = xlatequalif(pair.value.flags.value);
-			obj->iq |= (static_cast<int>(pair.value.value)) ? 1 : 0;
+			obj->iq |= (static_cast<int>(pair.value.value)) & 0x03;
 
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
@@ -289,7 +289,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 				// valor e qualidade
 				digital_w_time7_seq * obj = (digital_w_time7_seq *)(paddr + 1);
 				obj->iq = xlatequalif(pair.value.flags.value);
-				obj->iq |= (static_cast<int>(pair.value.value)) ? 1 : 0;
+				obj->iq |= (static_cast<int>(pair.value.value)) & 0x03;
 
 				time_t tmi = pair.value.time / 1000;
 				struct tm *unxtm = localtime(&tmi);
