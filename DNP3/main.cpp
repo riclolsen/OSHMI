@@ -228,8 +228,11 @@ int main(int argc, char* argv[])
         string parity = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "PARITY", "NONE");
         string flow_control = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "FLOW_CONTROL", "NONE");
 
-		if (IPAddr == "")
-			exit(2);
+		if (IPAddr == "" && serial_port_name == "")
+        {
+            cout << "Invalid slave config (must have ip adrress or serial port defined!";
+            exit(2);
+        }		
 
 		soehArr[cntslaves].SetSlaveNo(cntslaves);
 		soehArr[cntslaves].SetNoDataTimeout(nodata_timeout);
