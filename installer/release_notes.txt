@@ -186,6 +186,17 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.18:
+
+DNP3 Client Driver:
+ - Updated to version 0.76.
+ - Support for Serial Port connections.
+
+SQLite:
+ - Updated to version 3.33.0.
+
+-------------------------------------------------------------------
+
 Notes for version 6.17:
 
 Webserver.exe:

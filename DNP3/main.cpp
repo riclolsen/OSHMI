@@ -22,7 +22,7 @@
  *
  */
 
-#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.75 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
+#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.76 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
 
 #include <asiodnp3/DNP3Manager.h>
 #include <asiodnp3/PrintingSOEHandler.h>
@@ -36,6 +36,8 @@
 #include <opendnp3/LogLevels.h>
 #include <opendnp3/app/ControlRelayOutputBlock.h>
 
+#include <algorithm>
+#include <cctype>
 #include <thread>
 #include <vector>
 #include <string>
@@ -53,6 +55,12 @@ using namespace openpal;
 using namespace asiopal;
 using namespace asiodnp3;
 using namespace opendnp3;
+
+std::string to_lower(std::string str)
+{
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
+    return str;
+}
 
 class MyChannelListener final : public IChannelListener, private openpal::Uncopyable
   {
@@ -187,6 +195,7 @@ int main(int argc, char* argv[])
 	char buffer[20];
 	string IPAddrAnt, IPAddr;
 	int IPPort, IPPortAnt;
+    string SerialPortAnt;
 	string range_scan1;
 	string range_scan2;
 	string range_scan3;
@@ -210,8 +219,20 @@ int main(int argc, char* argv[])
         string range_scan3 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_3", "");
         string range_scan4 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_4", "");
 
-		if (IPAddr == "")
-			exit(2);
+		// optional serial port config (will be used if port name defined)
+		string serial_port_name = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "SERIAL_PORT_NAME", "");
+        int baud_rate = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "BAUD_RATE", 9600);
+        int async_open_delay = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "ASYNC_OPEN_DELAY", 0);
+        int data_bits = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "DATA_BITS", 8);
+        string stop_bits = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "STOP_BITS", "ONE");
+        string parity = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "PARITY", "NONE");
+        string flow_control = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "FLOW_CONTROL", "NONE");
+
+		if (IPAddr == "" && serial_port_name == "")
+        {
+            cout << "Invalid slave config (must have ip adrress or serial port defined!";
+            exit(2);
+        }		
 
 		soehArr[cntslaves].SetSlaveNo(cntslaves);
 		soehArr[cntslaves].SetNoDataTimeout(nodata_timeout);
@@ -221,11 +242,13 @@ int main(int argc, char* argv[])
 			soehArr[cntslaves].SetRedundantHMIAddress(IPAddrRed.c_str());
 		spSoehVec.push_back(make_shared<MySOEHandler>(soehArr[cntslaves]));
 
-		// one channel per IP/Port
-		// while the same IP/Port uses the same channel.
-		// Slaves of same IP/Port must be in sequence on dnp3.ini!
-		if (IPAddr == IPAddrAnt && IPPort == IPPortAnt) 
-	    	{
+		// one channel per IP/Port or serial port 
+		// while the same IP/Port or serial, will use the same channel.
+		// Slaves of same IP/Port or serial port must be in sequence on dnp3.ini!
+		if ( (serial_port_name == "" && (IPAddr == IPAddrAnt && IPPort == IPPortAnt)) || 
+			 (serial_port_name != "" && (serial_port_name == SerialPortAnt))
+			) 
+	    {
 			pChannelVec.push_back(pChannelVec[cntslaves - 1]);
 		}
 		else
@@ -233,24 +256,56 @@ int main(int argc, char* argv[])
 			std::shared_ptr<MyChannelListener> mcl = std::make_shared<MyChannelListener>();
 			mcl->setSOEH(cntslaves, spSoehVec[cntslaves]);
 
-			// Connect via a TCPClient socket to a outstation	
-			pChannelVec.push_back(
-				manager.AddTCPClient(
-					"tcpclient", 
-					FILTERS, 
-					ChannelRetry::Default(), 
-					IPAddr.c_str(), 
-					"0.0.0.0", 
-					IPPort, 
-					mcl
-			        )
-			);
+			if (serial_port_name != "")
+            {
+                std::cout << "Using serial port: " << serial_port_name << std::endl;              
 
-			// para serial usaria AddSerial
+                SerialSettings serial_settings;
+                serial_settings.deviceName = serial_port_name;
+                serial_settings.dataBits = data_bits;
+                serial_settings.asyncOpenDelay = TimeDuration::Milliseconds(async_open_delay);
+                serial_settings.baud = baud_rate;
+                if (to_lower(flow_control) == "hardware")
+                    serial_settings.flowType = FlowControl::Hardware;
+                else if (to_lower(flow_control) == "xonxoff")
+                    serial_settings.flowType = FlowControl::XONXOFF;
+                else
+                    serial_settings.flowType = FlowControl::None;
+                if (to_lower(parity) == "even")
+                    serial_settings.parity = Parity::Even;
+                else
+					serial_settings.parity = Parity::None;
+                if (to_lower(stop_bits) == "none")
+                    serial_settings.stopBits = StopBits::None;
+                else if (to_lower(stop_bits) == "onepointfive")
+                    serial_settings.stopBits = StopBits::One;
+                else if (to_lower(stop_bits) == "two")
+                    serial_settings.stopBits = StopBits::Two;
+                else
+                    serial_settings.stopBits = StopBits::One;
+
+                // Connect via a serial to a outstation
+                auto ch = manager.AddSerial("serialclient" + std::to_string(cntslaves + 1), FILTERS,
+                                            ChannelRetry::Default(), serial_settings, mcl);
+				if (ch == nullptr)
+                {
+                    std::cout << "Error allocating serial port client on: " << serial_port_name;
+                    exit(1);
+                }
+                pChannelVec.push_back(ch);
+            }
+            else
+            {
+                // Connect via a TCPClient socket to a outstation
+                pChannelVec.push_back(manager.AddTCPClient("tcpclient" + std::to_string(cntslaves + 1), FILTERS,
+                                                           ChannelRetry::Default(),
+                                                           IPAddr.c_str(), "0.0.0.0", IPPort, mcl));
+            }
 		}
 
 		IPAddrAnt = IPAddr; // save last IP
 		IPPortAnt = IPPort; // save last port
+        SerialPortAnt = serial_port_name; // save last serial port name
 
      	// you can override application layer settings for the master here
 		// in this example, we've change the application layer timeout to 2 seconds
@@ -524,7 +579,7 @@ int main(int argc, char* argv[])
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
-											// retorna confirmação como asdu de comando para cima
+											// retorna confirmaÃ§Ã£o como asdu de comando para cima
 											t_msgsup msg;
 											msg.causa = (res.status == CommandStatus::SUCCESS) ? 0x00 : 0x40;
 											msg.endereco = pmsg->endereco;
@@ -596,7 +651,7 @@ int main(int argc, char* argv[])
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
-											// retorna confirmação como asdu de comando para cima
+											// retorna confirmaÃ§Ã£o como asdu de comando para cima
 											t_msgsup msg;
 											msg.causa = (res.status == CommandStatus::SUCCESS) ? 0x00 : 0x40;
 											msg.endereco = pmsg->endereco;
@@ -638,7 +693,7 @@ int main(int argc, char* argv[])
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
-											// retorna confirmação como asdu de comando para cima
+											// retorna confirmaÃ§Ã£o como asdu de comando para cima
 											t_msgsup msg;
 											msg.causa = (res.status == CommandStatus::SUCCESS) ? 0x00 : 0x40;
 											msg.endereco = pmsg->endereco;
@@ -680,7 +735,7 @@ int main(int argc, char* argv[])
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
-											// retorna confirmação como asdu de comando para cima
+											// retorna confirmaÃ§Ã£o como asdu de comando para cima
 											t_msgsup msg;
 											msg.causa = (res.status == CommandStatus::SUCCESS) ? 0x00 : 0x40;
 											msg.endereco = pmsg->endereco;
