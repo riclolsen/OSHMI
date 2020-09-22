@@ -50,19 +50,7 @@ typedef struct
 #pragma pack(1) // membros das estruturas alinhados em byte
 
 typedef struct {
-        unsigned short nponto; // numero do ponto
-        unsigned char nponto3; // 3 byte do numero do ponto
-        unsigned char iq;      // informaçao com qualificador
-        unsigned short ms;     // milisegundos
-        unsigned char min;     // minuto
-        unsigned char hora;    // hora
-        unsigned char dia;     // dia
-        unsigned char mes;
-        unsigned char ano;
-} digital_w_time7;
-
-typedef struct {
-        unsigned char iq;     // informaçao com qualificador
+        unsigned char iq;     // informaÃ§ao com qualificador
         unsigned short ms;    // milisegundos
         unsigned char min;    // minuto
         unsigned char hora;   // hora
@@ -73,15 +61,9 @@ typedef struct {
 
 
 typedef struct {
-	unsigned char iq;      // informaçao com qualificador
+	unsigned char iq;      // informaÃ§ao com qualificador
 } digital_notime_seq;
 
-typedef struct {
-        unsigned short nponto; // numero do ponto
-        unsigned char nponto3; // 3 byte do numero do ponto
-        short sva;             // valor analogico
-        unsigned char qds;     // qualificador do ponto
-} analogico;
 
 typedef struct {
         short sva;         // valor analogico
@@ -89,23 +71,9 @@ typedef struct {
 } analogico_seq;
 
 typedef struct {
-        unsigned short nponto; // numero do ponto
-        unsigned char nponto3; // 3 byte do numero do ponto
-        unsigned char vti;     // valor de tap
-        unsigned char qds;     // qualificador
-} step;
-
-typedef struct {
         unsigned char vti;   // valor de tap
         unsigned char qds;   // qualificador
 } step_seq;
-
-typedef struct {
-        unsigned short nponto; // numero do ponto
-        unsigned char nponto3; // 3 byte do numero do ponto
-        float fr;      	       // valor em ponto flutuante
-        unsigned char qds;     // qualificador do ponto
-} flutuante;
 
 typedef struct {
         float fr;      		// valor em ponto flutuante
@@ -113,11 +81,15 @@ typedef struct {
 } flutuante_seq;
 
 typedef struct {
-	unsigned short nponto; // numero do ponto
-	unsigned char nponto3; // 3 byte do numero do ponto
-	unsigned int bcr;  	   // valor binary counter reading
-	unsigned char qds;     // qualificador do ponto
-} integrated;
+    float fr;          // valor em ponto flutuante
+    unsigned char qds; // qualificador do ponto
+    unsigned short ms; // milisegundos
+    unsigned char min; // minuto
+    unsigned char hora; // hora
+    unsigned char dia;  // dia
+    unsigned char mes;
+    unsigned char ano;
+} flutuante_w_time7_seq;
 
 typedef struct {
 	unsigned int bcr;   // valor binary counter reading
