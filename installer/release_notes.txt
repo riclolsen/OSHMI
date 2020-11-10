@@ -186,6 +186,34 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.20:
+
+WARNING! Due to hist.sl3 table format change, old hist.sl3 tables must be replaced by the table with new format!
+After upgrading version, replace c:\oshmi\db\hist.sl3 by c:\oshmi\db\db_cold\hist.sl3.
+Alternatively delete c:\oshmi\db\hist.sl3 before upgrading to 6.20 version.
+
+Webserver:
+ - Updated to version 6.20.
+ - Changed hist.sl3 table format to add FIELDTS column to record field timestamp.
+
+Screen Viewer:
+ - Fixed PHP/SQLite error related to documental annotations.
+
+-------------------------------------------------------------------
+
+Notes for version 6.19:
+
+DNP3 Client Driver:
+ - Updated to version 0.77.
+ - Send timestamp data for analog points when available (via I104M).
+
+Webserver:
+ - Updated to version 6.19.
+ - Added formula 56 (ON for 2 single points for a double state ok and valid).
+ - Added formula 57 (ON for a double state point ok and valid).
+
+-------------------------------------------------------------------
+
 Notes for version 6.18:
 
 DNP3 Client Driver:

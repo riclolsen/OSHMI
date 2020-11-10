@@ -16,6 +16,7 @@ int nponto;
 double valor;
 int flags;
 double tagtempo;
+double fieldtime;
 } THistValor;
 
 //---------------------------------------------------------------------------
@@ -44,7 +45,7 @@ private:	// User declarations
 
 public:		// User declarations
         __fastcall TfmHist(TComponent* Owner);
-        void PushVal( int nponto, double valor, int flags, double tagtempo );
+        void PushVal( int nponto, double valor, int flags, double tagtempo, double fieldtime );
 };
 //---------------------------------------------------------------------------
 extern PACKAGE TfmHist *fmHist;

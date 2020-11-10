@@ -91,7 +91,7 @@ try {
       {
       $pdo = new PDO( 'sqlite:../db/notes.sl3','','', [
         PDO::ATTR_TIMEOUT => ($filtag!="" || $filcontent!="")?0:5,
-        PDO::SQLITE_ATTR_OPEN_FLAGS => PDO::SQLITE_OPEN_READONLY,
+        // PDO::SQLITE_ATTR_OPEN_FLAGS => PDO::SQLITE_OPEN_READONLY, // THIS FLAG CAUSES ERRORS
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ] );
       $pdo->exec ( "PRAGMA query_only=TRUE" );

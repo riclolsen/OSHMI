@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------------
 /*
 OSHMI - Open Substation HMI
-	Copyright 2008-2019 - Ricardo L. Olsen
+	Copyright 2008-2020 - Ricardo L. Olsen
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1515,7 +1515,7 @@ if ( !((*it).second).EventoDigital )
 
     if ( grava )
       {
-      fmHist->PushVal( nponto, ((*it).second).Valor, ((*it).second).Qual.Byte, ((*it).second).TagTempo );
+      fmHist->PushVal( nponto, ((*it).second).Valor, ((*it).second).Qual.Byte, ((*it).second).TagTempo, ((*it).second).TagTempoEvento );
       ((*it).second).ValorHist = ((*it).second).Valor;
       ((*it).second).TickHist = tick;
       }
@@ -2415,7 +2415,7 @@ try
            {
            q.Duplo = ESTDUP_INDETERMINADO;
            r = FA_ESTFASIM_OFF;
-           }    
+           }
 
         q.Falha =  Pontos[(*it).second.Parcelas[0]].Qual.Falha | Pontos[(*it).second.Parcelas[1]].Qual.Falha;
 
@@ -2466,6 +2466,137 @@ try
          q.Falha = Pontos[(*it).second.Parcelas[0]].Qual.Falha |
                    Pontos[(*it).second.Parcelas[1]].Qual.Falha;
          q.Tipo = TIPO_ANALOGICO;
+        break;
+    case COD_FORMULA_2SINGVALID:
+        {
+         // double bit from 2 single bit VALID
+        double tag;
+
+        r = Pontos[(*it).second.Parcelas[0]].Valor;
+        q.Byte = Pontos[(*it).second.Parcelas[0]].Qual.Byte;
+
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_ON &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_OFF)
+           {
+           q.Duplo = ESTDUP_ON;
+           r = FA_ESTFASIM_ON;
+           }
+        else
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_OFF &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_ON)
+           {
+           q.Duplo = ESTDUP_ON;
+           r = FA_ESTFASIM_ON;
+           }
+        else
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_ON &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_ON)
+           {
+           q.Duplo = ESTDUP_OFF;
+           r = FA_ESTFASIM_OFF;
+           }
+        else
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_OFF &&
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_OFF)
+           {
+           q.Duplo = ESTDUP_OFF;
+           r = FA_ESTFASIM_OFF;
+           }
+
+        q.Falha =  Pontos[(*it).second.Parcelas[0]].Qual.Falha | Pontos[(*it).second.Parcelas[1]].Qual.Falha;
+        if (q.Falha)
+           {
+           q.Duplo = ESTDUP_OFF;
+           r = FA_ESTFASIM_OFF;
+           }
+
+        // get time from latest
+        if (Pontos[(*it).second.Parcelas[0]].TagTempoEvento > Pontos[(*it).second.Parcelas[1]].TagTempoEvento)
+          tag = Pontos[(*it).second.Parcelas[0]].TagTempoEvento;
+        else
+          tag = Pontos[(*it).second.Parcelas[1]].TagTempoEvento;
+
+        // changed state: insert timstamp from source
+        if ( (*it).second.Qual.Duplo != q.Duplo )
+           if ( !(*it).second.AlarmeInibido() )
+              {
+              TDateTime dt=tag;
+
+              unsigned short year; unsigned short month; unsigned short day;
+              unsigned short hour; unsigned short min; unsigned short sec; unsigned short msec;
+              dt.DecodeDate(&year, &month, &day);
+              dt.DecodeTime(&hour, &min, &sec, &msec);
+
+              IncluiEvento( nponto,
+                            SDE_UTREVGERADO,
+                            q.Byte,
+                            year,
+                            month,
+                            day,
+                            hour,
+                            min,
+                            sec,
+                            msec
+                            );
+              temtagtmp = 1;
+              }
+        }
+        break;
+    case COD_FORMULA_DUPVALID:
+        {
+         // double bit from 2 single bit VALID
+        double tag;
+
+        r = Pontos[(*it).second.Parcelas[0]].Valor;
+        q.Byte = Pontos[(*it).second.Parcelas[0]].Qual.Byte;
+
+        if (Pontos[(*it).second.Parcelas[0]].Qual.Duplo == ESTDUP_ON ||
+            Pontos[(*it).second.Parcelas[1]].Qual.Duplo == ESTDUP_OFF)
+           {
+           q.Duplo = ESTDUP_ON;
+           r = FA_ESTFASIM_ON;
+           }
+        else
+           {
+           q.Duplo = ESTDUP_OFF;
+           r = FA_ESTFASIM_OFF;
+           }
+
+        q.Falha =  Pontos[(*it).second.Parcelas[0]].Qual.Falha;
+        if (q.Falha)
+           {
+           q.Duplo = ESTDUP_OFF;
+           r = FA_ESTFASIM_OFF;
+           }
+
+        // get time
+        tag = Pontos[(*it).second.Parcelas[0]].TagTempoEvento;
+
+        // changed state: insert timstamp from source
+        if ( (*it).second.Qual.Duplo != q.Duplo )
+           if ( !(*it).second.AlarmeInibido() )
+              {
+              TDateTime dt=tag;
+
+              unsigned short year; unsigned short month; unsigned short day;
+              unsigned short hour; unsigned short min; unsigned short sec; unsigned short msec;
+              dt.DecodeDate(&year, &month, &day);
+              dt.DecodeTime(&hour, &min, &sec, &msec);
+
+              IncluiEvento( nponto,
+                            SDE_UTREVGERADO,
+                            q.Byte,
+                            year,
+                            month,
+                            day,
+                            hour,
+                            min,
+                            sec,
+                            msec
+                            );
+              temtagtmp = 1;
+              }
+        }
         break;
     default:
         q.Tipo = TIPO_ANALOGICO;
@@ -2640,6 +2771,8 @@ TPonto &pt = BL.GetRefPonto( nponto, found );
 if ( !found )
   return -2;
 
+pt.TagTempoEvento = 0; // erase old field timestamp
+
 // se foi definida uma UTR na base para o ponto, só atualiza o ponto se vier desta UTR
 if ( ( pt.UTR !=  0 ) &&
      ( pt.UTR != (signed) sec ) )
@@ -2747,6 +2880,23 @@ try
       case 35: // scaled c/ tag
           {
           analogico_seq * ana = (analogico_seq *) ptinfo;
+
+          if ( tipo == 34 || tipo == 35 )
+            { // trata tag de tempo longa
+            analogico_w_time7_seq * at7 = (analogico_w_time7_seq *) ptinfo;
+            TDateTime dtev;
+            try
+              {
+              dtev = EncodeDate( 2000 + ( at7->ano & 0x7f ), at7->mes & 0x0f, at7->dia & 0x1f ) +
+                     EncodeTime( at7->hora & 0x1f, at7->min & 0x3f, at7->ms / 1000, at7->ms % 1000 );
+              pt.TagTempoEvento = dtev;
+              }
+            catch ( Exception &E )
+              {
+              pt.TagTempoEvento = 0;
+              }
+            }
+
           double div;
           if ( tipo == 9 || tipo == 34 )
             div = 32767;
@@ -2781,6 +2931,22 @@ try
       case 36: // ponto flutuante c/ tag
           {
           flutuante_seq * flut = (flutuante_seq *) ptinfo;
+
+          if ( tipo == 36 )
+            { // trata tag de tempo longa
+            flutuante_w_time7_seq * ft7 = (flutuante_w_time7_seq *) ptinfo;
+            TDateTime dtev;
+            try
+              {
+              dtev = EncodeDate( 2000 + ( ft7->ano & 0x7f ), ft7->mes & 0x0f, ft7->dia & 0x1f ) +
+                     EncodeTime( ft7->hora & 0x1f, ft7->min & 0x3f, ft7->ms / 1000, ft7->ms % 1000 );
+              pt.TagTempoEvento = dtev;
+              }
+            catch ( Exception &E )
+              {
+              pt.TagTempoEvento = 0;
+              }
+            }
 
           /*
           // do not update non-numeric values

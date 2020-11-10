@@ -105,6 +105,8 @@ using namespace std;
 #define COD_FORMULA_DISTMAXMIN  53
 #define COD_FORMULA_DUPLO       54
 #define COD_FORMULA_DIV         55
+#define COD_FORMULA_2SINGVALID  56
+#define COD_FORMULA_DUPVALID    57
 
 #define RGLIM_NORMAL 0
 #define RGLIM_ALMINF 1
@@ -576,6 +578,17 @@ typedef struct {
 } analogico_seq;
 
 typedef struct {
+        short sva;         // valor analogico
+        unsigned char qds; // qualificador do ponto
+        unsigned short ms;    // milisegundos
+        unsigned char min;    // minuto
+        unsigned char hora;   // hora
+        unsigned char dia;    // dia
+        unsigned char mes;
+        unsigned char ano;
+} analogico_w_time7_seq;
+
+typedef struct {
         unsigned short nponto; // numero do ponto
         unsigned char nponto3; // 3 byte do numero do ponto
         unsigned char vti;     // valor de tap
@@ -598,6 +611,17 @@ typedef struct {
         float fr;      		// valor em ponto flutuante
         unsigned char qds; 	// qualificador do ponto
 } flutuante_seq;
+
+typedef struct {
+        float fr;      		// valor em ponto flutuante
+        unsigned char qds; 	// qualificador do ponto
+        unsigned short ms;    // milisegundos
+        unsigned char min;    // minuto
+        unsigned char hora;   // hora
+        unsigned char dia;    // dia
+        unsigned char mes;
+        unsigned char ano;
+} flutuante_w_time7_seq;
 
 typedef struct {
 	unsigned short nponto; // numero do ponto

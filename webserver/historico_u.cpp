@@ -35,13 +35,14 @@ __fastcall TfmHist::TfmHist(TComponent* Owner)
 {
 }
 
-void TfmHist::PushVal( int nponto, double valor, int flags, double tagtempo )
+void TfmHist::PushVal( int nponto, double valor, int flags, double tagtempo, double fieldtime )
 {
 THistValor hvl;
 hvl.nponto = nponto;
 hvl.valor = valor;
-hvl. flags = flags;
+hvl.flags = flags;
 hvl.tagtempo = tagtempo;
+hvl.fieldtime = fieldtime;
 ListaValHist.push_back( hvl );
 }
 
@@ -94,9 +95,10 @@ Label4->Caption = tickini - tickant;
       MONGODB = (String)"var bulk=db.realtime_data.initializeUnorderedBulkOp();\n";
       // vou usar insert or replace para fazer valer o último estado quando repetir a hora
       // também é útil para não dar erro
-      String S;
+      String S, SP;
       tm unxtm;
-      time_t unxts;
+      time_t unxts, unxtsf;
+      double fieldts;
       THistValor hvl;
       unsigned short year;
       unsigned short month;
@@ -105,7 +107,7 @@ Label4->Caption = tickini - tickant;
       unsigned short min;
       unsigned short sec;
       unsigned short msec;
-      TDateTime dt;
+      TDateTime dt, dtf;
       bool ins = true;
 
       // verifica se tem horário de verão agora
@@ -116,7 +118,7 @@ Label4->Caption = tickini - tickant;
         {
         if ( ins )
            {
-           SQL = SQL + (String)"insert or replace into hist (nponto, valor, flags, data) values ";
+           SQL = SQL + (String)"insert or replace into hist (nponto, valor, flags, data, fieldts) values ";
            PGSQL = PGSQL + (String)"insert into hist (nponto, valor, flags, data) values ";
            ins = false;
            }
@@ -138,9 +140,27 @@ Label4->Caption = tickini - tickant;
         unxtm.tm_isdst = isdst; // deixa para o sistema determinar se está ou não em Horário de Verão
         unxts = mktime( &unxtm );
 
-        S = S.sprintf( "(%u,%.14g,%u,%u),", hvl.nponto, hvl.valor, hvl.flags, unxts );
+        fieldts = 0;
+        if (hvl.fieldtime!= 0)
+          {
+          dtf = hvl.fieldtime;
+          dtf.DecodeDate( &year, &month, &day );
+          dtf.DecodeTime( &hour, &min, &sec, &msec );
+          unxtm.tm_year = year - 1900;
+          unxtm.tm_mon = month - 1;
+          unxtm.tm_mday = day;
+          unxtm.tm_hour = hour;
+          unxtm.tm_min = min;
+          unxtm.tm_sec = sec;
+          unxtm.tm_isdst = isdst; // deixa para o sistema determinar se está ou não em Horário de Verão
+          unxtsf = mktime( &unxtm );
+          fieldts = unxtsf * (double)1000.0 + msec;
+          }
+
+        S = S.sprintf( "(%u,%.14g,%u,%u,%.0f),", hvl.nponto, hvl.valor, hvl.flags, unxts, fieldts );
         SQL = SQL + S;
-        PGSQL = PGSQL + S;
+        SP = SP.sprintf( "(%u,%.14g,%u,%u),", hvl.nponto, hvl.valor, hvl.flags, unxts );
+        PGSQL = PGSQL + SP;
 
         if (DB_MONGODB && fpmg != NULL)
           {

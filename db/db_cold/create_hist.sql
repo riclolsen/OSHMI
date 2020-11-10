@@ -4,7 +4,8 @@ CREATE TABLE "hist" (
    "VALOR" Real NOT NULL,
    "FLAGS" Integer NOT NULL,
    "DATA" Integer NOT NULL,
-   PRIMARY KEY (NPONTO, DATA)
+   "FIELDTS" Integer DEFAULT 0,
+   PRIMARY KEY (NPONTO, DATA, FIELDTS)
    );
 -- CREATE INDEX ind_data on "hist" ( DATA );
 
