@@ -129,7 +129,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 	int max_pointspkt = PKTDIG_MAXPOINTS;
 
 	PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
 	t_msgsupsq msg;
@@ -161,7 +161,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
-			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
+			if (!((count + 1) % max_pointspkt)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 			{
 				msg.numpoints = count % max_pointspkt;
 				packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(digital_notime_seq));
@@ -208,7 +208,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
-			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
+			if (!((count + 1) % max_pointspkt)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 			{
 				msg.numpoints = count % max_pointspkt;
 				packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(digital_w_time7_seq));
@@ -229,7 +229,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 	int max_pointspkt = PKTDIG_MAXPOINTS;
 
 	PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
 	t_msgsupsq msg;
@@ -261,7 +261,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
-			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
+			if (!((count + 1) % max_pointspkt)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 			{
 				msg.numpoints = count % max_pointspkt;
 				packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(digital_notime_seq));
@@ -308,7 +308,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 					pair.value.time << " RTU:" << msg.sec << std::endl;
 
 				count++;
-				if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
+				if (!((count + 1) % max_pointspkt)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 				{
 					msg.numpoints = count % max_pointspkt;
 					packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(digital_w_time7_seq));
@@ -329,7 +329,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
 	int packet_size;
 
 	PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
 	t_msgsupsq msg;
@@ -340,38 +340,85 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
 
 	int count = 0;
 
-	msg.tipo = 13;
-	msg.taminfo = sizeof(flutuante_seq); // value size for the type (not counting the 4 byte address)
-	values.ForeachItem([&](const Indexed<Analog>& pair)
-	{
-		// acerta endereco do ponto
-		unsigned int * paddr = (unsigned int *)(msg.info + (count % PKTANA_MAXPOINTS) * (sizeof(int) + sizeof(flutuante_seq)));
-		*paddr = pair.index + OFFSET_ANALOG; // considera offset para o grupo
+    if (info.gv != GroupVariation::Group32Var3 && info.gv != GroupVariation::Group32Var4
+        && info.gv != GroupVariation::Group32Var7 && info.gv != GroupVariation::Group32Var8)
+    { // without time
+        msg.tipo = 13; // float without time
+        msg.taminfo = sizeof(flutuante_seq); // value size for the type (not counting the 4 byte address)
+        values.ForeachItem([&](const Indexed<Analog>& pair) {
+            // acerta endereco do ponto
+            unsigned int* paddr
+                = (unsigned int*)(msg.info + (count % PKTANA_MAXPOINTS) * (sizeof(int) + sizeof(flutuante_seq)));
+            *paddr = pair.index + OFFSET_ANALOG; // considera offset para o grupo
 
-		// valor e qualidade
-		flutuante_seq * obj = (flutuante_seq *)(paddr + 1);
-		obj->fr = (float)pair.value.value;
-		obj->qds = xlatequalif(pair.value.flags.value);
+            // valor e qualidade
+            flutuante_seq* obj = (flutuante_seq*)(paddr + 1);
+            obj->fr = (float)pair.value.value;
+            obj->qds = xlatequalif(pair.value.flags.value);
 
-		std::cout << "[" << pair.index << "] : " <<
-			pair.value.value << " : " <<
-			static_cast<int>(pair.value.flags.value) << " : " <<
-			pair.value.time << " RTU:" << msg.sec << std::endl;
+            std::cout << "[" << pair.index << "] : " << pair.value.value << " : "
+                      << static_cast<int>(pair.value.flags.value) << " RTU:" << msg.sec
+                      << std::endl;
 
-		count++;
+            count++;
 
-		if ( !((count + 1) % PKTANA_MAXPOINTS)) // se a próxima é do próximo pacote, manda agora
-		{
-			msg.numpoints = count % PKTANA_MAXPOINTS;
-			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
-			SendOSHMI(&msg, packet_size);
-		}
+            if (!((count + 1) % PKTANA_MAXPOINTS)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
+            {
+                msg.numpoints = count % PKTANA_MAXPOINTS;
+                packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
+                SendOSHMI(&msg, packet_size);
+            }
+        });
 
-	});
+        msg.numpoints = count % PKTANA_MAXPOINTS;
+        packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
+        SendOSHMI(&msg, packet_size);
+    }
+    else
+    { // with time
+        msg.tipo = 36; // float with time
+        msg.taminfo = sizeof(flutuante_w_time7_seq); // value size for the type (not counting the 4 byte address)
+        values.ForeachItem([&](const Indexed<Analog>& pair) {
+            // acerta endereco do ponto
+            unsigned int* paddr
+                = (unsigned int*)(msg.info
+                                  + (count % PKTANA_MAXPOINTS) * (sizeof(int) + sizeof(flutuante_w_time7_seq)));
+            *paddr = pair.index + OFFSET_ANALOG; // considera offset para o grupo
 
-	msg.numpoints = count % PKTANA_MAXPOINTS;
-	packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
-	SendOSHMI(&msg, packet_size);
+            // valor e qualidade
+            flutuante_w_time7_seq* obj = (flutuante_w_time7_seq*)(paddr + 1);
+            obj->fr = (float)pair.value.value;
+            obj->qds = xlatequalif(pair.value.flags.value);
+
+            time_t tmi = pair.value.time / 1000;
+            struct tm* unxtm = localtime(&tmi);
+
+            obj->ano = unxtm->tm_year % 100;
+            obj->mes = unxtm->tm_mon + 1;
+            obj->dia = unxtm->tm_mday;
+            obj->hora = unxtm->tm_hour;
+            obj->min = unxtm->tm_min;
+            obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time % 1000);
+
+            std::cout << "[" << pair.index << "] : " << pair.value.value << " : "
+                      << static_cast<int>(pair.value.flags.value) << " : " << pair.value.time  << msg.sec << " RTU:" << msg.sec
+                      << std::endl;
+
+            count++;
+
+            if (!((count + 1) % PKTANA_MAXPOINTS)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
+            {
+                msg.numpoints = count % PKTANA_MAXPOINTS;
+                packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_w_time7_seq));
+                SendOSHMI(&msg, packet_size);
+            }
+        });
+
+        msg.numpoints = count % PKTANA_MAXPOINTS;
+        packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_w_time7_seq));
+        SendOSHMI(&msg, packet_size);
+    }
+
 }
 
 void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Counter>>& values)
@@ -379,7 +426,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Cou
 	int packet_size;
 
 	PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
     // monta buffer de mensagem para OSHMI no formato I104M
 	t_msgsupsq msg;
@@ -410,7 +457,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Cou
 
 		count++;
 
-		if (!((count + 1) % PKTANA_MAXPOINTS)) // se a próxima é do próximo pacote, manda agora
+		if (!((count + 1) % PKTANA_MAXPOINTS)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 		{
 			msg.numpoints = count % PKTANA_MAXPOINTS;
 			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(integrated_seq));
@@ -429,7 +476,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Fro
 	int packet_size;
 
 	PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
 	t_msgsupsq msg;
@@ -460,7 +507,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Fro
 
 		count++;
 
-		if (!((count + 1) % PKTANA_MAXPOINTS)) // se a próxima é do próximo pacote, manda agora
+		if (!((count + 1) % PKTANA_MAXPOINTS)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 		{
 			msg.numpoints = count % PKTANA_MAXPOINTS;
 			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
@@ -480,7 +527,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 	int max_pointspkt = PKTDIG_MAXPOINTS;
 
 	PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
 	// monta buffer de mensagem para OSHMI no formato I104M
 	t_msgsupsq msg;
@@ -512,7 +559,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 				pair.value.time << " RTU:" << msg.sec << std::endl;
 
 			count++;
-			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
+			if (!((count + 1) % max_pointspkt)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 			{
 				msg.numpoints = count % max_pointspkt;
 				packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(digital_notime_seq));
@@ -559,7 +606,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 					pair.value.time << " RTU:" << msg.sec << std::endl;
 
 				count++;
-				if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
+				if (!((count + 1) % max_pointspkt)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 				{
 					msg.numpoints = count % max_pointspkt;
 					packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(digital_w_time7_seq));
@@ -579,7 +626,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
 	int packet_size;
 
 	PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
     // monta buffer de mensagem para OSHMI no formato I104M
 	t_msgsupsq msg;
@@ -610,7 +657,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
 
 		count++;
 
-		if (!((count + 1) % PKTANA_MAXPOINTS)) // se a próxima é do próximo pacote, manda agora
+		if (!((count + 1) % PKTANA_MAXPOINTS)) // se a prÃ³xima Ã© do prÃ³ximo pacote, manda agora
 		{
 			msg.numpoints = count % PKTANA_MAXPOINTS;
 			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
@@ -627,7 +674,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
 void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values)
 {
 	this->PrintHeaderInfo(info);
-	NoDataCntTime = 0; // mantém link vivo
+	NoDataCntTime = 0; // mantÃ©m link vivo
 
 	values.ForeachItem([&](const Indexed<OctetString>& pair)
 	{
