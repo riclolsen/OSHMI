@@ -43,6 +43,8 @@
 #pragma resource "*.dfm"
 TfmShell *fmShell;
 
+String SHELLAPIURL = "htdocs/shellapi.rjs";
+String ALARMSVIEWERSEL = "?SELMODULO=TODOS_ANORMAIS";
 String JANELA_AENCONTRAR = "";
 HWND JANELA_ENCONTRADA = 0;
 
@@ -282,6 +284,14 @@ if ( pIni != NULL )
   String SERVER1 = "127.0.0.1";
   String SERVER2 = "127.0.0.1";
 
+  // Alarms Viewer (from tabular parameter)
+  ALARMSVIEWERSEL = pIni->ReadString("HMISHELL","ALARMS_VIEWER_GET", ALARMSVIEWERSEL);
+
+  // Remote HTTP Port
+  REMOTE_PORT = pIni->ReadInteger("HMISHELL","REMOTE_HTTP_PORT", REMOTE_PORT);
+  // Shell API URL
+  SHELLAPIURL = pIni->ReadString("HMISHELL","SHELL_API_URL", SHELLAPIURL);
+
   // server 1 and 2 addresses
   SERVER1 = pIni->ReadString( "HMISHELL", "SERVER1", SERVER1 ).Trim();
   SERVER2 = pIni->ReadString( "HMISHELL", "SERVER2", SERVER2 ).Trim();
@@ -475,10 +485,10 @@ void __fastcall TfmShell::tbAnormaisClick(TObject *Sender)
 {
 JANELA_AENCONTRAR = TITULO_VISOR_ANORMALIDADES;
 EnumWindows( (int (__stdcall *)()) enumwndprc, 0);
-Linux_FindWindow( JANELA_AENCONTRAR, VISOR_TABULAR + (String)"?SELMODULO=TODOS_ANORMAIS" );
+Linux_FindWindow( JANELA_AENCONTRAR, VISOR_TABULAR + ALARMSVIEWERSEL );
 if ( JANELA_ENCONTRADA == 0 ) // se não achou executa
   {
-  ExecExternApp( (VISOR_TABULAR + (String)"?SELMODULO=TODOS_ANORMAIS").c_str() );
+  ExecExternApp( (VISOR_TABULAR + ALARMSVIEWERSEL).c_str() );
   ToolBar1->Enabled = false;
   Timer1->Interval = TIMER_ESPERA_VISOR;
   }

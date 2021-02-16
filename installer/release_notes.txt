@@ -186,6 +186,27 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.22:
+
+QTester104:
+ - Updated to version 2.4.
+ - Fixed packet read problem.
+
+ Chromium:
+ - Updated to version 88.0.4324.150.
+
+-------------------------------------------------------------------
+
+Notes for version 6.21:
+
+HMI Shell:
+ - Options to set HTTP port and URL for Shell API in ini file.
+
+Modbus:
+ - Support for RS232 and RS485.
+
+-------------------------------------------------------------------
+
 Notes for version 6.20:
 
 WARNING! Due to hist.sl3 table format change, old hist.sl3 tables must be replaced by the table with new format!
