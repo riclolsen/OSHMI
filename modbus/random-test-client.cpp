@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define VERSION "OSHMI Modbus Driver v.1.10 - Copyright 2015-2020 Ricardo L. Olsen"
+#define VERSION "OSHMI Modbus Driver v.1.11 - Copyright 2015-2020 Ricardo L. Olsen"
 
 #include <stdio.h>
 #include <conio.h>
@@ -106,6 +106,10 @@ struct mb_rturead
 	int stop_bits = 1;
 	char parity = 'N';
 	int log_debug = 0;
+	int tcp_pi_mode = 0;
+	int rs485_mode = 0;
+	int rts_mode = MODBUS_RTU_RTS_NONE;
+	int rts_delay = 0;
 	vector <mb_read> readhr;
 	vector <mb_read> readhr_float; // read consecutive 16 bit values as floats (assume 1st byte=exp, 2nd=MSB mant, 3rd=middle mant, 4=LSB mant so intel 2,3,0,1 order) 
 	vector <mb_read> readhr_long; // read consecutive 16 bit values as a long (32 bit integer=DWORD)
@@ -538,39 +542,72 @@ int main(void)
 		if (!reader.HasSection(rtun))
 		  break;
 		mb_rturead rtu;
-		rtu.ip = reader.GetString(rtun, "IP", "127.0.0.1");
+		rtu.ip = reader.GetString(rtun, "IP", "");
 		rtu.port = reader.GetInteger(rtun, "PORT", 502);
 		rtu.slave_id = reader.GetInteger(rtun, "SLAVE_ID", -1);
 		rtu.timeout_ms = reader.GetInteger(rtun, "TIMEOUT", 500);
 		rtu.delay = reader.GetInteger(rtun, "DELAY", 0);
 		rtu.endianness = reader.GetInteger(rtun, "ENDIANNESS", 0); // for 32 bit 0=BIG 1=MIDDLE LITTLE
+		rtu.tcp_pi_mode = reader.GetInteger(rtun, "TCP_PI_MODE", 0);
 
+		rtu.rs485_mode = reader.GetInteger(rtun, "RS485_MODE", 0);
+		rtu.rts_mode = reader.GetInteger(rtun, "RTS_MODE", 0);
+		rtu.rts_delay = reader.GetInteger(rtun, "RTS_DELAY", 0);
 		rtu.serial_port_name = reader.GetString(rtun, "SERIAL_PORT_NAME", "");
 		rtu.baud_rate = reader.GetInteger(rtun, "BAUD_RATE", 9600);
 		rtu.data_bits = reader.GetInteger(rtun, "DATA_BITS", 8);
 		rtu.stop_bits = reader.GetInteger(rtun, "STOP_BITS", 1);
-		string sparity = reader.GetString(rtun, "DATA_BITS", "N");
+		string sparity = reader.GetString(rtun, "PARITY", "N");
 		if (sparity.length() > 0)
 			rtu.parity = sparity[0];
 
 		rtu.log_debug = reader.GetInteger(rtun, "LOG_LEVEL", 0);
 
-		if (i > 0 &&  
-				(
-				rtu.ip!="" && mb_queue[i - 1].ip == rtu.ip && mb_queue[i - 1].port == rtu.port
+		if (i > 0 &&
+			(
+				rtu.ip != "" && mb_queue[i - 1].ip == rtu.ip && mb_queue[i - 1].port == rtu.port
 				||
-				rtu.serial_port_name != "" && mb_queue[i - 1].serial_port_name == rtu.serial_port_name
+				rtu.serial_port_name != "" && (mb_queue[i - 1].serial_port_name == rtu.serial_port_name)
 				)
-			)
+			) {
+			printf("........\n");
+			printf("RTU %d\n", i + 1);
+			if (rtu.slave_id == -1)
+				printf("SLAVE_ID [default]\n");
+			else
+				printf("SLAVE_ID %d\n", rtu.slave_id);
 			rtu.ctx = mb_queue[i - 1].ctx; // same previous IP and PORT or serial port, reuse connection
+		}
 		else
 		{
-			if (rtu.serial_port_name != "")
+			printf("-------------------------------\n");
+			printf("NEW CHANNEL\n");
+			if (rtu.serial_port_name != "") {
 				rtu.ctx = modbus_new_rtu(rtu.serial_port_name.c_str(), rtu.baud_rate, rtu.parity, rtu.data_bits, rtu.stop_bits);
-			else
-			    rtu.ctx = modbus_new_tcp(rtu.ip.c_str(), rtu.port);
+				if (rtu.rs485_mode != 0)
+					modbus_rtu_set_serial_mode(rtu.ctx, MODBUS_RTU_RS485);
+				if (rtu.rts_mode != 0) {
+					if (rtu.rts_mode == 1)
+						modbus_rtu_set_rts(rtu.ctx, MODBUS_RTU_RTS_UP);
+					else
+						modbus_rtu_set_rts(rtu.ctx, MODBUS_RTU_RTS_DOWN);
+				}
+				if (rtu.rts_delay != 0) {
+					modbus_rtu_set_rts(rtu.ctx, rtu.rts_delay);
+				}
+			}
+			else {
+				if (rtu.tcp_pi_mode != 0) {
+					char service[33];
+					_itoa(rtu.port, service, 10);
+					rtu.ctx = modbus_new_tcp_pi(rtu.ip.c_str(), service);
+				}
+				else {
+					rtu.ctx = modbus_new_tcp(rtu.ip.c_str(), rtu.port);
+				}
+			}
 			if (rtu.ctx == NULL) {
-				cout << "Unable to create the libmodbus context (slave " << i << ")!" << endl;
+				cout << "Unable to create the libmodbus context (slave " << i+1 << ")!" << endl;
 				exit(1);
 			}
 			if (rtu.log_debug == 0)
@@ -584,19 +621,25 @@ int main(void)
 			uint32_t old_response_to_sec;
 			uint32_t old_response_to_usec;
 			modbus_get_response_timeout(rtu.ctx, &old_response_to_sec, &old_response_to_usec);
-			printf("-------------------------------\n");
-			printf("RTU %d\n", i + 1);
-			if (rtu.serial_port_name != "")
+			if (rtu.serial_port_name != "") {
+				if (rtu.rs485_mode != 0)
+					printf("RS485\n");
 				printf("SERIAL PORT %s\n", rtu.serial_port_name.c_str());
-			else
-			    printf("IP %s PORT %d\n", rtu.ip.c_str(), rtu.port);
+			}
+			else {
+				if (rtu.tcp_pi_mode != 0)
+					printf("PI MODE\n");
+				printf("IP %s PORT %d\n", rtu.ip.c_str(), rtu.port);
+			}
+			printf("DELAY %d ms\n", rtu.delay);
+			printf ("TIMEOUT %d s : %d us \n", old_response_to_sec, old_response_to_usec);
+
+			printf("........\n");
+			printf("RTU %d\n", i + 1);
 			if (rtu.slave_id == -1)
 				printf("SLAVE_ID [default]\n");
 			else
-			    printf("SLAVE_ID %d\n", rtu.slave_id);
-			printf("DELAY %d ms\n", rtu.delay);
-			printf ("TIMEOUT %d s : %d us \n", old_response_to_sec, old_response_to_usec);
-			printf("-------------------------------\n");
+				printf("SLAVE_ID %d\n", rtu.slave_id);
 		}
 
 		for (int j = 0; j < MAX_INPREAD; j++)
@@ -693,6 +736,7 @@ int main(void)
 
 		mb_queue.push_back(rtu);
 	}	
+	printf("*******************************************************\n");
 
 	int max_pointspkt;
 	int count;
