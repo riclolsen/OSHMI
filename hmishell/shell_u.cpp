@@ -248,36 +248,45 @@ DWORD size = sizeof(UserName) - 1;
 GetUserName((TCHAR*)UserName, &size);
 Loga( (String)"System Started. User=" + (String)UserName );
 
-TIniFile *pIni = new TIniFile(ARQ_CONF_IHM);
-if ( pIni != NULL )
-  {
-  String BROWSER_OPTIONS = pIni->ReadString("RUN","BROWSER_OPTIONS", "--process-per-site --no-sandbox --disable-popup-blocking --no-proxy-server --bwsi --disable-extensions --disable-sync --no-first-run").Trim();
-  VISOR_EVENTOS = StringReplace(pIni->ReadString("RUN","EVENTS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
-  VISOR_TABULAR = StringReplace(pIni->ReadString("RUN","TABULAR_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
-  VISOR_TELAS = StringReplace(pIni->ReadString("RUN","SCREEN_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
-  VISOR_TENDENCIAS = StringReplace(pIni->ReadString("RUN","TREND_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
-  VISOR_CURVAS = StringReplace(pIni->ReadString("RUN","CURVES_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
-  VISOR_DOCS = StringReplace(pIni->ReadString("RUN","DOCS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
-  VISOR_LOGS = StringReplace(pIni->ReadString("RUN","LOGS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+// read from hmi.ini
+TIniFile *pIniHmi = new TIniFile(ARQ_CONF_IHM);
+// read from hmishell.ini
+TIniFile *pIni = new TIniFile(ARQ_CONF);
 
-  DELAY = pIni->ReadInteger( "RUN", "DELAY", 15 );
-  INTERVAL = pIni->ReadInteger( "RUN", "INTERVAL", 5 );
+// To read section RUN from hmi.ini or hmishell.ini
+// section RUN if exists on hmishell.ini takes precedence over hmi.ini
+TIniFile *pIniReadRun = pIni;
+if (pIni == NULL || !pIni->SectionExists("RUN"))
+  pIniReadRun = pIniHmi;
+
+if ( pIniReadRun != NULL )
+  {
+  BROWSER_OPTIONS = pIniReadRun->ReadString("RUN","BROWSER_OPTIONS", "--process-per-site --no-sandbox --disable-popup-blocking --no-proxy-server --bwsi --disable-extensions --disable-sync --no-first-run").Trim();
+  VISOR_EVENTOS = StringReplace(pIniReadRun->ReadString("RUN","EVENTS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_TABULAR = StringReplace(pIniReadRun->ReadString("RUN","TABULAR_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_TELAS = StringReplace(pIniReadRun->ReadString("RUN","SCREEN_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_TENDENCIAS = StringReplace(pIniReadRun->ReadString("RUN","TREND_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_CURVAS = StringReplace(pIniReadRun->ReadString("RUN","CURVES_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_DOCS = StringReplace(pIniReadRun->ReadString("RUN","DOCS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+  VISOR_LOGS = StringReplace(pIniReadRun->ReadString("RUN","LOGS_VIEWER", "").Trim(), "--bopt", BROWSER_OPTIONS);
+
+  DELAY = pIniReadRun->ReadInteger( "RUN", "DELAY", 15 );
+  INTERVAL = pIniReadRun->ReadInteger( "RUN", "INTERVAL", 5 );
   RUN_NUM = 0;
   for ( int i = 0; i < MAX_RUN; i++ )
     {
     String s;
     s = s.sprintf( "RUN%02d", i );
-    RUN[i] = pIni->ReadString( "RUN", s.c_str(), "" );
+    RUN[i] = pIniReadRun->ReadString( "RUN", s.c_str(), "" );
     if ( RUN[i] == "" )
       break;
     else
       RUN_NUM = i + 1;
     }
-
-  delete pIni;
   }
 
-pIni = new TIniFile(ARQ_CONF);
+delete pIniHmi;
+
 if ( pIni != NULL )
   {
   int LAST_SERVER = 2;
@@ -285,12 +294,12 @@ if ( pIni != NULL )
   String SERVER2 = "127.0.0.1";
 
   // Alarms Viewer (from tabular parameter)
-  ALARMSVIEWERSEL = pIni->ReadString("HMISHELL","ALARMS_VIEWER_GET", ALARMSVIEWERSEL);
+  ALARMSVIEWERSEL = pIni->ReadString( "HMISHELL", "ALARMS_VIEWER_GET", ALARMSVIEWERSEL );
 
   // Remote HTTP Port
-  REMOTE_PORT = pIni->ReadInteger("HMISHELL","REMOTE_HTTP_PORT", REMOTE_PORT);
+  REMOTE_PORT = pIni->ReadInteger( "HMISHELL", "REMOTE_HTTP_PORT", REMOTE_PORT );
   // Shell API URL
-  SHELLAPIURL = pIni->ReadString("HMISHELL","SHELL_API_URL", SHELLAPIURL);
+  SHELLAPIURL = pIni->ReadString( "HMISHELL", "SHELL_API_URL", SHELLAPIURL );
 
   // server 1 and 2 addresses
   SERVER1 = pIni->ReadString( "HMISHELL", "SERVER1", SERVER1 ).Trim();
@@ -325,6 +334,46 @@ if ( pIni != NULL )
     DWORD aNewColors[1];
     aNewColors[0] = RGB(red, green, blue);
     SetSysColors(1, aElements, aNewColors);
+    }
+
+  // Read from section USER_USERNAME (USERNAME in UPPER CASE!)
+  // This section (if exists) takes precedece over other configuration sections  
+  String sectionUser = (String)"USER_" + ((String)UserName).UpperCase();
+  if ( pIni->SectionExists(sectionUser) )
+    {
+    // Alarms Viewer (from tabular parameter)
+    ALARMSVIEWERSEL = pIni->ReadString( sectionUser, "ALARMS_VIEWER_GET", ALARMSVIEWERSEL );
+    // Remote HTTP Port
+    REMOTE_PORT = pIni->ReadInteger( sectionUser, "REMOTE_HTTP_PORT", REMOTE_PORT );
+    // Shell API URL
+    SHELLAPIURL = pIni->ReadString( sectionUser, "SHELL_API_URL", SHELLAPIURL );
+
+    // server 1 and 2 addresses for a OS logged in user [UserName]
+    SERVER1 = pIni->ReadString( sectionUser, (String)"SERVER1", SERVER1 ).Trim();
+    SERVER2 = pIni->ReadString( sectionUser, (String)"SERVER2", SERVER2 ).Trim();
+
+    BROWSER_OPTIONS = pIni->ReadString(sectionUser,"BROWSER_OPTIONS", BROWSER_OPTIONS).Trim();
+    VISOR_EVENTOS = StringReplace(pIni->ReadString(sectionUser,"EVENTS_VIEWER", VISOR_EVENTOS).Trim(), "--bopt", BROWSER_OPTIONS);
+    VISOR_TABULAR = StringReplace(pIni->ReadString(sectionUser,"TABULAR_VIEWER", VISOR_TABULAR).Trim(), "--bopt", BROWSER_OPTIONS);
+    VISOR_TELAS = StringReplace(pIni->ReadString(sectionUser,"SCREEN_VIEWER", VISOR_TELAS).Trim(), "--bopt", BROWSER_OPTIONS);
+    VISOR_TENDENCIAS = StringReplace(pIni->ReadString(sectionUser,"TREND_VIEWER", VISOR_TENDENCIAS).Trim(), "--bopt", BROWSER_OPTIONS);
+    VISOR_CURVAS = StringReplace(pIni->ReadString(sectionUser,"CURVES_VIEWER", VISOR_CURVAS).Trim(), "--bopt", BROWSER_OPTIONS);
+    VISOR_DOCS = StringReplace(pIni->ReadString(sectionUser,"DOCS_VIEWER", VISOR_DOCS).Trim(), "--bopt", BROWSER_OPTIONS);
+    VISOR_LOGS = StringReplace(pIni->ReadString(sectionUser,"LOGS_VIEWER", VISOR_LOGS).Trim(), "--bopt", BROWSER_OPTIONS);
+
+    DELAY = pIni->ReadInteger( sectionUser, "DELAY", 15 );
+    INTERVAL = pIni->ReadInteger( sectionUser, "INTERVAL", 5 );
+    RUN_NUM = 0;
+    for ( int i = 0; i < MAX_RUN; i++ )
+      {
+      String s;
+      s = s.sprintf( "RUN%02d", i );
+      RUN[i] = pIni->ReadString( sectionUser, s.c_str(), "" );
+      if ( RUN[i] == "" )
+        break;
+      else
+        RUN_NUM = i + 1;
+      }
     }
 
   delete pIni;

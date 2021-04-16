@@ -166,6 +166,7 @@ public:		// User declarations
         void ShowSelScreen(void);
         int NumScreens;
         int SelScreen;
+        String BROWSER_OPTIONS;
         String VISOR_EVENTOS;
         String VISOR_TABULAR;
         String VISOR_TELAS;

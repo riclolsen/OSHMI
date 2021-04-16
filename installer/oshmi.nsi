@@ -1,6 +1,6 @@
 ; oshmi.nsi
 ; OSHMI installer script
-; Copyright 2008-2020 - Ricardo L. Olsen
+; Copyright 2008-2021 - Ricardo L. Olsen
 
 ; NSIS (Nullsoft Scriptable Install System) - http://nsis.sourceforge.net/Main_Page
 
@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.22"
-!define VERSION_ "6.22.0.0"
+!define VERSION "v.6.23"
+!define VERSION_ "6.23.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'

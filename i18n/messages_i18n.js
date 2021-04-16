@@ -1,10 +1,10 @@
 // Internationalization Messages
-// OSHMI/Open Substation HMI - Copyright (c) 2008-2020 - Ricardo L. Olsen
+// OSHMI/Open Substation HMI - Copyright (c) 2008-2021 - Ricardo L. Olsen
 
 var Msg =
 {
 NomeProduto: 'OSHMI',
-VersaoProduto: '6.22',
+VersaoProduto: '6.23',
 
 NomeVisorTelas:       'Visor de Telas',
 NomeVisorEventos:     'Visor de Eventos',

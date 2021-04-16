@@ -186,13 +186,30 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.23:
+
+Webserver.exe:
+ - Updated to version 6.23.
+ - Record to hist table values even when alarm is inhibited for a point.
+
+HMI Shell:
+ - Possibility to specify configurations per OS user (USER_USERNAME section).
+
+SQLite:
+ - Updated to version 3.35.4.
+
+Chromium:
+ - Updated to version 90.0.4430.72.
+
+-------------------------------------------------------------------
+
 Notes for version 6.22:
 
 QTester104:
  - Updated to version 2.4.
  - Fixed packet read problem.
 
- Chromium:
+Chromium:
  - Updated to version 88.0.4324.150.
 
 -------------------------------------------------------------------

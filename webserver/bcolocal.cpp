@@ -1484,10 +1484,9 @@ if ( inclui_ev )
                 );
   }
   
-// manda para o histórico, se mudou valor ou qualificador, se não estiver inibido, e não for evento                
+// manda para o histórico, se mudou valor ou qualificador e não for evento                
 if ( HIST_RECORD )
 if ( fmHist != NULL )
-if ( !((*it).second).AlrIn )
 if ( !((*it).second).EventoDigital )
   {
   unsigned tick = GetTickCount();
