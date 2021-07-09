@@ -311,18 +311,6 @@ if ( pIni != NULL )
 
   LAST_SERVER = pIni->ReadInteger( "HMISHELL", "LAST_SERVER", LAST_SERVER );
   PROC_BEEP = pIni->ReadInteger( "HMISHELL", "BEEP", PROC_BEEP );
-  if ( LAST_SERVER == 2 )
-    {
-    LAST_SERVER = 1;
-    REMOTE_HOST = SERVER1;
-    }
-  else
-    {
-    LAST_SERVER = 2;
-    REMOTE_HOST = SERVER2;
-    }
-
-  pIni->WriteInteger( "HMISHELL", "LAST_SERVER", LAST_SERVER );
 
   int red = pIni->ReadInteger( "HMISHELL", "BGCOLOR_RED", -1 );
   int green = pIni->ReadInteger( "HMISHELL", "BGCOLOR_GREEN", -1 );
@@ -375,6 +363,19 @@ if ( pIni != NULL )
         RUN_NUM = i + 1;
       }
     }
+
+  if ( LAST_SERVER == 2 )
+    {
+    LAST_SERVER = 1;
+    REMOTE_HOST = SERVER1;
+    }
+  else
+    {
+    LAST_SERVER = 2;
+    REMOTE_HOST = SERVER2;
+    }
+
+  pIni->WriteInteger( "HMISHELL", "LAST_SERVER", LAST_SERVER );
 
   delete pIni;
   }
@@ -816,10 +817,8 @@ int leftmargin=4;
 int bzsize = 15;
 int lblspc = 2;
 
-if ( REMOTE_HOST == "127.0.0.1" )
-  fmSair->lbServer->Caption = "";
-else
-  fmSair->lbServer->Caption = REMOTE_HOST;
+fmSair->lbServer->Caption = REMOTE_HOST;
+fmSair->lbPort->Caption = REMOTE_PORT;
 
 // convert screen_list UTF8 encoded to native windows encoding
 WinExec("..\\bin\\convert-screenlist-from-utf8.bat", SW_HIDE);

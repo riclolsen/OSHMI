@@ -44,6 +44,7 @@ __published:	// IDE-managed Components
         TLabel *lbServer;
         TButton *btAjuda;
         TButton *btNotes;
+        TLabel *lbPort;
         void __fastcall btDesligarClick(TObject *Sender);
         void __fastcall btReiniciarClick(TObject *Sender);
         void __fastcall btLogoutClick(TObject *Sender);
