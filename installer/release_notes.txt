@@ -186,6 +186,19 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.25:
+
+Chromium:
+ - Updated to version 94.0.4606.61.
+
+SQLite:
+ - Updated to version 3.35.4.
+
+HMIShell:
+ - Updated to version 6.25, fixed problems with per OS user config.
+
+-------------------------------------------------------------------
+
 Notes for version 6.24:
 
 Chromium:
