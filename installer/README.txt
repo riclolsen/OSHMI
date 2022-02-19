@@ -186,6 +186,19 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.26:
+
+Screen Viewer:
+ - Fixed problem with Time Machine.
+
+Chromium:
+ - Updated to version 98.0.4758.102.
+
+SQLite:
+ - Updated to version 3.37.2.
+
+-------------------------------------------------------------------
+
 Notes for version 6.25:
 
 Chromium:

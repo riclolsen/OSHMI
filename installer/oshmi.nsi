@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.24"
-!define VERSION_ "6.24.0.0"
+!define VERSION "v.6.26"
+!define VERSION_ "6.26.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -46,7 +46,7 @@ VIProductVersion ${VERSION_}
 VIAddVersionKey ProductName "OSHMI (Open Substation HMI)"
 VIAddVersionKey Comments "SCADA HMI Software"
 VIAddVersionKey CompanyName "Ricardo Olsen"
-VIAddVersionKey LegalCopyright "Copyright 2008-2020 Ricardo L. Olsen"
+VIAddVersionKey LegalCopyright "Copyright 2008-2022 Ricardo L. Olsen"
 VIAddVersionKey FileDescription "OSHMI Installer"
 VIAddVersionKey FileVersion ${VERSION}
 VIAddVersionKey ProductVersion ${VERSION}

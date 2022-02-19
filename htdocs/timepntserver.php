@@ -134,10 +134,13 @@ try
                               WHERE
                                     (nponto = '$pnt' or 
                                      nponto in (select nponto from dumpdb where id='$pnt')) and 
-                                    data = (select data from hist where nponto=$pnt and data<=$FILTDH  
+                                    data = (select data from hist where nponto=
+                                      (select nponto from dumpdb where id='$pnt' or nponto='$pnt' limit 1)
+                                    AND data<=$FILTDH  
                               ORDER BY
                                     data desc limit 1) ";
         }
+      
       $uni = " UNION ";
       $cntsql++;
       if ( $cntsql > 50 )
@@ -200,7 +203,7 @@ try
     $dbpnt->exec ( "PRAGMA synchronous = NORMAL" );
     $dbpnt->exec ( "PRAGMA journal_mode = WAL" );
     $dbpnt->exec ( "PRAGMA locking_mode = NORMAL" );
-    $sql = "SELECT NPONTO, LIMS, LIMI from dumpdb where nponto = $pnt" ;
+    $sql = "SELECT NPONTO, LIMS, LIMI from dumpdb where nponto = (select nponto from dumpdb where id='$pnt' or nponto='$pnt' limit 1)" ;
     foreach ( $dbpnt->query( $sql ) as $row )
       {
       $nponto = $row['NPONTO'];
