@@ -23,6 +23,7 @@ Acknowledgements:
   Inkscape + SAGE - https://sourceforge.net/projects/sage-scada
   Chromium - by "The Chromium Authors"
   Chromium x86 binaries - http://chromium.woolyss.com
+  Libiec6150 - https://github.com/mz-automation/libiec61850
   ICCP Client by Fernando Covatti - https://github.com/fcovatti/iccp
   Opendnp3 - https://www.automatak.com/opendnp3/
   Libmodbus - http://libmodbus.org/
