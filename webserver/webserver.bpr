@@ -59,7 +59,7 @@
 IncludeVerInfo=1
 AutoIncBuild=0
 MajorVer=6
-MinorVer=23
+MinorVer=28
 Release=0
 Build=0
 Debug=0
@@ -73,13 +73,13 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=OSHMI
 FileDescription=Webserver
-FileVersion=6.23.0.0
+FileVersion=6.28.0.0
 InternalName=Webserver
-LegalCopyright=(c) 2008-2021 Ricardo Lastra Olsen
+LegalCopyright=(c) 2008-2022 Ricardo Lastra Olsen
 LegalTrademarks=
 OriginalFilename=webserver.exe
 ProductName=OSHMI: Open Substation HMI
-ProductVersion=6.23.0.0
+ProductVersion=6.28.0.0
 Comments=
 
 [HistoryLists\hlIncludePath]

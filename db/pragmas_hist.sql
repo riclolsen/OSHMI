@@ -1,5 +1,5 @@
 .timeout 9000
 PRAGMA temp_store = MEMORY;
-PRAGMA synchronous = NORMAL;
+PRAGMA synchronous = OFF;
 PRAGMA journal_mode = WAL;
 

@@ -1,5 +1,11 @@
 VERSION 3
 POINT_NUMB ADDR ID                                   TYP MESSAGE                              ALM   EQ  INF   OR  UN  RTU  ASDU       KCONV1       KCONV2  SUPCMD  DC  PR       INIVAL "SUBEST~BAY~DESCRIPTION"
+ 200000       0 Obj1CSWI1.Pos                          D OFF/ON                                 0    0    0    7   S    0    45       1.0000       0.0000  200004   2   1       0.0000 "IEC61850Ied1~CSWI1~ControlPos"
+ 200001       0 I3pMMXU1.A.phsB.cVal.mag.f             A val                                    0    0    0    0   E    0    13       1.0000       0.0000       0   1   1       1.0000 "IEC61850Ied1~I3pMMXU1~CurrentPhsBMagF"
+ 200002       0 I3pMMXU1.A.phsB                        A val                                    0    0    0    0   E    0    13       1.0000       0.0000       0   1   1       1.0000 "IEC61850Ied1~I3pMMXU1~CurrentPhsB"
+ 200003       0 Obj1XCBR1.Pos.stVal                    D OFF/ON                                 0    0    0    0   E    0    30       1.0000       0.0000       0   2   2       1.0000 "IEC61850Ied1~XCBR1~PosStVal"
+ 200004       0 Obj1XCBR1.Pos                          D OFF/ON                                 0    0    0    0   E    0    30       1.0000       0.0000       0   2   2       1.0000 "IEC61850Ied1~XCBR1~Pos"
+ 200005       0 Obj3XCBR2.Pos                          D OFF/ON                                 0    0    0    0   E    0    30       1.0000       0.0000       0   2   2       1.0000 "IEC61850Ied1~XCBR2~Pos"
       1       0 TES_SUP_SINGLE                         D OFF/ON                                38  310    0    0   S   27    30       1.0000       0.0000       0   2   2       1.0000 "TES~Sup~Single"
       2       0 TES_SUP_DOUBLE                         D OFF/ON                                38  310    0    0   S   27    31       1.0000       0.0000       0   2   2       1.0000 "TES~Sup~Double"
       3       0 TES_SUP_REG                            A Pos                                  216   16    0    0   S   27     5       1.0000       0.0000       0   0   1       0.0000 "TES~Sup~Regulate"

@@ -142,6 +142,8 @@ int address=0;
 float value=0;
 bool qualif_ok=true;
 bool isBinary=false;
+time_t uxtimetag = 0;
+unsigned short ms = 0;
 
 /* Loop over all keys of the root object */
 for (i = 0; i < r; i++) {
@@ -210,8 +212,24 @@ for (i = 0; i < r; i++) {
           }
       }
       else if (jsoneq(Message.c_str(), &t[i], "timestamp") == 0) {
+        // shall find timetag as unix time
+        if ( i+1<r && t[i+1].type == JSMN_PRIMITIVE ) {
+          uxtimetag = atol(Message.c_str() + t[i+1].start);
+          i++; // jump
+          }
+        else {
+          // invalid
+          }
       }
       else if (jsoneq(Message.c_str(), &t[i], "ms") == 0) {
+        // shall find ms from timetag 
+        if ( i+1<r && t[i+1].type == JSMN_PRIMITIVE ) {
+          ms = atoi(Message.c_str() + t[i+1].start);
+          i++; // jump
+          }
+        else {
+          // invalid
+          }
       }
       else if (jsoneq(Message.c_str(), &t[i], "time_failed") == 0) {
       }
@@ -233,7 +251,7 @@ for (i = 0; i < r; i++) {
             value = atof(Message.c_str() + t[i+1].start);
 
           // process tag and value then
-          process_point(point_key, tag.c_str(), address, utr, value, qualif_ok, isBinary);
+          process_point(point_key, tag.c_str(), address, utr, value, qualif_ok, isBinary, uxtimetag, ms);
 
           i++; // jump
           tag="";
@@ -253,12 +271,14 @@ for (i = 0; i < r; i++) {
       // process tag and value then
       // register tag if not found, as binary or analog
       if ( tag != "" || point_key != 0 || address !=0 ) {
-        process_point(point_key, tag.c_str(), address, utr, value, qualif_ok, isBinary);
+        process_point(point_key, tag.c_str(), address, utr, value, qualif_ok, isBinary, uxtimetag, ms);
         tag="";
         value=0;
         point_key=0;
         utr=0;
         address=0;
+        uxtimetag=0;
+        ms=0;
       }
       break;
     case JSMN_UNDEFINED:
@@ -268,12 +288,11 @@ for (i = 0; i < r; i++) {
 
   }
 if ( tag != "" || point_key != 0 || address != 0 )
-  process_point(point_key, tag.c_str(), address, utr, value, qualif_ok, isBinary);
-
+  process_point(point_key, tag.c_str(), address, utr, value, qualif_ok, isBinary, uxtimetag, ms);
 }
 //---------------------------------------------------------------------------
 
-void TfmJSON::process_point( int nponto, char * tagstr, unsigned int address, unsigned int utr, float valor, bool quality_ok, bool is_binary )
+void TfmJSON::process_point( int nponto, char * tagstr, unsigned int address, unsigned int utr, float valor, bool quality_ok, bool is_binary, time_t uxtime, short ms )
 {
    TFA_Qual qual;
    qual.Byte = 0;
@@ -292,6 +311,7 @@ void TfmJSON::process_point( int nponto, char * tagstr, unsigned int address, un
 
      // Test if point is registered in the database
      TPonto pt = BL.GetRefPontoByTag(tag, found);
+     nponto = pt.NPonto;
      if ( found )
        {
        if ( pt.EhComando() )
@@ -320,6 +340,7 @@ void TfmJSON::process_point( int nponto, char * tagstr, unsigned int address, un
        
        map <int, TPonto> mp = BL.GetMapaPontos();
        int nextpoint = mp.rbegin()->second.NPonto + 1; // greater key from map + 1
+       nponto = nextpoint;
        if ( is_binary )
          {
          qual.Estado = !( (int)valor ); // simples: vai para o evento como se fosse duplo 01 ou 10
@@ -443,10 +464,28 @@ void TfmJSON::process_point( int nponto, char * tagstr, unsigned int address, un
          }
        BL.ListaSEs.insert("JSON");
        }
-
      }
+  if (nponto>0 && is_binary && uxtime!=0)
+    {
+    tm *tmdt = localtime( &uxtime );
+    if ( tmdt != NULL )
+      {
+      IncluiEvento( nponto,
+              0,
+              qual.Byte,
+              tmdt->tm_year + 1900,
+              tmdt->tm_mon + 1,
+              tmdt->tm_mday,
+              tmdt->tm_hour,
+              tmdt->tm_min,
+              tmdt->tm_sec,
+              ms
+              );
+      }
+    }
 
 }
+//---------------------------------------------------------------------------
 
 // Send command via UDP/JSON
 // For binary command val: 0=OFF=false 1=ON=true 

@@ -8,6 +8,7 @@ c:\oshmi\bin\nssm stop OSHMI_iec104
 c:\oshmi\bin\nssm stop OSHMI_dnp3
 c:\oshmi\bin\nssm stop OSHMI_modbus
 c:\oshmi\bin\nssm stop OSHMI_iccp
+c:\oshmi\bin\nssm stop OSHMI_iec61850
 c:\oshmi\bin\nssm stop OSHMI_opc
 c:\oshmi\bin\nssm stop OSHMI_s7
 c:\oshmi\bin\nssm stop OSHMI_iec104_log
@@ -19,6 +20,7 @@ c:\oshmi\bin\nssm remove OSHMI_iec104 confirm
 c:\oshmi\bin\nssm remove OSHMI_dnp3 confirm
 c:\oshmi\bin\nssm remove OSHMI_modbus confirm
 c:\oshmi\bin\nssm remove OSHMI_iccp confirm
+c:\oshmi\bin\nssm remove OSHMI_iec61850 confirm
 c:\oshmi\bin\nssm remove OSHMI_opc confirm
 c:\oshmi\bin\nssm remove OSHMI_s7 confirm
 c:\oshmi\bin\nssm remove OSHMI_iec104_log confirm

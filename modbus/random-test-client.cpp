@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define VERSION "OSHMI Modbus Driver v.1.11 - Copyright 2015-2020 Ricardo L. Olsen"
+#define VERSION "OSHMI Modbus Driver v.1.12 - Copyright 2015-2022 Ricardo L. Olsen"
 
 #include <stdio.h>
 #include <conio.h>
@@ -115,6 +115,7 @@ struct mb_rturead
 	vector <mb_read> readhr_long; // read consecutive 16 bit values as a long (32 bit integer=DWORD)
 	vector <mb_read> readhr_bitstr; // read consecutive 16 bit values as 16 digital statuses to be converted to 16 digital points
 	vector <mb_read> readir;
+	vector <mb_read> readir_float; // read consecutive 16 bit values as floats (assume 1st byte=exp, 2nd=MSB mant, 3rd=middle mant, 4=LSB mant so intel 2,3,0,1 order) 
 	vector <mb_read> readis;
 	vector <mb_read> readcs;
 };
@@ -670,6 +671,19 @@ int main(void)
 		}
 		for (int j = 0; j < MAX_INPREAD; j++)
 		{
+			string key = (string)"READIR_FLOAT_" + std::to_string(j + 1);
+			string aCnCp = reader.GetString(rtun, key, "");
+			if (aCnCp == "")
+				break;
+			mb_read mbr;
+			mbr.i104addr = 0;
+			sscanf(aCnCp.c_str(), "%d %d %d", &mbr.mbaddress, &mbr.numreg, &mbr.i104addr);
+			if (mbr.i104addr == 0)
+				mbr.i104addr = mbr.mbaddress;
+			rtu.readir_float.push_back(mbr);
+		}
+		for (int j = 0; j < MAX_INPREAD; j++)
+		{
 			string key = (string)"READHR_LONG_" + std::to_string(j + 1);
 			string aCnCp = reader.GetString(rtun, key, "");
 			if (aCnCp == "")
@@ -761,7 +775,7 @@ int main(void)
 			}
 		}
 
-		// verify if there is commands to execute from OSHMI
+		// verify if there are commands to execute from OSHMI
 		bit = 0;
 		if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
         	mb_command(asdu, address, val, slave, bit);
@@ -776,7 +790,7 @@ int main(void)
 
 		for (unsigned j = 0; j < mb_queue[i].readhr.size(); j++)
 		{
-			// verify if there is commands to execute from OSHMI
+			// verify if there are commands to execute from OSHMI
 			bit = 0;
 			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
 				mb_command(asdu, address, val, slave, bit);
@@ -835,7 +849,7 @@ int main(void)
 
 		for (unsigned j = 0; j < mb_queue[i].readir.size(); j++)
 		{
-			// verify if there is commands to execute from OSHMI
+			// verify if there are commands to execute from OSHMI
 			bit = 0;
 			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
 				mb_command(asdu, address, val, slave, bit);
@@ -902,7 +916,7 @@ int main(void)
 
 		for (unsigned j = 0; j < mb_queue[i].readhr_float.size(); j++) // each 2 16 bit holding registers as a float
 		{
-			// verify if there is commands to execute from OSHMI
+			// verify if there are commands to execute from OSHMI
 			bit = 0;
 			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
 				mb_command(asdu, address, val, slave, bit);
@@ -964,6 +978,70 @@ int main(void)
 			Sleep(mb_queue[i].delay);
 		}
 
+		for (unsigned j = 0; j < mb_queue[i].readir_float.size(); j++) // each 2 16 bit holding registers as a float
+		{
+			// verify if there are commands to execute from OSHMI
+			bit = 0;
+			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
+				mb_command(asdu, address, val, slave, bit);
+
+			max_pointspkt = PKTFLT_MAXPOINTS;
+
+			if (mb_queue[i].slave_id != -1)
+				modbus_set_slave(mb_queue[i].ctx, mb_queue[i].slave_id);
+			modbus_set_response_timeout(mb_queue[i].ctx, mb_queue[i].timeout_ms / 1000, (mb_queue[i].timeout_ms % 1000) * 1000);
+
+			uint16_t* tabreg = (uint16_t*)malloc(2 * mb_queue[i].readir_float[j].numreg * sizeof(uint16_t));
+			memset(tabreg, 0, 2 * mb_queue[i].readir_float[j].numreg * sizeof(uint16_t));
+			rc = modbus_read_input_registers(mb_queue[i].ctx, mb_queue[i].readir_float[j].mbaddress, mb_queue[i].readir_float[j].numreg * 2, tabreg);
+
+			if (rc != mb_queue[i].readir_float[j].numreg * 2) {
+				printf("RTU_%d ERROR modbus_read_input_registers (%d)\n", i + 1, rc);
+				printf("%s\n", modbus_strerror(errno));
+				// printf("Address = %d\n", addr);
+				// nb_fail++;
+				modbus_flush(mb_queue[i].ctx);
+				modbus_close(mb_queue[i].ctx);
+				Sleep(mb_queue[i].delay);
+				modbus_connect(mb_queue[i].ctx);
+				break;
+			}
+
+			count = 0;
+			for (int k = 0; k < mb_queue[i].readir_float[j].numreg * 2; k += 2)
+			{
+				union { float f; unsigned short bt[2]; } u;
+
+				u.bt[1] = tabreg[k];
+				u.bt[0] = tabreg[k + 1];
+
+				printf("RTU_%d: %s, Port: %d, ID: %d  Input %d = %f\n", i + 1, mb_queue[i].ip.c_str(), mb_queue[i].port, mb_queue[i].slave_id, mb_queue[i].readir_float[j].mbaddress + k, u.f);
+
+				unsigned int* paddr = (unsigned int*)(msg.info + (count % max_pointspkt) * (sizeof(int) + sizeof(flutuante_seq)));
+				*paddr = mb_queue[i].readir_float[j].i104addr + k / 2; // point number
+
+				// value and quality
+				flutuante_seq* obj = (flutuante_seq*)(paddr + 1);
+				obj->qds = 0;
+				obj->fr = u.f;
+
+				count++;
+				if (!((count + 1) % max_pointspkt)) // if next from packet send now (se a proxima eh do proximo pacote, manda agora)
+				{
+					msg.numpoints = count % max_pointspkt;
+					packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
+					oh.SendOSHMI(&msg, packet_size);
+				}
+			}
+
+			msg.numpoints = count % max_pointspkt;
+			packet_size = sizeof(int) * 7 + msg.numpoints * (sizeof(int) + sizeof(flutuante_seq));
+			oh.SendOSHMI(&msg, packet_size);
+
+			free(tabreg);
+			Sleep(mb_queue[i].delay);
+		}
+
 		// holding pairs of 16 bit registers as 32 bit integers
 		msg.signature = MSGSUPSQ_SIG;
 		msg.prim = 1;
@@ -974,7 +1052,7 @@ int main(void)
 
 		for (unsigned j = 0; j < mb_queue[i].readhr_long.size(); j++) // each 2 16 bit holding registers as a 32 bit word
 		{
-			// verify if there is commands to execute from OSHMI
+			// verify if there are commands to execute from OSHMI
 			bit = 0;
 			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
 				mb_command(asdu, address, val, slave, bit);
@@ -1056,7 +1134,7 @@ int main(void)
 
 		for (unsigned j = 0; j < mb_queue[i].readhr_bitstr.size(); j++) // each 16 bit holding registers as bitstring
 		{
-			// verify if there is commands to execute from OSHMI
+			// verify if there are commands to execute from OSHMI
 			bit = 0;
 			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
 				mb_command(asdu, address, val, slave, bit);
@@ -1122,7 +1200,7 @@ int main(void)
 
 		for (unsigned j = 0; j < mb_queue[i].readcs.size(); j++)
 		{
-			// verify if there is commands to execute from OSHMI
+			// verify if there are commands to execute from OSHMI
 			bit = 0;
 			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
 				mb_command(asdu, address, val, slave, bit);
@@ -1186,7 +1264,7 @@ int main(void)
 
 		for (unsigned j = 0; j < mb_queue[i].readis.size(); j++)
 		{
-			// verify if there is commands to execute from OSHMI
+			// verify if there are commands to execute from OSHMI
 			bit = 0;
 			if (oh.receiveCommands(&asdu, &address, &val, &slave, &bit))
 				mb_command(asdu, address, val, slave, bit);

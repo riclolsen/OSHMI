@@ -308,7 +308,7 @@ unsigned int UTR;
 unsigned int Flags;
 } TEventoAtrasado;
 
-#define TPONTO_TAG_SIZE 30
+#define TPONTO_TAG_SIZE 71
 #define TPONTO_UNI_SIZE 10
 #define TPONTO_EST_SIZE 30
 #define TPONTO_MOD_SIZE 30

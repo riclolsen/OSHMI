@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.26"
-!define VERSION_ "6.26.0.0"
+!define VERSION "v.6.28"
+!define VERSION_ "6.28.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -228,7 +228,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\bin\*.dll"
   File /a "..\bin\*.vbs"
   File /a "..\bin\*.bat"
-  ;File /a "..\bin\*.json"
+  File /a "..\bin\*.json"
+  File /a "..\bin\*.pdb"
 
   SetOutPath $INSTDIR\bin\platforms
   File /a "..\bin\platforms\*.dll"
@@ -241,6 +242,7 @@ Section "" ; empty string makes it hidden, so would starting with -
 
   SetOutPath $INSTDIR\extprogs
   File /a "..\extprogs\download_external_progs.bat"
+  File /a "..\extprogs\PortQry.exe"
   
   SetOutPath $INSTDIR\nginx_php
   File /r /x *.log "..\nginx_php\*.*" 
@@ -362,6 +364,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\htdocs\images\*.*"
 
   SetOutPath $INSTDIR\extprogs
+  File /a "..\extprogs\dotnet-runtime-6.0.13-win-x86.exe" 
   File /a "..\extprogs\vcredist_x86.exe"
   File /a "..\extprogs\vcredist_x86-2012.exe"
   File /a "..\extprogs\vcredist_x86-2013.exe"
@@ -396,6 +399,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\docs\oshmi_modbus_config-en_us.pdf"
   File /a "..\docs\oshmi_opc_client_config-en_us.odt"
   File /a "..\docs\oshmi_opc_client_config-en_us.pdf"
+  File /a "..\docs\oshmi_iec61850_client_config-en_us.odt"
+  File /a "..\docs\oshmi_iec61850_client_config-en_us.pdf"
   File /a "..\docs\oshmi_s7_client_config-en_us.odt"
   File /a "..\docs\oshmi_s7_client_config-en_us.pdf"
   File /a "..\docs\lua_reference_manual.pdf"
@@ -445,6 +450,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\conf_templates\dnp3.ini"  
   File /a "..\conf_templates\modbus_queue.ini"
   File /a "..\conf_templates\opc_client.conf"
+  File /a "..\conf_templates\iec61850_client.conf"
   File /a "..\conf_templates\s7client.ini"
   File /a "..\conf_templates\hmi.ini"
   File /a "..\conf_templates\hmishell.ini"
@@ -477,6 +483,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   ;nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2015.exe" /q'
   ;nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2017.exe" /q'
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-15-17-19.exe" /q'
+  nsExec::Exec '"$INSTDIR\extprogs\dotnet-runtime-6.0.13-win-x86.exe" /install /passive /quiet'
 
 ;  MessageBox MB_YESNO "Wish to substitute Windows Shell by the HMIShell? \nWARNING: ANSWERING YES WILL BLOCK THE MACHINE FOR THE OPERATOR" IDNO InstFim 
 ; LabelShell:
@@ -577,6 +584,9 @@ Section "" ; empty string makes it hidden, so would starting with -
   SimpleFC::AddApplication "OSHMI ICCP" "$INSTDIR\bin\iccp_client.exe" 0 2 "" 1
   Pop $0 ; return error(1)/success(0)
 
+  SimpleFC::AddApplication "OSHMI ICCP" "$INSTDIR\bin\iec61850_client.exe" 0 2 "" 1
+  Pop $0 ; return error(1)/success(0)
+  
   SimpleFC::AddApplication "OSHMI NGINX" "$INSTDIR\nginx_php\nginx.exe" 0 2 "" 1
   Pop $0 ; return error(1)/success(0)
 
@@ -620,6 +630,10 @@ Section "" ; empty string makes it hidden, so would starting with -
   SimpleFC::AddPort 8098 "OSHMI DNP3" 256 0 2 "" 1
   Pop $0 ; return error(1)/success(0)
   SimpleFC::AddPort 8096 "OSHMI DNP3" 256 0 2 "" 1
+  Pop $0 ; return error(1)/success(0)
+  SimpleFC::AddPort 9100 "OSHMI JSON" 256 0 2 "" 1
+  Pop $0 ; return error(1)/success(0)
+  SimpleFC::AddPort 9101 "OSHMI JSON CMD" 256 0 2 "" 1
   Pop $0 ; return error(1)/success(0)
   
   ; Verify system locale to set HMI language
@@ -678,6 +692,7 @@ Section "Uninstall"
   ; SetOutPath $INSTDIR\bin
   nsExec::Exec 'net stop OSHMI_rtwebsrv'
   nsExec::Exec 'net stop OSHMI_iec104'
+  nsExec::Exec 'net stop OSHMI_iec61850'
   nsExec::Exec 'net stop OSHMI_iccp'
   nsExec::Exec 'net stop OSHMI_dnp3'
   nsExec::Exec 'net stop OSHMI_modbus'
@@ -715,6 +730,8 @@ Section "Uninstall"
   SimpleFC::RemoveApplication "$INSTDIR\opc_client.exe"
   Pop $0 ; return error(1)/success(0)
   SimpleFC::RemoveApplication "$INSTDIR\s7client.exe"
+  Pop $0 ; return error(1)/success(0)
+  SimpleFC::RemoveApplication "$INSTDIR\iec61850_client.exe"
   Pop $0 ; return error(1)/success(0)
 
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OSHMI"

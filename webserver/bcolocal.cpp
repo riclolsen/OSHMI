@@ -414,12 +414,13 @@ if ( fp == NULL )
 char buff[10000];
 
 TIniFile *pIniIHM = new TIniFile(ARQUIVO_INI);
+T_INTEGRIDADE = pIniIHM->ReadInteger( "BDTR", "INTEGRITY_PERIOD", T_INTEGRIDADE );
 
 Pontos.clear();
 
 if (fp)
   {
-  char tag[100];
+  char tag[1000];
   char alarme[100];
   char descricao[100];
   char tipo, c;

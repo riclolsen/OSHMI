@@ -186,6 +186,26 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.28:
+
+IEC61850:
+ - New IEC61850 Client driver.
+
+-------------------------------------------------------------------
+
+Notes for version 6.27:
+
+Modbus:
+ - Added read of pair of consecutive input registers as floats.
+
+Chromium:
+ - Updated to version 108.0.5359.125.
+
+SQLite:
+ - Updated to version 3.40.0.
+
+-------------------------------------------------------------------
+
 Notes for version 6.26:
 
 Screen Viewer:

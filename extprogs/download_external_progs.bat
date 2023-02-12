@@ -34,3 +34,6 @@ echo To create certificates and configure https in Nginx
 
 rem start /wait npp.7.2.2.Installer.exe
 rem start /wait DB.Browser.for.SQLite-3.9.1-win32.exe
+
+rem IEC61850 IED Explorer tool
+..\bin\wget -N --no-check-certificate %proxy% https://sourceforge.net/projects/iedexplorer/files/IEDExplorer_0.80.exe/download

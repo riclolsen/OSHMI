@@ -168,6 +168,11 @@ Webserver, HMIShell, Mon_Proc and Sim_TR:
 QTester104:
  - QT 5.13 or newer.
 
+IEC61850 Driver:
+ - Visual Studio Community (2022 or newer).
+ - Libiec6150 library https://github.com/mz-automation/libiec61850.
+ - DOTNET 6.0 or later.
+
 DNP3 and Modbus Drivers:
  - Visual Studio Community (2015 or newer).
  - OpenDNP3 and Libmodbus libraries.
@@ -183,6 +188,26 @@ S7 Driver:
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 6.28:
+
+IEC61850:
+ - New IEC61850 Client driver.
+
+-------------------------------------------------------------------
+
+Notes for version 6.27:
+
+Modbus:
+ - Added read of pair of consecutive input registers as floats.
+
+Chromium:
+ - Updated to version 108.0.5359.125.
+
+SQLite:
+ - Updated to version 3.40.0.
 
 -------------------------------------------------------------------
 

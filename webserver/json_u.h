@@ -24,7 +24,7 @@ __published:	// IDE-managed Components
           TStream *AData, TIdSocketHandle *ABinding);
 private:	// User declarations
         void logaln( String msg );
-        void process_point( int nponto, char * tagstr, unsigned int address, unsigned int utr, float valor, bool quality_ok, bool is_binary );
+        void process_point( int nponto, char * tagstr, unsigned int address, unsigned int utr, float valor, bool quality_ok, bool is_binary, time_t uxtime, short ms);
 public:		// User declarations
         __fastcall TfmJSON(TComponent* Owner);
         int Command( TPonto &pt, double val );

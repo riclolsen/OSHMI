@@ -221,8 +221,8 @@ object fmVeDados: TfmVeDados
     Shape = stCircle
   end
   object sgPontos: TStringGrid
-    Left = 8
-    Top = 40
+    Left = 0
+    Top = 48
     Width = 891
     Height = 568
     Anchors = [akLeft, akTop, akRight, akBottom]
