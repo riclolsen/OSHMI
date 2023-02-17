@@ -3,7 +3,7 @@ A modern SCADA HMI for substations, IoT and other automation applications.
 
 See demo here: http://vmi233205.contaboserver.net:51909/
 
-This project exists because we believe that by combining existing open source projects and tools we can create a very capable, mobile and cloud-friendly HMI system that can rival proprietary software. This approach makes it possible to sum the forces of each project (Chromium, SVG/HTML5, PHP, Lua, SQLite, Inkscape, Lib61850, OpenDNP3, Nginx, Vega, PostgreSQL, Grafana,…) to achieve a great set of open, evergreen, modular and customizable tools for building great HMIs for automation projects. If you also believe this is possible, please give OSHMI a try and collaborate with the project!
+This project exists because we believe that by combining existing open source projects and tools we can create a very capable, mobile and cloud-friendly HMI system that can rival proprietary software. This approach makes it possible to sum the forces of each project (Chromium, SVG/HTML5, PHP, Lua, SQLite, Inkscape, Libiec61850, OpenDNP3, Nginx, Vega, PostgreSQL, Grafana,…) to achieve a great set of open, evergreen, modular and customizable tools for building great HMIs for automation projects. If you also believe this is possible, please give OSHMI a try and collaborate with the project!
 
 - Mobile and Cloud friendly.
 - Created for substation automation and control centers, but can be used for IoT and general SCADA HMI automation applications.
@@ -12,7 +12,7 @@ This project exists because we believe that by combining existing open source pr
 - Strong focus on UX and High Performance HMI / ISA101 compatible graphics.
 - Redundant mode of operation, dual server/ ?n? clients. Unlimited points, clients, monitors and viewers.
 - Easy configuration with plain text files.
-- IEC61850, IEC 60870-5-104 (QTester104), DNP3, MODBUS, OPC UA/DA, Siemens S7, and ICCP client protocol drivers.
+- IEC61850, IEC60870-5-104 (QTester104), DNP3, MODBUS, OPC UA/DA, Siemens S7, and ICCP client protocol drivers.
 - The client web interface can be accessed by modern IOS, Android devices or by an HTML5 browser.
 - Please notice that OSHMI does NOT function by itself as a protocol gateway!
 
@@ -34,7 +34,7 @@ Some Features:
 - Use of Desktop Notifications for breaker opening by protection.
 - No need for any browser plugin!
 
-Software languages: english and portuguese. Can be easily translated to other languages (UTF-8 user interface).
+Software languages: english, ukranian and portuguese (BR). Can be easily translated to other languages (UTF-8 user interface).
 
 Contact me here: https://www.linkedin.com/in/ricardo-olsen/
 
