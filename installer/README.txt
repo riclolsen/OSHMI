@@ -23,6 +23,7 @@ Acknowledgements:
   Inkscape + SAGE - https://sourceforge.net/projects/sage-scada
   Chromium - by "The Chromium Authors"
   Chromium x86 binaries - http://chromium.woolyss.com
+  Libiec6150 - https://github.com/mz-automation/libiec61850
   ICCP Client by Fernando Covatti - https://github.com/fcovatti/iccp
   Opendnp3 - https://www.automatak.com/opendnp3/
   Libmodbus - http://libmodbus.org/
@@ -168,6 +169,11 @@ Webserver, HMIShell, Mon_Proc and Sim_TR:
 QTester104:
  - QT 5.13 or newer.
 
+IEC61850 Driver:
+ - Visual Studio Community (2022 or newer).
+ - Libiec6150 library https://github.com/mz-automation/libiec61850.
+ - DOTNET 6.0 or later.
+
 DNP3 and Modbus Drivers:
  - Visual Studio Community (2015 or newer).
  - OpenDNP3 and Libmodbus libraries.
@@ -183,6 +189,13 @@ S7 Driver:
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+
+-------------------------------------------------------------------
+
+Notes for version 6.29:
+
+IEC61850:
+ - IEC61850 Client driver updated to version 0.3.
 
 -------------------------------------------------------------------
 
