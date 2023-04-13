@@ -148,7 +148,7 @@ Section "" ; empty string makes it hidden, so would starting with -
   StrCpy $NAVWINCMD "browser\chrome.exe"
   StrCpy $NAVLINCMD "/usr/bin/chromium-browser"
   StrCpy $NAVDATDIR "--user-data-dir=$INSTDIR\browser-data"
-  StrCpy $NAVPREOPT "--process-per-site --no-sandbox"
+  StrCpy $NAVPREOPT "--process-per-site "
   StrCpy $NAVPOSOPT "--disable-popup-blocking --no-proxy-server --bwsi --disable-extensions --disable-sync --no-first-run"
   StrCpy $NAVVISABO "/htdocs/about.html"
   StrCpy $NAVVISEVE "/htdocs/events.html"
