@@ -192,6 +192,14 @@ Inkscape+SAGE:
 
 -------------------------------------------------------------------
 
+Notes for version 6.30:
+
+DNP3 Client:
+ - Dnp3 Client driver updated to version 0.80 based on OpenDNP3 3.1.2.
+ - Support for pulse off commands.
+ 
+ -------------------------------------------------------------------
+
 Notes for version 6.29:
 
 IEC61850:

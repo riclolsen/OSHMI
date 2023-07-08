@@ -17,7 +17,11 @@
  * This project was forked on 01/01/2013 by Automatak, LLC and modifications
  * may have been made to this file. Automatak, LLC licenses these modifications
  * to you under the terms of the License.
+ * 
+ * Modified and integrated into OSHMI by Ricardo Lastra Olsen (2016-2023).
+ *
  */
+
 #ifndef ASIODNP3_MYSOEHANDLER_H
 #define ASIODNP3_MYSOEHANDLER_H
 
@@ -154,20 +158,30 @@ public:
 		redundant_hmi = true;
 	}
    
-	void Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values) override final;
-	void Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values) override final;
-	void Process(const HeaderInfo& info, const ICollection<Indexed<Analog>>& values) override final;
-	void Process(const HeaderInfo& info, const ICollection<Indexed<Counter>>& values) override final;
-	void Process(const HeaderInfo& info, const ICollection<Indexed<FrozenCounter>>& values) override final;
-	void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryOutputStatus>>& values) override final;
-	void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogOutputStatus>>& values) override final;
-	void Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values) override final;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<Binary>>& values) override;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<DoubleBitBinary>>& values) override;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<Analog>>& values) override;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<Counter>>& values) override;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<FrozenCounter>>& values) override;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryOutputStatus>>& values) override;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogOutputStatus>>& values) override;
+	void Process(const HeaderInfo& info, const ICollection<Indexed<OctetString>>& values) override;
 
-	void Process(const HeaderInfo& info, const ICollection<Indexed<TimeAndInterval>>& values) override final {};
-	void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryCommandEvent>>& values) override final {};
-	void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) override final {};
-	void Process(const HeaderInfo& info, const ICollection<Indexed<SecurityStat>>& values) override final {};
-	void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) override final {};
+	void Process(const HeaderInfo& info, const ICollection<Indexed<TimeAndInterval>>& values) override {};
+    void Process(const HeaderInfo& info, const ICollection<Indexed<BinaryCommandEvent>>& values) override{};
+    void Process(const HeaderInfo& info, const ICollection<Indexed<AnalogCommandEvent>>& values) override{};
+	// void Process(const HeaderInfo& info, const ICollection<Indexed<SecurityStat>>& values) override;
+    void Process(const HeaderInfo& info, const ICollection<DNPTime>& values) override {};
+
+		void BeginFragment(const ResponseInfo& info) override
+    {
+        // std::cout << "Begin receiving measurement data for outstation: " << SlaveAddress << std::endl;
+    }
+
+    void EndFragment(const ResponseInfo& info) override
+    {
+        // std::cout << "End receiving measurement data for outstation: " << SlaveAddress << std::endl;
+    }
 
     void Init();
     unsigned char xlatequalif(int qdnp);
@@ -179,15 +193,19 @@ public:
 
 protected:
 
-	void Start() final {}
-	void End() final {}
+	virtual void Start() {}
+    virtual void End() {}
 
 private:
 
 	void PrintHeaderInfo(const HeaderInfo& header)
 	{
-		std::cout << "Header: " << " Group" << GroupVariationToString(header.gv);
-		std::cout << QualifierCodeToString(header.qualifier) << " timestamps: " << GetTimeString(header.tsmode) << std::endl;
+        std::cout << "Header: "
+                  << " Group" << GroupVariationSpec::to_human_string(header.gv);
+        std::cout << QualifierCodeSpec::to_human_string(header.qualifier)
+                  << " isEvent: " << header.isEventVariation
+                  << " tsQuality: " << TimestampQualitySpec::to_human_string(header.tsquality)
+			      << std::endl;
 	}
 
 	template <class T>
@@ -196,30 +214,6 @@ private:
 		std::ostringstream oss;
 		oss << meas.value;
 		return oss.str();
-	}
-
-    std::string GetTimeString(TimestampMode tsmode)
-	{
-		std::ostringstream oss;	
-		switch (tsmode)
-		{
-			case(TimestampMode::SYNCHRONIZED) :
-				return "synchronized";
-				break;
-			case(TimestampMode::UNSYNCHRONIZED):
-				oss << "unsynchronized";
-				break;
-			default:
-				oss << "no timestamp";
-				break;
-		}
-		
-		return oss.str();
-	}
-
-	std::string ValueToString(const DoubleBitBinary& meas)
-	{
-		return DoubleBitToString(meas.value);
 	}
 
 };

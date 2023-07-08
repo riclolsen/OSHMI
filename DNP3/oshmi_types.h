@@ -6,94 +6,94 @@
 
 #define MSGSUP_SIG 0x53535353
 typedef struct {
-	unsigned int signature;  // 0x53535353
-	unsigned int endereco;
-	unsigned int tipo;
-	unsigned int prim;
-	unsigned int sec;
-	unsigned int causa;
-	unsigned int taminfo;
-	unsigned char info[255];
+	uint32_t signature;  // 0x53535353
+    uint32_t endereco;
+    uint32_t tipo;
+    uint32_t prim;
+    uint32_t sec;
+    uint32_t causa;
+    uint32_t taminfo;
+    uint8_t info[255];
 } t_msgsup;
 
 #define MSGSUPSQ_SIG 0x64646464
 typedef struct {
-	unsigned int signature;  // 0x64646464
-	unsigned int numpoints;
-	unsigned int tipo;
-	unsigned int prim;
-	unsigned int sec;
-	unsigned int causa;
-	unsigned int taminfo; // value size for the type (not counting the 4 byte address)
-	unsigned char info[2000]; // { 4 bytes unsigned int address, point value (taminfo bytes) } ...  Repeat
+    uint32_t signature; // 0x64646464
+    uint32_t numpoints;
+    uint32_t tipo;
+    uint32_t prim;
+    uint32_t sec;
+    uint32_t causa;
+    uint32_t taminfo;         // value size for the type (not counting the 4 byte address)
+    uint8_t info[2000]; // { 4 bytes unsigned int address, point value (taminfo bytes) } ...  Repeat
 } t_msgsupsq;
 
 #define MSGCMD_SIG 0x4b4b4b4b
 typedef struct
 {
-	unsigned int signature; // 0x4b4b4b4b
-	unsigned int endereco;
-	unsigned int tipo;
+    uint32_t signature; // 0x4b4b4b4b
+    uint32_t endereco;
+    uint32_t tipo;
 	union 
 	{
-		unsigned int onoff;
+        uint32_t onoff;
 		float setpoint;
-		int setpoint_i32;
-		short int setpoint_i16;
+        int32_t setpoint_i32;
+		int16_t setpoint_i16;
 	};
-	unsigned int sbo;
-	unsigned int qu;
-	unsigned int utr;
+    uint32_t sbo;
+    uint32_t qu;
+    uint32_t utr;
 } t_msgcmd;
 
 #pragma pack(push)
 #pragma pack(1) // membros das estruturas alinhados em byte
 
 typedef struct {
-        unsigned char iq;     // informaçao com qualificador
-        unsigned short ms;    // milisegundos
-        unsigned char min;    // minuto
-        unsigned char hora;   // hora
-        unsigned char dia;    // dia
-        unsigned char mes;
-        unsigned char ano;
+        uint8_t iq;     // informaçao com qualificador
+        uint16_t ms;    // milisegundos
+        uint8_t min;    // minuto
+        uint8_t hora;   // hora
+        uint8_t dia;    // dia
+        uint8_t mes;
+        uint8_t ano;
 } digital_w_time7_seq;
 
 
 typedef struct {
-	unsigned char iq;      // informaçao com qualificador
+    uint8_t iq; // informaçao com qualificador
 } digital_notime_seq;
 
 
 typedef struct {
-        short sva;         // valor analogico
-        unsigned char qds; // qualificador do ponto
+        int16_t sva;         // valor analogico
+        uint8_t qds; // qualificador do ponto
 } analogico_seq;
 
 typedef struct {
-        unsigned char vti;   // valor de tap
-        unsigned char qds;   // qualificador
+        uint8_t vti;        // valor de tap
+        uint8_t qds; // qualificador
 } step_seq;
 
 typedef struct {
         float fr;      		// valor em ponto flutuante
-        unsigned char qds; 	// qualificador do ponto
+        uint8_t qds; // qualificador do ponto
 } flutuante_seq;
 
 typedef struct {
     float fr;          // valor em ponto flutuante
-    unsigned char qds; // qualificador do ponto
-    unsigned short ms; // milisegundos
-    unsigned char min; // minuto
-    unsigned char hora; // hora
-    unsigned char dia;  // dia
-    unsigned char mes;
-    unsigned char ano;
+    uint8_t qds;       // qualificador do ponto
+    uint16_t ms;       // milisegundos
+    uint8_t min;       // minuto
+    uint8_t hora;      // hora
+    uint8_t dia;       // dia
+    uint8_t mes;       // mes
+    uint8_t ano;       // ano
 } flutuante_w_time7_seq;
 
 typedef struct {
-	unsigned int bcr;   // valor binary counter reading
-	unsigned char qds; 	// qualificador do ponto
+    uint32_t bcr;       // valor binary counter reading
+    uint8_t qds;        // qualificador do ponto
 } integrated_seq;
 
 #pragma pack(pop)

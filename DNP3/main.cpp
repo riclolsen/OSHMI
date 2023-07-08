@@ -18,22 +18,20 @@
  * may have been made to this file. Automatak, LLC licenses these modifications
  * to you under the terms of the License.
  *
- * Modified and integrated into OSHMI by Ricardo Lastra Olsen (2016-2018).
+ * Modified and integrated into OSHMI by Ricardo Lastra Olsen (2016-2023).
  *
  */
 
-#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.77 (Based on Open DNP3 2.3.2) - Copyright 2016-2020 - Ricardo Lastra Olsen"
+#define DRIVER_VERSION "OSHMI DNP3 DRIVER V0.80 (Based on Open DNP3 3.1.2) - Copyright 2016-2023 - Ricardo Lastra Olsen"
 
-#include <asiodnp3/DNP3Manager.h>
-#include <asiodnp3/PrintingSOEHandler.h>
-#include <asiodnp3/ConsoleLogger.h>
-#include <asiodnp3/DefaultMasterApplication.h>
-#include <asiodnp3/PrintingCommandCallback.h>
-#include <asiodnp3/PrintingChannelListener.h>
+#include <opendnp3/DNP3Manager.h>
+#include <opendnp3/master/PrintingSOEHandler.h>
+#include <opendnp3/ConsoleLogger.h>
+#include <opendnp3/master/DefaultMasterApplication.h>
+#include <opendnp3/master/PrintingCommandResultCallback.h>
+#include <opendnp3/channel/PrintingChannelListener.h>
 
-#include <asiopal/UTCTimeSource.h>
-
-#include <opendnp3/LogLevels.h>
+#include <opendnp3/logging/LogLevels.h>
 #include <opendnp3/app/ControlRelayOutputBlock.h>
 
 #include <algorithm>
@@ -51,9 +49,6 @@
 #define MAX_SLAVES 50
 
 using namespace std;
-using namespace openpal;
-using namespace asiopal;
-using namespace asiodnp3;
 using namespace opendnp3;
 
 std::string to_lower(std::string str)
@@ -62,7 +57,7 @@ std::string to_lower(std::string str)
     return str;
 }
 
-class MyChannelListener final : public IChannelListener, private openpal::Uncopyable
+class MyChannelListener final : public IChannelListener, private opendnp3::Uncopyable
   {
     protected:
 		int cntSlaves;
@@ -71,7 +66,8 @@ class MyChannelListener final : public IChannelListener, private openpal::Uncopy
 	public:
      virtual void OnStateChange(opendnp3::ChannelState state) override
      {
-         std::cout << "channel state change: " << cntSlaves << " " << opendnp3::ChannelStateToString(state) << std::endl;
+         std::cout << "channel state change: " << cntSlaves << " " << ChannelStateSpec::to_human_string(state)
+                   << std::endl;
 		 soeHandler->SendOSHMIChannelStatePoint(state == ChannelState::OPEN);
      }
      static std::shared_ptr<IChannelListener> Create()
@@ -82,7 +78,10 @@ class MyChannelListener final : public IChannelListener, private openpal::Uncopy
 		 cntSlaves = cntslaves;
 		 soeHandler = sh;
 	 }
-     MyChannelListener() {}
+     MyChannelListener()
+     {
+         cntSlaves = 0;
+     }
   };
 	
 // wait while receiving keep alive messages
@@ -153,26 +152,37 @@ void waittobe_active(int shandle)
 
 int main(int argc, char* argv[])
 {
-	vector <shared_ptr <asiodnp3::IChannel>> pChannelVec;
+	vector <shared_ptr <opendnp3::IChannel>> pChannelVec;
 	MasterStackConfig stackConfigVec[MAX_SLAVES];
 	MySOEHandler soehArr[MAX_SLAVES];
 	vector <shared_ptr <MySOEHandler>> spSoehVec;
-	vector <shared_ptr <asiodnp3::IMaster>> spMasterVec;
+    vector<shared_ptr<opendnp3::IMaster>> spMasterVec;
 
-	vector <shared_ptr<asiodnp3::IMasterScan>> spIntegrityScanVec;
-	vector <shared_ptr<asiodnp3::IMasterScan>> spExceptionScanVec;
-    vector <shared_ptr<asiodnp3::IMasterScan>> spRangeScan1Vec;
-	vector <shared_ptr<asiodnp3::IMasterScan>> spRangeScan2Vec;
-	vector <shared_ptr<asiodnp3::IMasterScan>> spRangeScan3Vec;
-	vector <shared_ptr<asiodnp3::IMasterScan>> spRangeScan4Vec;
+	vector<shared_ptr<opendnp3::IMasterScan>> spIntegrityScanVec;
+    vector<shared_ptr<opendnp3::IMasterScan>> spExceptionScanVec;
+    vector<shared_ptr<opendnp3::IMasterScan>> spRangeScan1Vec;
+    vector<shared_ptr<opendnp3::IMasterScan>> spRangeScan2Vec;
+    vector<shared_ptr<opendnp3::IMasterScan>> spRangeScan3Vec;
+    vector<shared_ptr<opendnp3::IMasterScan>> spRangeScan4Vec;
 	int masterAddress, slaveAddress;
 
 	std::cout << DRIVER_VERSION << std::endl;
 
 	INIReader reader_hmi(OSHMIINI);
+    if (reader_hmi.ParseError() == -1)
+    {
+        cout << "OSHMI Ini file not found! " << OSHMIINI << endl;
+    }
+        
     string IPAddrRed = reader_hmi.GetString("REDUNDANCY", "OTHER_HMI_IP", ""); // ip address of redundant hmi
 
 	INIReader reader(DNP3INI);
+
+	if (reader.ParseError() == -1)
+    {
+        cout << "DNP3 Ini file not found! " << DNP3INI << endl;
+        exit(1);
+    }        
 
 	masterAddress = reader.GetInteger("MASTER", "LINK_ADDRESS", 1);
 	if (masterAddress > 65534)
@@ -186,7 +196,7 @@ int main(int argc, char* argv[])
 
 	// Specify what log levels to use. NORMAL is warning and above
 	// You can add all the comms logging by uncommenting below
-	const uint32_t FILTERS = levels::NORMAL | levels::ALL_COMMS;
+	const opendnp3::LogLevels FILTERS = levels::NORMAL | levels::ALL_COMMS;
 
 	// This is the main point of interaction with the stack
 	DNP3Manager manager(std::thread::hardware_concurrency(), ConsoleLogger::Create());
@@ -194,39 +204,39 @@ int main(int argc, char* argv[])
 	int cntslaves = 0;
 	char buffer[20];
 	string IPAddrAnt, IPAddr;
-	int IPPort, IPPortAnt;
+	uint16_t IPPort, IPPortAnt;
     string SerialPortAnt;
 	string range_scan1;
 	string range_scan2;
 	string range_scan3;
 	string range_scan4;
 
-	while ((slaveAddress = reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS", 65535)) <= 65534)
+	while ((slaveAddress = reader.GetInteger(((string)"SLAVE") + _itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS", 65535)) <= 65534)
 	{
-        IPAddr = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "IP_ADDRESS", "");
-        IPPort = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "IP_PORT", 20000);
-        int enable_unsolicited = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "ENABLE_UNSOLICITED", 1);
-        int integrity_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "INTEGRITY_SCAN", 180);
-        int class0_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS0_SCAN", 8);
-        int class1_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS1_SCAN", 5);
-        int class2_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS2_SCAN", 17);
-        int class3_scan = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "CLASS3_SCAN", 29);
-		int response_timeout = reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "RESPONSE_TIMEOUT", 2);
-        int time_sync = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "TIME_SYNC", 1);
-		int nodata_timeout = reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "NODATA_TIMEOUT", 300);
-        string range_scan1 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_1", "");
-        string range_scan2 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_2", "");
-        string range_scan3 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_3", "");
-        string range_scan4 = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_4", "");
+        IPAddr = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "IP_ADDRESS", "");
+        IPPort = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "IP_PORT", 20000);
+        int enable_unsolicited = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "ENABLE_UNSOLICITED", 1);
+        int integrity_scan = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "INTEGRITY_SCAN", 180);
+        int class0_scan = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "CLASS0_SCAN", 8);
+        int class1_scan = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "CLASS1_SCAN", 5);
+        int class2_scan = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "CLASS2_SCAN", 17);
+        int class3_scan = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "CLASS3_SCAN", 29);
+		int response_timeout = reader.GetInteger(((string)"SLAVE") + _itoa(1 + cntslaves, buffer, 10), "RESPONSE_TIMEOUT", 2);
+        int time_sync = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "TIME_SYNC", 1);
+		int nodata_timeout = reader.GetInteger(((string)"SLAVE") + _itoa(1 + cntslaves, buffer, 10), "NODATA_TIMEOUT", 300);
+        string range_scan1 = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_1", "");
+        string range_scan2 = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_2", "");
+        string range_scan3 = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_3", "");
+        string range_scan4 = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "RANGE_SCAN_4", "");
 
 		// optional serial port config (will be used if port name defined)
-		string serial_port_name = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "SERIAL_PORT_NAME", "");
-        int baud_rate = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "BAUD_RATE", 9600);
-        int async_open_delay = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "ASYNC_OPEN_DELAY", 0);
-        int data_bits = reader.GetInteger(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "DATA_BITS", 8);
-        string stop_bits = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "STOP_BITS", "ONE");
-        string parity = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "PARITY", "NONE");
-        string flow_control = reader.GetString(((string) "SLAVE") + itoa(1 + cntslaves, buffer, 10), "FLOW_CONTROL", "NONE");
+		string serial_port_name = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "SERIAL_PORT_NAME", "");
+        int baud_rate = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "BAUD_RATE", 9600);
+        int async_open_delay = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "ASYNC_OPEN_DELAY", 0);
+        int data_bits = reader.GetInteger(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "DATA_BITS", 8);
+        string stop_bits = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "STOP_BITS", "ONE");
+        string parity = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "PARITY", "NONE");
+        string flow_control = reader.GetString(((string) "SLAVE") + _itoa(1 + cntslaves, buffer, 10), "FLOW_CONTROL", "NONE");
 
 		if (IPAddr == "" && serial_port_name == "")
         {
@@ -298,8 +308,8 @@ int main(int argc, char* argv[])
             {
                 // Connect via a TCPClient socket to a outstation
                 pChannelVec.push_back(manager.AddTCPClient("tcpclient" + std::to_string(cntslaves + 1), FILTERS,
-                                                           ChannelRetry::Default(),
-                                                           IPAddr.c_str(), "0.0.0.0", IPPort, mcl));
+                                                           ChannelRetry::Default(), {IPEndpoint(IPAddr, IPPort)},
+                                                           "0.0.0.0", mcl));
             }
 		}
 
@@ -337,34 +347,39 @@ int main(int argc, char* argv[])
 			pChannelVec[cntslaves]->AddMaster(
 				master_name, // id for logging
 				spSoehVec[cntslaves], // callback for data processing                
-				asiodnp3::DefaultMasterApplication::Create(),	// master application instance
+				opendnp3::DefaultMasterApplication::Create(),	// master application instance
 				stackConfigVec[cntslaves] // stack configuration
 			));
 
 		// do an integrity poll (Class 3/2/1/0) every N seconds
 		if (integrity_scan == 0)
 			integrity_scan = 0x7FFFFFFF;
-		spIntegrityScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(ClassField::AllClasses(), TimeDuration::Seconds(integrity_scan)));
+        spIntegrityScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(
+            ClassField::AllClasses(), TimeDuration::Seconds(integrity_scan), spSoehVec[cntslaves]));
 
 		// do a Class 1 exception poll every X seconds
 		if (class0_scan == 0)
 			class0_scan = 0x7FFFFFFF;
-		spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(ClassField(ClassField::CLASS_0), TimeDuration::Seconds(class0_scan)));
+        spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(
+            ClassField(ClassField::CLASS_0), TimeDuration::Seconds(class0_scan), spSoehVec[cntslaves]));
 
 		// do a Class 1 exception poll every X seconds
 		if (class1_scan == 0)
 			class1_scan = 0x7FFFFFFF;
-		spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(ClassField(ClassField::CLASS_1), TimeDuration::Seconds(class1_scan)));
+        spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(
+            ClassField(ClassField::CLASS_1), TimeDuration::Seconds(class1_scan), spSoehVec[cntslaves]));
 
 		// do a Class 2 exception poll every Y seconds
 		if (class2_scan == 0)
 			class2_scan = 0x7FFFFFFF;
-		spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(ClassField(ClassField::CLASS_2), TimeDuration::Seconds(class2_scan)));
+        spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(
+            ClassField(ClassField::CLASS_2), TimeDuration::Seconds(class2_scan), spSoehVec[cntslaves]));
 
 		// do a Class 3 exception poll every X seconds
 		if (class3_scan == 0)
 			class3_scan = 0x7FFFFFFF;
-		spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(ClassField(ClassField::CLASS_3), TimeDuration::Seconds(class3_scan)));
+        spExceptionScanVec.push_back(spMasterVec[cntslaves]->AddClassScan(
+            ClassField(ClassField::CLASS_3), TimeDuration::Seconds(class3_scan), spSoehVec[cntslaves]));
 
 		if (range_scan1 != "")
 		{
@@ -377,10 +392,12 @@ int main(int argc, char* argv[])
 			getline(ss, sub, ','); int period = std::stoi(sub);
 			if (period == 0)
 				period = 0x7FFFFFFF;
-			spRangeScan1Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period)));
+            spRangeScan1Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period), spSoehVec[cntslaves]));
 		}
 		else
-			spRangeScan1Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF)));
+            spRangeScan1Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF), spSoehVec[cntslaves]));
 
 		if (range_scan2 != "")
 		{
@@ -393,10 +410,12 @@ int main(int argc, char* argv[])
 			getline(ss, sub, ','); int period = std::stoi(sub);
 			if (period == 0)
 				period = 0x7FFFFFFF;
-			spRangeScan2Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period)));
+            spRangeScan2Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period), spSoehVec[cntslaves]));
 		}
 		else
-			spRangeScan2Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF)));
+            spRangeScan2Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF), spSoehVec[cntslaves]));
 
 		if (range_scan3 != "")
 		{
@@ -409,10 +428,12 @@ int main(int argc, char* argv[])
 			getline(ss, sub, ','); int period = std::stoi(sub);
 			if (period == 0)
 				period = 0x7FFFFFFF;
-			spRangeScan3Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period)));
+            spRangeScan3Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period), spSoehVec[cntslaves]));
 		}
 		else
-			spRangeScan3Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF)));
+            spRangeScan3Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF), spSoehVec[cntslaves]));
 
 		if (range_scan4 != "")
 		{
@@ -425,10 +446,12 @@ int main(int argc, char* argv[])
 			getline(ss, sub, ','); int period = std::stoi(sub);
 			if (period == 0)
 				period = 0x7FFFFFFF;
-			spRangeScan4Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period)));
+            spRangeScan4Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(group, variation), start, stop, TimeDuration::Seconds(period), spSoehVec[cntslaves]));
 		}
 		else
-			spRangeScan4Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF)));
+            spRangeScan4Vec.push_back(spMasterVec[cntslaves]->AddRangeScan(
+                GroupVariationID(1, 0), 0, 0, TimeDuration::Seconds(0x7FFFFFFF), spSoehVec[cntslaves]));
 
 		// Enable the master. This will start communications.
 		spMasterVec[cntslaves]->Enable();
@@ -436,7 +459,7 @@ int main(int argc, char* argv[])
 		cntslaves++;
 
 		// when no more slaves found
-		if (reader.GetInteger(((string)"SLAVE") + itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS", -1) == -1)
+		if (reader.GetInteger(((string)"SLAVE") + _itoa(1 + cntslaves, buffer, 10), "LINK_ADDRESS", -1) == -1)
 		{
 			time_t timeant = 0;
 
@@ -541,41 +564,45 @@ int main(int argc, char* argv[])
 						switch (pmsg->tipo)
 						{
 						case 45:; // digital single command
-						{
-							ControlCode cc = (ControlCode)pmsg->qu;
-							switch (cc)
+						{						
+                            OperationType ot = OperationType::NUL;
+                            TripCloseCode tc = TripCloseCode::NUL;
+							switch (pmsg->qu)
 							{
-							case ControlCode::NUL:
-							case ControlCode::LATCH_ON:
-							case ControlCode::LATCH_OFF:
+                            case 0:
 							default:
 								if (pmsg->onoff)
-									cc = ControlCode::LATCH_ON;
+                                    ot = OperationType::LATCH_ON;
 								else
-									cc = ControlCode::LATCH_OFF;
+                                    ot = OperationType::LATCH_OFF;
 								break;
-							case ControlCode::CLOSE_PULSE_ON:
-							case ControlCode::TRIP_PULSE_ON:
-								if (pmsg->onoff)
-									cc = ControlCode::CLOSE_PULSE_ON;
+                            case 65:
+                                if (pmsg->onoff)
+                                {
+                                    ot = OperationType::PULSE_ON;
+                                    tc = TripCloseCode::CLOSE;
+                                }                                   
 								else
-									cc = ControlCode::TRIP_PULSE_ON;
+                                {
+                                    ot = OperationType::PULSE_ON;
+                                    tc = TripCloseCode::TRIP;
+                                }                                    
 								break;
-							case ControlCode::PULSE_ON:
-								cc = ControlCode::PULSE_ON;
-								break;
-							case ControlCode::UNDEFINED:
-								cc = ControlCode::UNDEFINED;
+                            case 1:
+                                if (pmsg->onoff)
+                                    ot = OperationType::PULSE_ON;
+                                else
+                                    ot = OperationType::PULSE_OFF;                               
 								break;
 							}
 							for (int i = 0; i < cntslaves; i++)
 							{
 								if (stackConfigVec[i].link.RemoteAddr == pmsg->utr) // encontra a utr
 								{
-									ControlRelayOutputBlock crob(cc);
+									ControlRelayOutputBlock crob(ot, tc);
 									auto handler = [&pmsg, &stackConfigVec, &i, &spSoehVec](const ICommandTaskResult& result) -> void
 									{
-										std::cout << "Summary: " << TaskCompletionToString(result.summary) << std::endl;
+										std::cout << "Summary: " << TaskCompletionSpec::to_human_string(result.summary) << std::endl;
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
@@ -595,8 +622,8 @@ int main(int argc, char* argv[])
 											std::cout
 												<< "  Header: " << res.headerIndex
 												<< "   Index: " << res.index
-												<< "   State: " << CommandPointStateToString(res.state)
-												<< "   Status: " << CommandStatusToString(res.status);
+												<< "   State: " << CommandPointStateSpec::to_human_string(res.state)
+												<< "   Status: " << CommandStatusSpec::to_human_string(res.status);
 										};
 										result.ForeachItem(print);
 									};
@@ -647,7 +674,7 @@ int main(int argc, char* argv[])
 									AnalogOutputInt16 ao((int16_t)pmsg->setpoint_i16);
 									auto handler = [&pmsg, &stackConfigVec, &i, &spSoehVec](const ICommandTaskResult& result) -> void
 									{
-										std::cout << "Summary: " << TaskCompletionToString(result.summary) << std::endl;
+										std::cout << "Summary: " << TaskCompletionSpec::to_human_string(result.summary) << std::endl;
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
@@ -667,8 +694,8 @@ int main(int argc, char* argv[])
 											std::cout
 												<< "  Header: " << res.headerIndex
 												<< "   Index: " << res.index
-												<< "   State: " << CommandPointStateToString(res.state)
-												<< "   Status: " << CommandStatusToString(res.status);
+												<< "   State: " << CommandPointStateSpec::to_human_string(res.state)
+                                                << "   Status: " << CommandStatusSpec::to_human_string(res.status);
 										};
 										result.ForeachItem(print);
 									};
@@ -689,7 +716,8 @@ int main(int argc, char* argv[])
 									AnalogOutputFloat32 ao(pmsg->setpoint);
 									auto handler = [&pmsg, &stackConfigVec, &i, &spSoehVec](const ICommandTaskResult& result) -> void
 									{
-										std::cout << "Summary: " << TaskCompletionToString(result.summary) << std::endl;
+                                        std::cout << "Summary: " << TaskCompletionSpec::to_human_string(result.summary)
+                                                  << std::endl;
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
@@ -709,8 +737,8 @@ int main(int argc, char* argv[])
 											std::cout
 												<< "  Header: " << res.headerIndex
 												<< "   Index: " << res.index
-												<< "   State: " << CommandPointStateToString(res.state)
-												<< "   Status: " << CommandStatusToString(res.status);
+                                                << "   State: " << CommandPointStateSpec::to_human_string(res.state)
+                                                << "   Status: " << CommandStatusSpec::to_human_string(res.status);
 										};
 										result.ForeachItem(print);
 									};
@@ -731,7 +759,8 @@ int main(int argc, char* argv[])
 									AnalogOutputInt32 ao((int32_t)pmsg->setpoint_i32);
 									auto handler = [&pmsg, &stackConfigVec, &i, &spSoehVec](const ICommandTaskResult& result) -> void
 									{
-										std::cout << "Summary: " << TaskCompletionToString(result.summary) << std::endl;
+                                        std::cout << "Summary: " << TaskCompletionSpec::to_human_string(result.summary)
+                                                  << std::endl;
 										auto print = [&pmsg, &stackConfigVec, &i, &spSoehVec](const CommandPointResult& res)
 										{
 											std::cout << " OSHMI Cmd-> RTU:" << pmsg->utr;
@@ -751,8 +780,8 @@ int main(int argc, char* argv[])
 											std::cout
 												<< "  Header: " << res.headerIndex
 												<< "   Index: " << res.index
-												<< "   State: " << CommandPointStateToString(res.state)
-												<< "   Status: " << CommandStatusToString(res.status);
+                                                << "   State: " << CommandPointStateSpec::to_human_string(res.state)
+                                                << "   Status: " << CommandStatusSpec::to_human_string(res.status);
 										};
 										result.ForeachItem(print);
 									};

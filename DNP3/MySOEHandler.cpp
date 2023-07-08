@@ -17,6 +17,9 @@
  * This project was forked on 01/01/2013 by Automatak, LLC and modifications
  * may have been made to this file. Automatak, LLC licenses these modifications
  * to you under the terms of the License.
+ * 
+ * Modified and integrated into OSHMI by Ricardo Lastra Olsen (2016-2023).
+ *
  */
 
 #include <iostream>
@@ -53,6 +56,10 @@ MySOEHandler::MySOEHandler()
 	saddress.sin_family = AF_INET;
 	saddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 	saddress.sin_port = htons((unsigned short)I104M_WRITEUDPPORT);
+    saddress_red.sin_family = AF_INET;
+    saddress_red.sin_port = htons((unsigned short)I104M_WRITEUDPPORT);
+    saddress_red_driver.sin_family = AF_INET;
+    saddress_red_driver.sin_port = htons((unsigned short)I104M_WRITEUDPPORT);
 
 	if (shandle == 0)
         Init();
@@ -158,7 +165,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
 				static_cast<int>(pair.value.flags.value) << " : " <<
-				pair.value.time << " RTU:" << msg.sec << std::endl;
+			    pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 			count++;
 			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
@@ -191,7 +198,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 			obj->iq = xlatequalif(pair.value.flags.value);
 			obj->iq |= pair.value.value ? 1 : 0;
 
-			time_t tmi = pair.value.time / 1000;
+			time_t tmi = pair.value.time.value / 1000;
 			struct tm *unxtm = localtime( &tmi );
 			//struct tm *unxtm = gmtime(&tmi);
 
@@ -200,12 +207,12 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 			obj->dia = unxtm->tm_mday;
 			obj->hora = unxtm->tm_hour;
 			obj->min = unxtm->tm_min;
-			obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time % 1000);
+			obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time.value % 1000);
 
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
 				static_cast<int>(pair.value.flags.value) << " : " <<
-				pair.value.time << " RTU:" << msg.sec << std::endl;
+				pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 			count++;
 			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
@@ -255,10 +262,9 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 			obj->iq = xlatequalif(pair.value.flags.value);
 			obj->iq |= (static_cast<int>(pair.value.value)) & 0x03;
 
-			std::cout << "[" << pair.index << "] : " <<
-				ValueToString(pair.value) << " : " <<
-				static_cast<int>(pair.value.flags.value) << " : " <<
-				pair.value.time << " RTU:" << msg.sec << std::endl;
+			std::cout << "[" << pair.index << "] : " << DoubleBitSpec::to_human_string(pair.value.value) << " : "
+                      << static_cast<int>(pair.value.flags.value) << " : " 
+					  << pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 			count++;
 			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
@@ -291,7 +297,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 				obj->iq = xlatequalif(pair.value.flags.value);
 				obj->iq |= (static_cast<int>(pair.value.value)) & 0x03;
 
-				time_t tmi = pair.value.time / 1000;
+				time_t tmi = pair.value.time.value / 1000;
 				struct tm *unxtm = localtime(&tmi);
 				//struct tm *unxtm = gmtime(&tmi);
 
@@ -300,12 +306,11 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Dou
 				obj->dia = unxtm->tm_mday;
 				obj->hora = unxtm->tm_hour;
 				obj->min = unxtm->tm_min;
-				obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time % 1000);
+				obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time.value % 1000);
 
-     			std::cout << "[" << pair.index << "] : " <<
-					ValueToString(pair.value) << " : " <<
-					static_cast<int>(pair.value.flags.value) << " : " <<
-					pair.value.time << " RTU:" << msg.sec << std::endl;
+     			std::cout << "[" << pair.index << "] : " << DoubleBitSpec::to_human_string(pair.value.value) << " : "
+                          << static_cast<int>(pair.value.flags.value) << " : " 
+					      << pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 				count++;
 				if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
@@ -390,7 +395,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
             obj->fr = (float)pair.value.value;
             obj->qds = xlatequalif(pair.value.flags.value);
 
-            time_t tmi = pair.value.time / 1000;
+            time_t tmi = pair.value.time.value / 1000;
             struct tm* unxtm = localtime(&tmi);
 
             obj->ano = unxtm->tm_year % 100;
@@ -398,10 +403,10 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
             obj->dia = unxtm->tm_mday;
             obj->hora = unxtm->tm_hour;
             obj->min = unxtm->tm_min;
-            obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time % 1000);
+            obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time.value % 1000);
 
             std::cout << "[" << pair.index << "] : " << pair.value.value << " : "
-                      << static_cast<int>(pair.value.flags.value) << " : " << pair.value.time  << msg.sec << " RTU:" << msg.sec
+                      << static_cast<int>(pair.value.flags.value) << " : " << pair.value.time.value  << msg.sec << " RTU:" << msg.sec
                       << std::endl;
 
             count++;
@@ -453,7 +458,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Cou
 		std::cout << "[" << pair.index << "] : " <<
 			pair.value.value << " : " <<
 			static_cast<int>(pair.value.flags.value) << " : " <<
-			pair.value.time << " RTU:" << msg.sec << std::endl;
+			pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 		count++;
 
@@ -503,7 +508,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Fro
 		std::cout << "[" << pair.index << "] : " <<
 			pair.value.value << " : " <<
 			static_cast<int>(pair.value.flags.value) << " : " <<
-			pair.value.time << " RTU:" << msg.sec << std::endl;
+			pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 		count++;
 
@@ -556,7 +561,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 			std::cout << "[" << pair.index << "] : " <<
 				ValueToString(pair.value) << " : " <<
 				static_cast<int>(pair.value.flags.value) << " : " <<
-				pair.value.time << " RTU:" << msg.sec << std::endl;
+				pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 			count++;
 			if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
@@ -589,7 +594,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 				obj->iq = xlatequalif(pair.value.flags.value);
 				obj->iq |= pair.value.value ? 1 : 0;
 
-				time_t tmi = pair.value.time / 1000;
+				time_t tmi = pair.value.time.value / 1000;
 				struct tm *unxtm = localtime(&tmi);
 				//struct tm *unxtm = gmtime(&tmi);
 
@@ -598,12 +603,12 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Bin
 				obj->dia = unxtm->tm_mday;
 				obj->hora = unxtm->tm_hour;
 				obj->min = unxtm->tm_min;
-				obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time % 1000);
+				obj->ms = (unsigned short)(unxtm->tm_sec * 1000 + pair.value.time.value % 1000);
 
 				std::cout << "[" << pair.index << "] : " <<
 					ValueToString(pair.value) << " : " <<
 					static_cast<int>(pair.value.flags.value) << " : " <<
-					pair.value.time << " RTU:" << msg.sec << std::endl;
+					pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 				count++;
 				if (!((count + 1) % max_pointspkt)) // se a próxima é do próximo pacote, manda agora
@@ -653,7 +658,7 @@ void MySOEHandler::Process(const HeaderInfo& info, const ICollection<Indexed<Ana
 		std::cout << "[" << pair.index << "] : " <<
 			pair.value.value << " : " <<
 			static_cast<int>(pair.value.flags.value) << " : " <<
-			pair.value.time << " RTU:" << msg.sec << std::endl;
+			pair.value.time.value << " RTU:" << msg.sec << std::endl;
 
 		count++;
 
