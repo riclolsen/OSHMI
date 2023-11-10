@@ -1,5 +1,5 @@
 /* 
- * This software implements a IEC62850 driver for OSHMI.
+ * This software implements a IEC61850 driver for OSHMI.
  * Copyright - 2023 - Ricardo Lastra Olsen
  * 
  * Requires libiec61850 from MZ Automation.
@@ -36,7 +36,7 @@ namespace OSHMI_IEC61850_Client
 {
     class Program
     {
-        static public string Version = "OSHMI IEC61850 Client Driver Version 0.1";
+        static public string Version = "OSHMI IEC61850 Client Driver Version 0.6";
         static public string HmiConfigFile = "c:\\oshmi\\conf\\hmi.ini";
         static public string OtherHmiIp = "";
         static public string ConfigFile = "c:\\oshmi\\conf\\iec61850_client.conf";
@@ -57,7 +57,11 @@ namespace OSHMI_IEC61850_Client
             public ulong timestamp; // timestamp
             public Iec61850Entry iecEntry; // iec61850 object entry
         }
-
+        public class RcbConfig
+        {
+            public bool enabled; // is enabled?
+            public uint integrity_period; // integrity period
+        }
         public class Iec61850Entry
         {
             public string path; // IEC61850 object path
@@ -81,7 +85,8 @@ namespace OSHMI_IEC61850_Client
             public bool browse; // browse all IEC61850 tree
             public bool useBrcb; // use buffered reports
             public bool useUrcb; // use unbuffered reports
-            public Dictionary<string, Iec61850Entry> entries; // list of desired entries
+            public Dictionary<string, Iec61850Entry> entries; // list of iec61850 objects
+            public Dictionary<string, RcbConfig> rcbConfigs; // list of RCB configs
             public Dictionary<string, byte[]> lastReportIds; // list of last seen reports to be logged to/read from disk
             public uint read_period; // read period for tags not in reports
             public uint reports_integrity_period; // integrity period for reports
@@ -307,159 +312,211 @@ namespace OSHMI_IEC61850_Client
             }
             return v;
         }
+        static string getRefFc(string dataRef, out FunctionalConstraint fc)
+        {
+            string ret = dataRef;
+            fc = FunctionalConstraint.NONE;
+            for (int i = 0; i < 17; i++)
+            {
+                var sfc = "$" + ((FunctionalConstraint)i).ToString() + "$";
+                if (dataRef.Contains(sfc))
+                {
+                    fc = (FunctionalConstraint)i;
+                    ret = dataRef.Replace(sfc, ".");
+                    break;
+                }
+            }
+            return ret.Replace("$", ".");
+        }
+        static string getRefFc2(string dataRef, out FunctionalConstraint fc)
+        {
+            string ret = dataRef;
+            fc = FunctionalConstraint.NONE;
+            for (int i = 0; i < 17; i++)
+            {
+                var sfc = "[" + ((FunctionalConstraint)i).ToString() + "]";
+                if (dataRef.Contains(sfc))
+                {
+                    fc = (FunctionalConstraint)i;
+                    ret = dataRef.Replace(sfc, "");
+                    break;
+                }
+            }
+            return ret;
+        }
 
         private static void reportHandler(Report report, object parameter)
         { // handle reports, forward values to OSHMI when desired
             ReptParam rp = (ReptParam)parameter;
-
             string log = "";
-            if (LogLevel > LogLevelNone)
-            {
-                log = rp.srv.name + " Report RCB: " + report.GetRcbReference();
-                if (report.HasSeqNum())
-                    log += " SeqNumb:" + report.GetSeqNum();
-                if (report.HasSubSeqNum())
-                    log += " SubSeqNumb:" + report.GetSubSeqNum();
-                log += "\n";
-            }
-            byte[] entryId = report.GetEntryId();
-            if (entryId != null)
+
+            try
             {
                 if (LogLevel > LogLevelNone)
-                    log += "  entryID: " + BitConverter.ToString(entryId) + " \n";
-                if (rp.srv.brcb.Contains(report.GetRcbReference()))
                 {
-                    rp.srv.lastReportIds[report.GetRcbReference()] = entryId;
-                    rp.srv.brcbCount++;
+                    log = rp.srv.name + " Report RCB: " + report.GetRcbReference();
+                    if (report.HasSeqNum())
+                        log += " SeqNumb:" + report.GetSeqNum();
+                    if (report.HasSubSeqNum())
+                        log += " SubSeqNumb:" + report.GetSubSeqNum();
+                    log += "\n";
                 }
-            }
-            if (LogLevel > LogLevelNone && report.HasDataSetName())
-                log += "  data-set: " + rp.rcb.GetDataSetReference() + "\n";
-
-            if (report.HasTimestamp() && LogLevel > LogLevelNone)
-                log += "  timestamp: " + MmsValue.MsTimeToDateTimeOffset(report.GetTimestamp()).ToString() + "\n";
-
-            MmsValue values = report.GetDataSetValues();
-
-            if (LogLevel > LogLevelNone)
-                log += "  report dataset contains " + values.Size() + " elements" + "\n";
-
-            for (int k = 0; k < values.Size(); k++)
-            {
-                if (report.HasReasonForInclusion())
-                    if (report.GetReasonForInclusion(k) != ReasonForInclusion.REASON_NOT_INCLUDED)
+                byte[] entryId = report.GetEntryId();
+                if (entryId != null)
+                {
+                    if (LogLevel > LogLevelNone)
+                        log += "  entryID: " + BitConverter.ToString(entryId) + " \n";
+                    if (rp.srv.brcb.Contains(report.GetRcbReference()))
                     {
-                        var dataRef = report.GetDataReference(k).Replace("$ST$", ".").Replace("$MX$", ".").Replace("$CF$", ".").Replace("$CO$", ".").Replace("$RP$", ".").Replace('$', '.');
+                        rp.srv.lastReportIds[report.GetRcbReference()] = entryId;
+                        rp.srv.brcbCount++;
+                    }
+                }
+                if (LogLevel > LogLevelNone && report.HasDataSetName())
+                    log += "  data-set: " + rp.rcb.GetDataSetReference() + "\n";
 
-                        if (!rp.srv.autoTag && !rp.srv.entries.ContainsKey(dataRef)) continue; // when no autoTag do not forward data for tags undefined for oshmi
-                        Iec61850Entry entry = new Iec61850Entry();
-                        if (rp.srv.entries.ContainsKey(dataRef))
-                            entry = rp.srv.entries[dataRef];
-                        else
-                        {  // autoTag undefined oshmi tag with server name plus 61850 path
-                            entry.path = dataRef;
-                            entry.oshmi_tag = rp.srv.name + ":" + dataRef;
-                            entry.childs = new List<string> { };
-                        }
-                        entry.rcbName = report.GetRcbReference();
-                        entry.dataSetName = rp.rcb.GetDataSetReference();
+                if (report.HasTimestamp() && LogLevel > LogLevelNone)
+                    log += "  timestamp: " + MmsValue.MsTimeToDateTimeOffset(report.GetTimestamp()).ToString() + "\n";
 
-                        log += "\nElement " + k + " , path " + entry.path + " , OSHMI_tag " + entry.oshmi_tag + "\n";
+                MmsValue values = report.GetDataSetValues();
 
-                        if (LogLevel > LogLevelNone)
-                            log += " Included for reason " + report.GetReasonForInclusion(k).ToString() + " \n";
-                        string tag = entry.oshmi_tag;
-                        var value = values.GetElement(k);
-                        double v;
-                        bool failed;
-                        ulong timestamp;
-                        Boolean isBinary = false;
+                if (LogLevel > LogLevelNone)
+                    log += "  report dataset contains " + values.Size() + " elements" + "\n";
 
-                        if (value.GetType() == MmsType.MMS_STRUCTURE)
+                for (int k = 0; k < values.Size(); k++)
+                {
+                    if (report.HasReasonForInclusion())
+                        if (report.GetReasonForInclusion(k) != ReasonForInclusion.REASON_NOT_INCLUDED)
                         {
-                            if (LogLevel > LogLevelNone)
+                            var dr = report.GetDataReference(k);
+                            if (dr == null)
                             {
-                                log += " Value is of complex type [";
-                                foreach (var item in entry.childs)
-                                {
-                                    log += item + " ";
-                                }
-                                log += "]\n";
+                                log += "Can't get data reference for element " + k + " of report! Skipping element...\n";
+                                continue;
                             }
-                            v = MMSGetNumericVal(value, out isBinary);
-                            failed = MMSGetQualityFailed(value);
-                            timestamp = MMSGetTimestamp(value);
+                            var dataRef = getRefFc(dr, out FunctionalConstraint fc);
 
-                            for (int i = 0; i < value.Size(); i++)
+                            if (!rp.srv.autoTag && !rp.srv.entries.ContainsKey(dataRef)) continue; // when no autoTag do not forward data for tags undefined for oshmi
+                            Iec61850Entry entry = new Iec61850Entry();
+                            if (rp.srv.entries.ContainsKey(dataRef))
+                                entry = rp.srv.entries[dataRef];
+                            else
+                            {  // autoTag undefined oshmi tag with server name plus 61850 path
+                                entry.path = dataRef;
+                                entry.oshmi_tag = rp.srv.name + ":" + dataRef;
+                                entry.childs = new List<string> { };
+                            }
+                            entry.rcbName = report.GetRcbReference();
+                            entry.dataSetName = rp.rcb.GetDataSetReference();
+
+                            log += "\nElement " + k + " , path " + entry.path + " , OSHMI_tag " + entry.oshmi_tag + "\n";
+
+                            if (LogLevel > LogLevelNone)
+                                log += " Included for reason " + report.GetReasonForInclusion(k).ToString() + " \n";
+                            string tag = entry.oshmi_tag;
+                            var value = values.GetElement(k);
+                            double v;
+                            bool failed;
+                            ulong timestamp;
+                            Boolean isBinary = false;
+
+                            if (value.GetType() == MmsType.MMS_STRUCTURE)
                             {
                                 if (LogLevel > LogLevelNone)
-                                    log += "  " + value.GetElement(i).GetType();
-
-                                if (value.GetElement(i).GetType() == MmsType.MMS_STRUCTURE)
                                 {
-                                    v = MMSGetNumericVal(value.GetElement(i), out isBinary);
-                                    for (int j = 0; j < value.GetElement(i).Size(); j++)
+                                    log += " Value is of complex type [";
+                                    foreach (var item in entry.childs)
+                                    {
+                                        log += item + " ";
+                                    }
+                                    log += "]\n";
+                                }
+                                v = MMSGetNumericVal(value, out isBinary);
+                                failed = MMSGetQualityFailed(value);
+                                timestamp = MMSGetTimestamp(value);
+
+                                for (int i = 0; i < value.Size(); i++)
+                                {
+                                    if (LogLevel > LogLevelNone)
+                                        log += "  " + value.GetElement(i).GetType();
+
+                                    if (value.GetElement(i).GetType() == MmsType.MMS_STRUCTURE)
+                                    {
+                                        v = MMSGetNumericVal(value.GetElement(i), out isBinary);
+                                        for (int j = 0; j < value.GetElement(i).Size(); j++)
+                                        {
+                                            if (LogLevel > LogLevelNone)
+                                                log += "  " + value.GetElement(i).GetElement(j).GetType();
+                                            if (LogLevel > LogLevelNone)
+                                                log += "     -> " + value.GetElement(i).GetElement(j).ToString() + "\n";
+                                            v = MMSGetNumericVal(value.GetElement(i).GetElement(j), out isBinary);
+                                        }
+                                    }
+                                    failed = MMSGetQualityFailed(value.GetElement(i));
+                                    timestamp = MMSGetTimestamp(value.GetElement(i));
+                                    if (value.GetElement(i).GetType() == MmsType.MMS_BIT_STRING)
                                     {
                                         if (LogLevel > LogLevelNone)
-                                            log += "  " + value.GetElement(i).GetElement(j).GetType();
+                                            log += "   -> " + value.GetElement(i).ToString() + "\n";
+                                    }
+                                    else
+                                    if (value.GetElement(i).GetType() == MmsType.MMS_UTC_TIME)
+                                    {
                                         if (LogLevel > LogLevelNone)
-                                            log += "     -> " + value.GetElement(i).GetElement(j).ToString() + "\n";
-                                        v = MMSGetNumericVal(value.GetElement(i).GetElement(j), out isBinary);
+                                            log += "   -> " + value.GetElement(i).GetUtcTimeAsDateTimeOffset() + "\n";
+                                    }
+                                    else
+                                    {
+                                        if (LogLevel > LogLevelNone)
+                                            log += "   -> " + v + "\n";
                                     }
                                 }
-                                failed = MMSGetQualityFailed(value.GetElement(i));
-                                timestamp = MMSGetTimestamp(value.GetElement(i));
-                                if (value.GetElement(i).GetType() == MmsType.MMS_BIT_STRING)
-                                {
-                                    if (LogLevel > LogLevelNone)
-                                        log += "   -> " + value.GetElement(i).ToString() + "\n";
-                                }
-                                if (value.GetElement(i).GetType() == MmsType.MMS_UTC_TIME)
-                                {
-                                    if (LogLevel > LogLevelNone)
-                                        log += "   -> " + value.GetElement(i).GetUtcTimeAsDateTimeOffset() + "\n";
-                                }
+
+                                string vstr;
+                                if (isBinary)
+                                    vstr = v != 0 ? "true" : "false";
+                                else
+                                    vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
+
+                                SendUdp(Encoding.ASCII.GetBytes(
+                                     "[{\"tag\":\"" + tag +
+                                     "\",\"value\":" + vstr +
+                                     ",\"failed\":" + (failed ? "true" : "false") +
+                                     ((report.GetReasonForInclusion(k) == ReasonForInclusion.REASON_DATA_CHANGE && timestamp != 0) ?
+                                      (",\"timestamp\": " + timestamp / 1000 + ",\"ms\":" + timestamp % 1000) : "") +
+                                     "}]"));
                             }
-
-                            string vstr;
-                            if (isBinary)
-                                vstr = v != 0 ? "true" : "false";
                             else
-                                vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
+                            {
+                                v = MMSGetDoubleVal(value, out isBinary);
+                                if (LogLevel > LogLevelNone)
+                                {
+                                    log += " Value is of simple type " + value.GetType() + " " + v;
+                                }
+                                failed = false;
+                                if (MMSTestDoubleStateFailed(value)) failed = true; // double state inconsistent state
+                                string vstr;
+                                if (isBinary)
+                                    vstr = v != 0 ? "true" : "false";
+                                else
+                                    vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
 
-                            SendUdp(Encoding.ASCII.GetBytes(
+                                SendUdp(Encoding.ASCII.GetBytes(
                                  "[{\"tag\":\"" + tag +
                                  "\",\"value\":" + vstr +
                                  ",\"failed\":" + (failed ? "true" : "false") +
-                                 ((report.GetReasonForInclusion(k) == ReasonForInclusion.REASON_DATA_CHANGE && timestamp != 0) ?
-                                  (",\"timestamp\": " + timestamp / 1000 + ",\"ms\":" + timestamp % 1000) : "") +
+                                 (report.GetReasonForInclusion(k) == ReasonForInclusion.REASON_DATA_CHANGE ?
+                                 (",\"timestamp\": " + (Int32)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds()) + ",\"ms\":" + 0 : "") +
                                  "}]"));
-                        }
-                        else
-                        {
-                            v = MMSGetDoubleVal(value, out isBinary);
-                            if (LogLevel > LogLevelNone)
-                            {
-                                log += " Value is of simple type " + value.GetType() + " " + v;
                             }
-                            failed = false;
-                            if (MMSTestDoubleStateFailed(value)) failed = true; // double state inconsistent state
-                            string vstr;
-                            if (isBinary)
-                                vstr = v != 0 ? "true" : "false";
-                            else
-                                vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
-
-                            SendUdp(Encoding.ASCII.GetBytes(
-                             "[{\"tag\":\"" + tag +
-                             "\",\"value\":" + vstr +
-                             ",\"failed\":" + (failed ? "true" : "false") +
-                             (report.GetReasonForInclusion(k) == ReasonForInclusion.REASON_DATA_CHANGE ?
-                             (",\"timestamp\": " + (Int32)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds()) + ",\"ms\":" + 0 : "") +
-                             "}]"));
                         }
-                    }
+                }
                 Log(log);
+            }
+            catch (Exception e)
+            {
+                Log(log);
+                Log(e);
             }
         }
 
@@ -545,20 +602,32 @@ namespace OSHMI_IEC61850_Client
                                 foreach (var dataName in listData)
                                 {
                                     Log(srv.name + "     " + dataSetName + " -> " + dataName);
-                                    var dataRef = dataName.Replace("[MX]", "").Replace("[ST]", "").Replace("[CF]", "").Replace("[RP]", "").Replace("[CO]", "");
+                                    var dataRef = getRefFc2(dataName, out FunctionalConstraint fc);
                                     if (srv.entries.ContainsKey(dataRef))
                                     {
                                         var entry = srv.entries[dataRef];
+                                        if (entry.fc != fc)
+                                            continue;
                                         entry.dataSetName = dataSetName;
                                         Log(srv.name + "       Found desired entry " + entry.path);
                                         if (entry.childs.Count == 0)
-                                            for (int j = 0; j < con.GetVariableSpecification(entry.path, entry.fc).Size(); j++)
+                                        {
+                                            try
                                             {
-                                                Log(srv.name + "         Child " + con.GetVariableSpecification(entry.path, entry.fc).GetElement(j).GetName());
-                                                entry.childs.Add(con.GetVariableSpecification(entry.path, entry.fc).GetElement(j).GetName());
+                                                var sz = con.GetVariableSpecification(entry.path, entry.fc).Size();
+                                                for (int j = 0; j < sz; j++)
+                                                {
+                                                    var cname = con.GetVariableSpecification(entry.path, entry.fc).GetElement(j).GetName();
+                                                    Log(srv.name + "         Child " + cname);
+                                                    entry.childs.Add(cname);
+                                                }
                                             }
+                                            catch { }
+                                        }
                                     }
                                 }
+
+                                // var ds = con.ReadDataSetValues(dataSetName, null);
                             }
 
                             if (srv.useUrcb)
@@ -568,16 +637,28 @@ namespace OSHMI_IEC61850_Client
                                     con.GetLogicalNodeDirectory(logicalNodeReference, ACSIClass.ACSI_CLASS_URCB);
                                 foreach (string urcb in urcbs)
                                 {
-                                    Log(srv.name + " URCB: " + logicalNodeReference + ".RP." + urcb);
-                                    srv.urcb.Add(logicalNodeReference + ".RP." + urcb);
-                                    var rcb = con.GetReportControlBlock(logicalNodeReference + ".RP." + urcb);
+                                    var rcbName = logicalNodeReference + ".RP." + urcb;
+                                    srv.urcb.Add(rcbName);
+                                    var rcb = con.GetReportControlBlock(rcbName);
+
+                                    var reports_integrity_period = srv.reports_integrity_period;
+                                    if (srv.rcbConfigs.Count > 0 && srv.rcbConfigs.ContainsKey(rcbName))
+                                    {
+                                        if (!srv.rcbConfigs[rcbName].enabled)
+                                        {
+                                            Log(srv.name + " URCB: " + rcbName + " disabled by config.");
+                                            continue;
+                                        }
+                                        reports_integrity_period = srv.rcbConfigs[rcbName].integrity_period;
+                                    }
+                                    Log(srv.name + " URCB: " + rcbName);
 
                                     var dataSetName = rcb.GetDataSetReference();
                                     foreach (var entry in srv.entries)
                                     {
                                         if (entry.Value.dataSetName == dataSetName)
                                         {
-                                            srv.entries[entry.Key].rcbName = logicalNodeReference + ".RP." + urcb;
+                                            srv.entries[entry.Key].rcbName = rcbName;
                                         }
                                     }
 
@@ -594,15 +675,24 @@ namespace OSHMI_IEC61850_Client
 
                                         rcb.InstallReportHandler(reportHandler, new ReptParam { srv = srv, rcb = rcb });
                                         rcb.SetTrgOps(TriggerOptions.DATA_UPDATE | TriggerOptions.DATA_CHANGED | TriggerOptions.INTEGRITY);
-                                        rcb.SetIntgPd(srv.reports_integrity_period * 1000);
+                                        rcb.SetIntgPd(reports_integrity_period * 1000);
+                                        rcb.SetOptFlds(ReportOptions.SEQ_NUM |
+                                                       ReportOptions.TIME_STAMP |
+                                                       ReportOptions.REASON_FOR_INCLUSION |
+                                                       ReportOptions.DATA_SET |
+                                                       ReportOptions.DATA_REFERENCE |
+                                                       ReportOptions.CONF_REV);
+
+                                        rcb.SetRptEna(false);
                                         rcb.SetRptEna(true);
                                         try
                                         {
                                             rcb.SetRCBValues();
+                                            rcb.SetGI(true);
                                         }
                                         catch (IedConnectionException e)
                                         {
-                                            Log(srv.name + " URCB: IED SetRCB exception - " + e.Message);
+                                            Log(srv.name + " URCB: IED SetRCB exception - " + e.Message + " Code:" + e.GetErrorCode());
                                         }
                                     }
                                 }
@@ -615,16 +705,28 @@ namespace OSHMI_IEC61850_Client
                                     con.GetLogicalNodeDirectory(logicalNodeReference, ACSIClass.ACSI_CLASS_BRCB);
                                 foreach (string brcb in brcbs)
                                 {
-                                    Log(srv.name + " BRCB: " + logicalNodeReference + ".BR." + brcb);
-                                    srv.brcb.Add(logicalNodeReference + ".BR." + brcb);
-                                    var rcb = con.GetReportControlBlock(logicalNodeReference + ".BR." + brcb);
+                                    var rcbName = logicalNodeReference + ".BR." + brcb;
+                                    srv.brcb.Add(rcbName);
+                                    var rcb = con.GetReportControlBlock(rcbName);
+
+                                    var reports_integrity_period = srv.reports_integrity_period;
+                                    if (srv.rcbConfigs.Count > 0 && srv.rcbConfigs.ContainsKey(rcbName))
+                                    {
+                                        if (!srv.rcbConfigs[rcbName].enabled)
+                                        {
+                                            Log(srv.name + " BRCB: " + rcbName + " disabled by config.");
+                                            continue;
+                                        }
+                                        reports_integrity_period = srv.rcbConfigs[rcbName].integrity_period;
+                                    }
+                                    Log(srv.name + " BRCB: " + rcbName);
 
                                     var dataSetName = rcb.GetDataSetReference();
                                     foreach (var entry in srv.entries)
                                     {
                                         if (entry.Value.dataSetName == dataSetName)
                                         {
-                                            srv.entries[entry.Key].rcbName = logicalNodeReference + ".BR." + brcb;
+                                            srv.entries[entry.Key].rcbName = rcbName;
                                         }
                                     }
 
@@ -642,21 +744,30 @@ namespace OSHMI_IEC61850_Client
                                         rcb.InstallReportHandler(reportHandler, new ReptParam { srv = srv, rcb = rcb });
                                         rcb.SetTrgOps(TriggerOptions.DATA_UPDATE | TriggerOptions.DATA_CHANGED | TriggerOptions.INTEGRITY);
                                         byte[] lastEntryId = { 0, 0, 0, 0, 0, 0, 0, 0 };
-                                        if (srv.lastReportIds.ContainsKey(logicalNodeReference + ".BR." + brcb))
+                                        if (srv.lastReportIds.ContainsKey(rcbName))
                                         {
-                                            lastEntryId = srv.lastReportIds[logicalNodeReference + ".BR." + brcb];
-                                            Log(srv.name + " BRCB: " + logicalNodeReference + ".BR." + brcb + " - Last seen entryId: " + BitConverter.ToString(lastEntryId));
+                                            lastEntryId = srv.lastReportIds[rcbName];
+                                            Log(srv.name + " BRCB: " + rcbName + " - Last seen entryId: " + BitConverter.ToString(lastEntryId));
                                         }
                                         rcb.SetEntryID(lastEntryId);
-                                        rcb.SetIntgPd(srv.reports_integrity_period * 1000);
+                                        rcb.SetIntgPd(reports_integrity_period * 1000);
+                                        rcb.SetOptFlds(ReportOptions.SEQ_NUM |
+                                                       ReportOptions.TIME_STAMP |
+                                                       ReportOptions.REASON_FOR_INCLUSION |
+                                                       ReportOptions.DATA_SET |
+                                                       ReportOptions.DATA_REFERENCE |
+                                                       ReportOptions.CONF_REV |
+                                                       ReportOptions.ENTRY_ID);
+                                        rcb.SetRptEna(false);
                                         rcb.SetRptEna(true);
                                         try
                                         {
                                             rcb.SetRCBValues();
+                                            rcb.SetGI(true);
                                         }
                                         catch (IedConnectionException e)
                                         {
-                                            Log(srv.name + " BRCB: IED SetRCB exception - " + e.Message);
+                                            Log(srv.name + " BRCB: IED SetRCB exception - " + e.Message + " Code:" + e.GetErrorCode());
                                         }
                                     }
                                 }
@@ -677,221 +788,135 @@ namespace OSHMI_IEC61850_Client
                                 tag = entry.oshmi_tag;
 
                             if (entry.rcbName == "" && entry.fc != FunctionalConstraint.CO) // only read elements that are not in reports
-                                con.ReadValueAsync(entry.path, entry.fc,
-                                    delegate (uint invokeId, object parameter, IedClientError err, MmsValue value)
+                            {
+                                int err = 6;
+                                for (int j = 0; j < 5 && err == 6; j++)
+                                {
+                                    if (srv.ControlQueue.Count > 0)
+                                        CheckCommands(srv, con);
+
+                                    Log(srv.name + " Async Reading " + entry.path + " " + entry.fc + " ind:" + (i + 1) + " try:" + (j + 1));
+                                    err = 0;
+                                    try
                                     {
-                                        string log = "";
-                                        if (LogLevel > LogLevelNone)
-                                            log = srv.name + " READ " + " " + entry.path + " " + tag;
-                                        if (err == IedClientError.IED_ERROR_OK)
-                                        {
-                                            var tp = value.GetType();
-                                            double v = 0;
-                                            bool failed = false;
-                                            ulong timestamp = 0;
-                                            bool isBinary = false;
-
-                                            if (value.GetType() == MmsType.MMS_STRUCTURE)
+                                        con.ReadValueAsync(entry.path, entry.fc,
+                                            delegate (uint invokeId, object parameter, IedClientError err, MmsValue value)
                                             {
-                                                failed = true;
-                                                if (LogLevel > LogLevelHigh) log += "\n    Value is of complex type \n";
-                                                v = MMSGetNumericVal(value, out isBinary);
-                                                failed = MMSGetQualityFailed(value);
-                                                timestamp = MMSGetTimestamp(value);
-
-                                                for (int i = 0; i < value.Size(); i++)
+                                                string log = "";
+                                                if (LogLevel > LogLevelNone)
+                                                    log = srv.name + " READED" + " " + entry.path + " " + tag;
+                                                if (err == IedClientError.IED_ERROR_OK)
                                                 {
-                                                    if (LogLevel > LogLevelHigh) log += "    element: " + value.GetElement(i).GetType();
+                                                    var tp = value.GetType();
+                                                    double v = 0;
+                                                    bool failed = false;
+                                                    ulong timestamp = 0;
+                                                    bool isBinary = false;
 
-                                                    if (value.GetElement(i).GetType() == MmsType.MMS_STRUCTURE)
+                                                    if (value.GetType() == MmsType.MMS_STRUCTURE)
                                                     {
-                                                        v = MMSGetNumericVal(value.GetElement(i), out isBinary);
-                                                        for (int j = 0; j < value.GetElement(i).Size(); j++)
+                                                        failed = true;
+                                                        if (LogLevel > LogLevelHigh) log += "\n    Value is of complex type \n";
+                                                        v = MMSGetNumericVal(value, out isBinary);
+                                                        failed = MMSGetQualityFailed(value);
+                                                        timestamp = MMSGetTimestamp(value);
+
+                                                        for (int i = 0; i < value.Size(); i++)
                                                         {
-                                                            if (LogLevel > LogLevelHigh) log += "    element: " + value.GetElement(i).GetElement(j).GetType();
-                                                            if (LogLevel > LogLevelHigh) log += " -> " + value.GetElement(i).GetElement(j).ToString() + "\n";
-                                                            v = MMSGetNumericVal(value.GetElement(i).GetElement(j), out isBinary);
+                                                            if (LogLevel > LogLevelHigh) log += "    element: " + value.GetElement(i).GetType();
+
+                                                            if (value.GetElement(i).GetType() == MmsType.MMS_STRUCTURE)
+                                                            {
+                                                                v = MMSGetNumericVal(value.GetElement(i), out isBinary);
+                                                                for (int j = 0; j < value.GetElement(i).Size(); j++)
+                                                                {
+                                                                    if (LogLevel > LogLevelHigh) log += "    element: " + value.GetElement(i).GetElement(j).GetType();
+                                                                    if (LogLevel > LogLevelHigh) log += " -> " + value.GetElement(i).GetElement(j).ToString() + "\n";
+                                                                    v = MMSGetNumericVal(value.GetElement(i).GetElement(j), out isBinary);
+                                                                }
+                                                            }
+                                                            failed = MMSGetQualityFailed(value.GetElement(i));
+                                                            timestamp = MMSGetTimestamp(value.GetElement(i));
+                                                            if (value.GetElement(i).GetType() == MmsType.MMS_BIT_STRING)
+                                                            {
+                                                                if (LogLevel > LogLevelHigh) log += " -> " + value.GetElement(i).ToString() + "\n";
+                                                            }
+                                                            else
+                                                            if (value.GetElement(i).GetType() == MmsType.MMS_UTC_TIME)
+                                                            {
+                                                                if (LogLevel > LogLevelHigh) log += " -> " + value.GetElement(i).GetUtcTimeAsDateTimeOffset() + "\n";
+                                                            }
+                                                            else
+                                                            {
+                                                                if (LogLevel > LogLevelHigh)
+                                                                    log += "   -> " + v + "\n";
+                                                            }
                                                         }
+                                                        string vstr;
+                                                        if (isBinary)
+                                                            vstr = v != 0 ? "true" : "false";
+                                                        else
+                                                            vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
+
+                                                        SendUdp(Encoding.ASCII.GetBytes(
+                                                             "[{\"tag\":\"" + tag +
+                                                             "\",\"value\":" + vstr +
+                                                             ",\"failed\":" + (false ? "true" : "false") +
+                                                             // ",\"timestamp\": " + (Int32)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds() +
+                                                             //",\"ms\":" + 0 +
+                                                             "}]"));
+                                                        if (LogLevel > LogLevelNone) log += "    v=" + v.ToString("G", CultureInfo.CreateSpecificCulture("en-US")) + " f=" + failed + " t=" + timestamp;
                                                     }
-                                                    failed = MMSGetQualityFailed(value.GetElement(i));
-                                                    timestamp = MMSGetTimestamp(value.GetElement(i));
-                                                    if (value.GetElement(i).GetType() == MmsType.MMS_BIT_STRING)
+                                                    else
                                                     {
-                                                        if (LogLevel > LogLevelHigh) log += " -> " + value.GetElement(i).ToString() + "\n";
-                                                    }
-                                                    if (value.GetElement(i).GetType() == MmsType.MMS_UTC_TIME)
-                                                    {
-                                                        if (LogLevel > LogLevelHigh) log += " -> " + value.GetElement(i).GetUtcTimeAsDateTimeOffset() + "\n";
+                                                        v = MMSGetDoubleVal(value, out isBinary);
+                                                        if (MMSTestDoubleStateFailed(value)) failed = true; // double state inconsistent state
+                                                        string vstr;
+                                                        if (isBinary)
+                                                            vstr = v != 0 ? "true" : "false";
+                                                        else
+                                                            vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
+
+                                                        SendUdp(Encoding.ASCII.GetBytes(
+                                                         "[{\"tag\":\"" + tag +
+                                                         "\",\"value\":" + vstr +
+                                                         ",\"failed\":" + (failed ? "true" : "false") +
+                                                         //",\"timestamp\": " + (Int32)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds() +
+                                                         //",\"ms\":" + 0 +
+                                                         "}]"));
+                                                        if (LogLevel > LogLevelNone) log += "    v=" + v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
                                                     }
                                                 }
-                                                string vstr;
-                                                if (isBinary)
-                                                    vstr = v != 0 ? "true" : "false";
                                                 else
-                                                    vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
-
-                                                SendUdp(Encoding.ASCII.GetBytes(
-                                                     "[{\"tag\":\"" + tag +
-                                                     "\",\"value\":" + vstr +
-                                                     ",\"failed\":" + (false ? "true" : "false") +
-                                                     // ",\"timestamp\": " + (Int32)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds() +
-                                                     //",\"ms\":" + 0 +
-                                                     "}]"));
-                                                if (LogLevel > LogLevelNone) log += "    v=" + v.ToString("G", CultureInfo.CreateSpecificCulture("en-US")) + " f=" + failed + " t=" + timestamp;
-                                            }
-                                            else
-                                            {
-                                                v = MMSGetDoubleVal(value, out isBinary);
-                                                if (MMSTestDoubleStateFailed(value)) failed = true; // double state inconsistent state
-                                                string vstr;
-                                                if (isBinary)
-                                                    vstr = v != 0 ? "true" : "false";
-                                                else
-                                                    vstr = v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
-
-                                                SendUdp(Encoding.ASCII.GetBytes(
-                                                 "[{\"tag\":\"" + tag +
-                                                 "\",\"value\":" + vstr +
-                                                 ",\"failed\":" + (failed ? "true" : "false") +
-                                                 //",\"timestamp\": " + (Int32)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds() +
-                                                 //",\"ms\":" + 0 +
-                                                 "}]"));
-                                                if (LogLevel > LogLevelNone) log += "    v=" + v.ToString("G", CultureInfo.CreateSpecificCulture("en-US"));
-                                            }
+                                                {
+                                                    if (LogLevel > 0) log += "    Read error: " + err.ToString();
+                                                }
+                                                Log(log);
+                                            }, null);
+                                    }
+                                    catch (IedConnectionException e)
+                                    {
+                                        err = e.GetErrorCode();
+                                        if (e.GetErrorCode() == 6)
+                                        {
+                                            CheckCommands(srv, con);
+                                            Thread.Sleep(250);
                                         }
                                         else
-                                        {
-                                            if (LogLevel > 0) log += "    Read error: " + err.ToString();
-                                        }
-                                        Log(log);
-                                    }, null);
+                                        if (LogLevel > LogLevelNormal)
+                                            Log(srv.name + " Exception reading " + entry.path + " " + entry.fc + " error:" + e.GetErrorCode());
+                                    }
+                                }
+                            }
                         }
 
                         for (int i = 0; i < srv.read_period * 10; i++)
                         {
                             if (srv.ControlQueue.Count > 0)
-                            {
-                                var oc = srv.ControlQueue.Dequeue();
-                                Log(srv.name + " Control " + oc.iecEntry.path + " Value " + oc.value);
-
-                                if (oc.iecEntry.fc != FunctionalConstraint.CO)
-                                { // simple write
-                                    try
-                                    {
-                                        var mmsv = con.ReadValue(oc.iecEntry.path, oc.iecEntry.fc);
-                                        switch (mmsv.GetType())
-                                        {
-                                            default:
-                                            case MmsType.MMS_BCD:
-                                            case MmsType.MMS_OBJ_ID:
-                                            case MmsType.MMS_GENERALIZED_TIME:
-                                            case MmsType.MMS_STRUCTURE:
-                                            case MmsType.MMS_ARRAY:
-                                                Log(srv.name + " Writable object of unsupported type! " + oc.iecEntry.path);
-                                                break;
-                                            case MmsType.MMS_BOOLEAN:
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value != 0));
-                                                break;
-                                            case MmsType.MMS_UNSIGNED:
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue((uint)oc.value));
-                                                break;
-                                            case MmsType.MMS_INTEGER:
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue((long)oc.value));
-                                                break;
-                                            case MmsType.MMS_FLOAT:
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value));
-                                                break;
-                                            case MmsType.MMS_STRING:
-                                            case MmsType.MMS_VISIBLE_STRING:
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value.ToString()));
-                                                break;
-                                            case MmsType.MMS_BIT_STRING:
-                                                var bs = MmsValue.NewBitString(mmsv.Size());
-                                                bs.BitStringFromUInt32((uint)oc.value);
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, bs);
-                                                break;
-                                            case MmsType.MMS_UTC_TIME:
-                                                var ut = MmsValue.NewUtcTime((ulong)oc.value);
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, ut);
-                                                break;
-                                            case MmsType.MMS_BINARY_TIME:
-                                                var bt = MmsValue.NewBinaryTime(true);
-                                                bt.SetBinaryTime((ulong)oc.value);
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, bt);
-                                                break;
-                                            case MmsType.MMS_OCTET_STRING:
-                                                var os = MmsValue.NewOctetString(mmsv.Size());
-                                                os.SetOctetStringOctet(0, (byte)(((uint)oc.value) % 256));
-                                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, os);
-                                                break;
-                                        }
-                                    }
-                                    catch (IedConnectionException ex)
-                                    {
-                                        Log(srv.name + " Writable object not found! " + oc.iecEntry.path);
-                                        Log(ex.Message);
-                                        continue;
-                                    }
-                                }
-                                else
-                                { // control object
-                                    try
-                                    {
-                                        ControlObject control = con.CreateControlObject(oc.iecEntry.path);
-                                        if (control == null)
-                                        {
-                                            Log(srv.name + " Control object not found! " + oc.iecEntry.path);
-                                            continue;
-                                        }
-                                        control.SetOrigin(Version, OrCat.STATION_CONTROL);
-                                        control.SetInterlockCheck(true);
-                                        control.SetSynchroCheck(true);
-                                        control.SetTestMode(false);
-
-                                        ControlModel controlModel = control.GetControlModel();
-                                        Log(oc.iecEntry.path + " has control model " + controlModel.ToString());
-                                        Log("  type of ctlVal: " + control.GetCtlValType().ToString());
-
-                                        switch (controlModel)
-                                        {
-
-                                            case ControlModel.STATUS_ONLY:
-                                                Log("Control is status-only!");
-                                                break;
-
-                                            case ControlModel.DIRECT_NORMAL:
-                                            case ControlModel.DIRECT_ENHANCED:
-                                                if (!control.Operate(oc.value != 0))
-                                                    Console.WriteLine("operate failed!");
-                                                else
-                                                    Console.WriteLine("operated successfully!");
-                                                break;
-
-                                            case ControlModel.SBO_NORMAL:
-                                            case ControlModel.SBO_ENHANCED:
-
-                                                if (control.Select())
-                                                {
-                                                    if (!control.Operate(oc.value != 0))
-                                                        Console.WriteLine("operate failed!");
-                                                    else
-                                                        Console.WriteLine("operated successfully!");
-                                                }
-                                                else
-                                                    Console.WriteLine("Select failed!");
-                                                break;
-                                        }
-                                        control.Dispose();
-                                    }
-                                    catch (IedConnectionException ex)
-                                    {
-                                        Log(srv.name + " Control object not found! " + oc.iecEntry.path);
-                                        continue;
-                                    }
-                                }
-                            }
-                            // wait 1/10 second
-                            System.Threading.Thread.Sleep(100);
+                                CheckCommands(srv, con);
+                            else
+                                // wait 1/10 second
+                                Thread.Sleep(100);
                         }
 
                         if (brcbCountPrev != srv.brcbCount)
@@ -915,12 +940,12 @@ namespace OSHMI_IEC61850_Client
             } while (true);
 
         }
-        
+
         public static void Main(string[] args)
         { // args: loglevel 0 to 3, browse 1 or 0
             var browse = false;
-            if (args.Length > 0) 
-            { 
+            if (args.Length > 0)
+            {
                 switch (args[0])
                 {
                     case "0": LogLevel = LogLevelNone; break;
@@ -947,9 +972,9 @@ namespace OSHMI_IEC61850_Client
             var dict = File.ReadLines(HmiConfigFile)
                .Where(line => !string.IsNullOrWhiteSpace(line) && !line.Trim().StartsWith(";"))
                .Select(line => line.Split(new char[] { '=' }, 2, 0))
-               .ToDictionary(parts => parts[0], parts => parts.Length>1?parts[1]:"");
+               .ToDictionary(parts => parts[0], parts => parts.Length > 1 ? parts[1] : "");
             if (dict.ContainsKey("OTHER_HMI_IP"))
-              OtherHmiIp = dict["OTHER_HMI_IP"];
+                OtherHmiIp = dict["OTHER_HMI_IP"];
 
             // Read config
             List<Iec61850Server> servers = new List<Iec61850Server>();
@@ -981,7 +1006,7 @@ namespace OSHMI_IEC61850_Client
                             passwd = result[12].Trim();
                         cnt_entries = -1;
                         cnt_servers++;
-                        Iec61850Server opcserv = new Iec61850Server
+                        Iec61850Server iecserv = new Iec61850Server
                         {
                             name = result[1].Trim(),
                             hostname = result[2].Trim(),
@@ -997,6 +1022,7 @@ namespace OSHMI_IEC61850_Client
                             certificate_password = passwd,
                             browse = browse,
                             entries = new Dictionary<string, Iec61850Entry>(),
+                            rcbConfigs = new Dictionary<string, RcbConfig>(),
                             datasets = new List<string>(),
                             brcb = new List<string>(),
                             urcb = new List<string>(),
@@ -1004,13 +1030,23 @@ namespace OSHMI_IEC61850_Client
                             brcbCount = 0,
                             ControlQueue = new Queue<Iec61850Control>(),
                         };
-                        if (File.Exists(ReportIdsFilePrefix + opcserv.name + ".json"))
+                        if (File.Exists(ReportIdsFilePrefix + iecserv.name + ".json"))
                         {
-                            var jstr = File.ReadAllText(ReportIdsFilePrefix + opcserv.name + ".json");
-                            opcserv.lastReportIds =
+                            var jstr = File.ReadAllText(ReportIdsFilePrefix + iecserv.name + ".json");
+                            iecserv.lastReportIds =
                                 JsonSerializer.Deserialize<Dictionary<string, byte[]>>(jstr);
                         }
-                        servers.Add(opcserv);
+                        servers.Add(iecserv);
+                    }
+                    else
+                    if (result[0].ToLower().Contains("rcb") && result.Count() >= 4)
+                    {
+                        RcbConfig rcbConfig = new RcbConfig()
+                        {
+                            integrity_period = System.Convert.ToUInt32(result[2].Trim()),
+                            enabled = result[3].Trim() == "Y" ? true : false,
+                        };
+                        servers[cnt_servers].rcbConfigs[result[1].Trim()] = rcbConfig;
                     }
                     else
                     if ((result[0].ToLower().Contains("tag") || result[0].ToLower().Contains("control")) && result.Count() >= 5)
@@ -1063,7 +1099,7 @@ namespace OSHMI_IEC61850_Client
                     {
                         Log("Received packet not allowed from " + groupEP.Address.ToString(), LogLevelHigh);
                         continue;
-                    }                       
+                    }
                     Log($"Received message from {groupEP} : ");
                     string s = Encoding.UTF8.GetString(bytes, 0, bytes.Length - 1).Trim(); // bytes.Length-1 is to remove the final \0
                     Log(s);
@@ -1111,6 +1147,170 @@ namespace OSHMI_IEC61850_Client
             {
                 listener.Close();
             }
+        }
+        static void CheckCommands(Iec61850Server srv, IedConnection con)
+        {
+            if (srv.ControlQueue.Count > 0)
+            {
+                var oc = srv.ControlQueue.Dequeue();
+                Log(srv.name + " Control " + oc.iecEntry.path + " Value " + oc.value);
+
+                if (oc.iecEntry.fc != FunctionalConstraint.CO)
+                { // simple write
+                    try
+                    {
+                        var mmsv = con.ReadValue(oc.iecEntry.path, oc.iecEntry.fc);
+                        switch (mmsv.GetType())
+                        {
+                            default:
+                            case MmsType.MMS_BCD:
+                            case MmsType.MMS_OBJ_ID:
+                            case MmsType.MMS_GENERALIZED_TIME:
+                            case MmsType.MMS_STRUCTURE:
+                            case MmsType.MMS_ARRAY:
+                                Log(srv.name + " Writable object of unsupported type! " + oc.iecEntry.path);
+                                break;
+                            case MmsType.MMS_BOOLEAN:
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value != 0));
+                                break;
+                            case MmsType.MMS_UNSIGNED:
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue((uint)oc.value));
+                                break;
+                            case MmsType.MMS_INTEGER:
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue((long)oc.value));
+                                break;
+                            case MmsType.MMS_FLOAT:
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value));
+                                break;
+                            case MmsType.MMS_STRING:
+                            case MmsType.MMS_VISIBLE_STRING:
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value.ToString()));
+                                break;
+                            case MmsType.MMS_BIT_STRING:
+                                var bs = MmsValue.NewBitString(mmsv.Size());
+                                bs.BitStringFromUInt32((uint)oc.value);
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, bs);
+                                break;
+                            case MmsType.MMS_UTC_TIME:
+                                var ut = MmsValue.NewUtcTime((ulong)oc.value);
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, ut);
+                                break;
+                            case MmsType.MMS_BINARY_TIME:
+                                var bt = MmsValue.NewBinaryTime(true);
+                                bt.SetBinaryTime((ulong)oc.value);
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, bt);
+                                break;
+                            case MmsType.MMS_OCTET_STRING:
+                                var os = MmsValue.NewOctetString(mmsv.Size());
+                                os.SetOctetStringOctet(0, (byte)(((uint)oc.value) % 256));
+                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, os);
+                                break;
+                        }
+                    }
+                    catch (IedConnectionException ex)
+                    {
+                        Log(srv.name + " Writable object not found! " + oc.iecEntry.path);
+                        Log(ex.Message);
+                        return;
+                    }
+                }
+                else
+                { // control object
+                    try
+                    {
+                        ControlObject control = con.CreateControlObject(oc.iecEntry.path);
+                        if (control == null)
+                        {
+                            Log(srv.name + " Control object not found! " + oc.iecEntry.path);
+                            return;
+                        }
+                        control.SetOrigin(Version, OrCat.STATION_CONTROL);
+                        control.SetInterlockCheck(true);
+                        control.SetSynchroCheck(true);
+                        control.SetTestMode(false);
+
+                        ControlModel controlModel = control.GetControlModel();
+                        MmsType controlType = control.GetCtlValType();
+                        Log(oc.iecEntry.path + " has control model " + controlModel.ToString());
+                        Log("  type of ctlVal: " + controlType.ToString());
+
+                        switch (controlModel)
+                        {
+                            case ControlModel.STATUS_ONLY:
+                                Log("Control is status-only!");
+                                break;
+                            case ControlModel.DIRECT_NORMAL:
+                            case ControlModel.DIRECT_ENHANCED:
+                                switch (controlType)
+                                {
+                                    case MmsType.MMS_BOOLEAN:
+                                        if (control.Operate(oc.value != 0))
+                                            Log("Operated successfully!");                                        
+                                        else
+                                            Log("Operate failed!");
+                                        break;
+                                    case MmsType.MMS_UNSIGNED:
+                                    case MmsType.MMS_INTEGER:
+                                        if (control.Operate((int)oc.value))
+                                            Log("Operated successfully!");
+                                        else
+                                            Log("Operate failed!");
+                                        break;
+                                    case MmsType.MMS_FLOAT:
+                                        if (control.Operate((float)oc.value))
+                                            Log("Operated successfully!");
+                                        else
+                                            Log("Operate failed!");
+                                        break;
+                                    default:
+                                        Log("Unsupported Command Type!");
+                                        break;
+                                }
+                                break;
+                            case ControlModel.SBO_NORMAL:
+                            case ControlModel.SBO_ENHANCED:
+                                if (control.Select())
+                                {
+                                    switch (controlType)
+                                    {
+                                        case MmsType.MMS_BOOLEAN:
+                                            if (control.Operate(oc.value != 0))
+                                                Log("Operated successfully!");
+                                            else
+                                                Log("Operate failed!");
+                                            break;
+                                        case MmsType.MMS_UNSIGNED:
+                                        case MmsType.MMS_INTEGER:
+                                            if (control.Operate((int)oc.value))
+                                                Log("Operated successfully!");
+                                            else
+                                                Log("Operate failed!");
+                                            break;
+                                        case MmsType.MMS_FLOAT:
+                                            if (control.Operate((float)oc.value))
+                                                Log("Operated successfully!");
+                                            else
+                                                Log("Operate failed!");
+                                            break;
+                                        default:
+                                            Log("Unsupported Command Type!");
+                                            break;
+                                    }
+                                }
+                                else
+                                    Log("Select failed!");
+                                break;
+                        }
+                        control.Dispose();
+                    }
+                    catch (IedConnectionException ex)
+                    {
+                        Log(srv.name + " Control object exception! " + oc.iecEntry.path);
+                        return;
+                    }
+                }
+            }
+
         }
     }
 }
