@@ -1,5 +1,5 @@
 OSHMI - Open Substation HMI
-    Copyright 2008-2020 - Ricardo L. Olsen 
+    Copyright 2008-2023 - Ricardo L. Olsen 
     (https://www.linkedin.com/in/ricardo-olsen/)
 
     This program is free software: you can redistribute it and/or modify
@@ -189,8 +189,28 @@ S7 Driver:
 
 Inkscape+SAGE:
  - See http://wiki.inkscape.org/wiki/index.php/Compiling_Inkscape_on_Windows_with_MSYS2.
+ 
+-------------------------------------------------------------------
+
+Notes for version 6.31:
+
+
+IEC61850:
+ - IEC61850 Client driver updated to version 0.6.
+ 
+Chromium:
+ - Updated to version 109.0.5414.120.
+
 
 -------------------------------------------------------------------
+
+Notes for version 6.30:
+
+DNP3 Client:
+ - Dnp3 Client driver updated to version 0.80 based on OpenDNP3 3.1.2.
+ - Support for pulse off commands.
+ 
+ -------------------------------------------------------------------
 
 Notes for version 6.29:
 

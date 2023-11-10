@@ -11,8 +11,8 @@ RequestExecutionLevel user
 
 ;--------------------------------
 
-!define VERSION "v.6.30"
-!define VERSION_ "6.30.0.0"
+!define VERSION "v.6.31"
+!define VERSION_ "6.31.0.0"
 
 Function .onInit
  System::Call 'keexrnel32::CreateMutexA(i 0, i 0, t "MutexOshmiInstall") i .r1 ?e'
@@ -364,12 +364,10 @@ Section "" ; empty string makes it hidden, so would starting with -
   File /a "..\htdocs\images\*.*"
 
   SetOutPath $INSTDIR\extprogs
-  File /a "..\extprogs\dotnet-runtime-6.0.13-win-x86.exe" 
+  File /a "..\extprogs\dotnet-runtime-6.0.24-win-x86.exe" 
   File /a "..\extprogs\vcredist_x86.exe"
   File /a "..\extprogs\vcredist_x86-2012.exe"
   File /a "..\extprogs\vcredist_x86-2013.exe"
-  ;File /a "..\extprogs\vcredist_x86-2015.exe"
-  ;File /a "..\extprogs\vcredist_x86-2017.exe"
   File /a "..\extprogs\vcredist_x86-15-17-19.exe"
 
   SetOutPath $INSTDIR\browser
@@ -480,10 +478,8 @@ Section "" ; empty string makes it hidden, so would starting with -
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86.exe" /q'
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2012.exe" /q'
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2013.exe" /q'
-  ;nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2015.exe" /q'
-  ;nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-2017.exe" /q'
   nsExec::Exec '"$INSTDIR\extprogs\vcredist_x86-15-17-19.exe" /q'
-  nsExec::Exec '"$INSTDIR\extprogs\dotnet-runtime-6.0.13-win-x86.exe" /install /passive /quiet'
+  nsExec::Exec '"$INSTDIR\extprogs\dotnet-runtime-6.0.24-win-x86.exe" /install /passive /quiet'
 
 ;  MessageBox MB_YESNO "Wish to substitute Windows Shell by the HMIShell? \nWARNING: ANSWERING YES WILL BLOCK THE MACHINE FOR THE OPERATOR" IDNO InstFim 
 ; LabelShell:
