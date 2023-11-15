@@ -36,7 +36,7 @@ namespace OSHMI_IEC61850_Client
 {
     class Program
     {
-        static public string Version = "OSHMI IEC61850 Client Driver Version 0.6";
+        static public string Version = "OSHMI IEC61850 Client Driver Version 0.8";
         static public string HmiConfigFile = "c:\\oshmi\\conf\\hmi.ini";
         static public string OtherHmiIp = "";
         static public string ConfigFile = "c:\\oshmi\\conf\\iec61850_client.conf";
@@ -55,6 +55,7 @@ namespace OSHMI_IEC61850_Client
             public string oshmi_cmd_tag; // tag name on OSHMI 
             public double value; // command value
             public ulong timestamp; // timestamp
+            public bool useSelectWithValue; // will use select with value when kconv1=1 on point_list and control mode allows
             public Iec61850Entry iecEntry; // iec61850 object entry
         }
         public class RcbConfig
@@ -1108,27 +1109,30 @@ namespace OSHMI_IEC61850_Client
                     {
                         string tag = "";
                         double dval = 0;
+                        bool useSelWVal = false;
                         dynamic result = JsonSerializer.Deserialize<Dictionary<string, dynamic>>(s);
                         foreach (KeyValuePair<string, object> entry in result)
                         {
                             var key = entry.Key;
                             var value = entry.Value;
                             Log(String.Format("Command {0} : {1}", key, value));
-                            if (key == "tag")
+                            if (key.ToLower() == "tag")
                                 tag = value.ToString();
-                            if (key == "value")
+                            if (key.ToLower() == "value")
                                 dval = Double.Parse(value.ToString());
+                            if (key.ToLower() == "sbo")
+                                useSelWVal = value.ToString().ToLower() == "true";
                         }
-                        Iec61850Control oc = new Iec61850Control() { oshmi_cmd_tag = tag, value = dval, timestamp = (ulong)DateTime.Now.Ticks };
+                        Iec61850Control ic = new Iec61850Control() { oshmi_cmd_tag = tag, value = dval, timestamp = (ulong)DateTime.Now.Ticks, useSelectWithValue = useSelWVal };
                         foreach (var srv in servers)
                         {
                             foreach (var entry in srv.entries)
                             {
                                 // enqueue command for server when oshmi tag matches
-                                if (oc.oshmi_cmd_tag == entry.Value.oshmi_tag)
+                                if (ic.oshmi_cmd_tag == entry.Value.oshmi_tag)
                                 {
-                                    oc.iecEntry = srv.entries[entry.Key];
-                                    srv.ControlQueue.Enqueue(oc);
+                                    ic.iecEntry = srv.entries[entry.Key];
+                                    srv.ControlQueue.Enqueue(ic);
                                 }
                             }
                         }
@@ -1152,14 +1156,14 @@ namespace OSHMI_IEC61850_Client
         {
             if (srv.ControlQueue.Count > 0)
             {
-                var oc = srv.ControlQueue.Dequeue();
-                Log(srv.name + " Control " + oc.iecEntry.path + " Value " + oc.value);
+                var ic = srv.ControlQueue.Dequeue();
+                Log(srv.name + " Control " + ic.iecEntry.path + " Value " + ic.value);
 
-                if (oc.iecEntry.fc != FunctionalConstraint.CO)
+                if (ic.iecEntry.fc != FunctionalConstraint.CO)
                 { // simple write
                     try
                     {
-                        var mmsv = con.ReadValue(oc.iecEntry.path, oc.iecEntry.fc);
+                        var mmsv = con.ReadValue(ic.iecEntry.path, ic.iecEntry.fc);
                         switch (mmsv.GetType())
                         {
                             default:
@@ -1168,48 +1172,48 @@ namespace OSHMI_IEC61850_Client
                             case MmsType.MMS_GENERALIZED_TIME:
                             case MmsType.MMS_STRUCTURE:
                             case MmsType.MMS_ARRAY:
-                                Log(srv.name + " Writable object of unsupported type! " + oc.iecEntry.path);
+                                Log(srv.name + " Writable object of unsupported type! " + ic.iecEntry.path);
                                 break;
                             case MmsType.MMS_BOOLEAN:
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value != 0));
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, new MmsValue(ic.value != 0));
                                 break;
                             case MmsType.MMS_UNSIGNED:
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue((uint)oc.value));
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, new MmsValue((uint)ic.value));
                                 break;
                             case MmsType.MMS_INTEGER:
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue((long)oc.value));
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, new MmsValue((long)ic.value));
                                 break;
                             case MmsType.MMS_FLOAT:
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value));
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, new MmsValue(ic.value));
                                 break;
                             case MmsType.MMS_STRING:
                             case MmsType.MMS_VISIBLE_STRING:
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, new MmsValue(oc.value.ToString()));
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, new MmsValue(ic.value.ToString()));
                                 break;
                             case MmsType.MMS_BIT_STRING:
                                 var bs = MmsValue.NewBitString(mmsv.Size());
-                                bs.BitStringFromUInt32((uint)oc.value);
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, bs);
+                                bs.BitStringFromUInt32((uint)ic.value);
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, bs);
                                 break;
                             case MmsType.MMS_UTC_TIME:
-                                var ut = MmsValue.NewUtcTime((ulong)oc.value);
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, ut);
+                                var ut = MmsValue.NewUtcTime((ulong)ic.value);
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, ut);
                                 break;
                             case MmsType.MMS_BINARY_TIME:
                                 var bt = MmsValue.NewBinaryTime(true);
-                                bt.SetBinaryTime((ulong)oc.value);
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, bt);
+                                bt.SetBinaryTime((ulong)ic.value);
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, bt);
                                 break;
                             case MmsType.MMS_OCTET_STRING:
                                 var os = MmsValue.NewOctetString(mmsv.Size());
-                                os.SetOctetStringOctet(0, (byte)(((uint)oc.value) % 256));
-                                con.WriteValue(oc.iecEntry.path, oc.iecEntry.fc, os);
+                                os.SetOctetStringOctet(0, (byte)(((uint)ic.value) % 256));
+                                con.WriteValue(ic.iecEntry.path, ic.iecEntry.fc, os);
                                 break;
                         }
                     }
                     catch (IedConnectionException ex)
                     {
-                        Log(srv.name + " Writable object not found! " + oc.iecEntry.path);
+                        Log(srv.name + " Writable object not found! " + ic.iecEntry.path);
                         Log(ex.Message);
                         return;
                     }
@@ -1218,10 +1222,10 @@ namespace OSHMI_IEC61850_Client
                 { // control object
                     try
                     {
-                        ControlObject control = con.CreateControlObject(oc.iecEntry.path);
+                        ControlObject control = con.CreateControlObject(ic.iecEntry.path);
                         if (control == null)
                         {
-                            Log(srv.name + " Control object not found! " + oc.iecEntry.path);
+                            Log(srv.name + " Control object not found! " + ic.iecEntry.path);
                             return;
                         }
                         control.SetOrigin(Version, OrCat.STATION_CONTROL);
@@ -1231,81 +1235,184 @@ namespace OSHMI_IEC61850_Client
 
                         ControlModel controlModel = control.GetControlModel();
                         MmsType controlType = control.GetCtlValType();
-                        Log(oc.iecEntry.path + " has control model " + controlModel.ToString());
-                        Log("  type of ctlVal: " + controlType.ToString());
+                        Log(srv.name + " " + ic.iecEntry.path + " has control model " + controlModel.ToString());
+                        Log(srv.name + "  type of ctlVal: " + controlType.ToString());
 
                         switch (controlModel)
                         {
                             case ControlModel.STATUS_ONLY:
-                                Log("Control is status-only!");
+                                Log(srv.name + " Control is status-only!");
                                 break;
                             case ControlModel.DIRECT_NORMAL:
                             case ControlModel.DIRECT_ENHANCED:
                                 switch (controlType)
                                 {
                                     case MmsType.MMS_BOOLEAN:
-                                        if (control.Operate(oc.value != 0))
-                                            Log("Operated successfully!");                                        
+                                        if (control.Operate(ic.value != 0))
+                                        {
+                                            Log(srv.name + " Operated successfully!");
+                                        }
                                         else
-                                            Log("Operate failed!");
+                                        {
+                                            Log(srv.name + " Operate failed!");
+                                            Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                            Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                        }
                                         break;
                                     case MmsType.MMS_UNSIGNED:
                                     case MmsType.MMS_INTEGER:
-                                        if (control.Operate((int)oc.value))
-                                            Log("Operated successfully!");
+                                        if (control.Operate((int)ic.value))
+                                        {
+                                            Log(srv.name + " Operated successfully!");
+                                        }
                                         else
-                                            Log("Operate failed!");
+                                        {
+                                            Log(srv.name + " Operate failed!");
+                                            Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                            Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                        }
                                         break;
                                     case MmsType.MMS_FLOAT:
-                                        if (control.Operate((float)oc.value))
-                                            Log("Operated successfully!");
+                                        if (control.Operate((float)ic.value))
+                                        {
+                                            Log(srv.name + " Operated successfully!");
+                                        }
                                         else
-                                            Log("Operate failed!");
+                                        {
+                                            Log(srv.name + " Operate failed!");
+                                            Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                            Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                        }
                                         break;
                                     default:
-                                        Log("Unsupported Command Type!");
+                                        Log(srv.name + " Unsupported Command Type!");
                                         break;
                                 }
                                 break;
                             case ControlModel.SBO_NORMAL:
                             case ControlModel.SBO_ENHANCED:
-                                if (control.Select())
+                                switch (controlType)
                                 {
-                                    switch (controlType)
-                                    {
-                                        case MmsType.MMS_BOOLEAN:
-                                            if (control.Operate(oc.value != 0))
-                                                Log("Operated successfully!");
-                                            else
-                                                Log("Operate failed!");
-                                            break;
-                                        case MmsType.MMS_UNSIGNED:
-                                        case MmsType.MMS_INTEGER:
-                                            if (control.Operate((int)oc.value))
-                                                Log("Operated successfully!");
-                                            else
-                                                Log("Operate failed!");
-                                            break;
-                                        case MmsType.MMS_FLOAT:
-                                            if (control.Operate((float)oc.value))
-                                                Log("Operated successfully!");
-                                            else
-                                                Log("Operate failed!");
-                                            break;
-                                        default:
-                                            Log("Unsupported Command Type!");
-                                            break;
-                                    }
+                                    case MmsType.MMS_BOOLEAN:
+                                        if (ic.useSelectWithValue)
+                                        {
+                                            Log(srv.name + " Selecting with value...");
+                                            if (!control.SelectWithValue(ic.value != 0))
+                                            {
+                                                Log(srv.name + " Select with value failed!");
+                                                Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                                Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Log(srv.name + " Selecting without value...");
+                                            if (!control.Select())
+                                            {
+                                                Log(srv.name + " Select without value failed!");
+                                                Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                                Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                                break;
+                                            }                                            
+                                        }
+                                        Log(srv.name + " Selected successfully!");
+                                        Thread.Sleep(100);
+                                        if (control.Operate(ic.value != 0))
+                                        {
+                                            Log(srv.name + " Operated successfully!");
+                                        }
+                                        else
+                                        {
+                                            Log(srv.name + " Operate failed!");
+                                            Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                            Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                        }
+                                        break;
+                                    case MmsType.MMS_UNSIGNED:
+                                    case MmsType.MMS_INTEGER:
+                                        if (ic.useSelectWithValue)
+                                        {
+                                            Log(srv.name + " Selecting with value...");
+                                            if (!control.SelectWithValue((int)ic.value))
+                                            {
+                                                Log(srv.name + " Select with value failed!");
+                                                Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                                Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Log(srv.name + " Selecting without value...");
+                                            if (!control.Select())
+                                            {
+                                                Log(srv.name + " Select without value failed!");
+                                                Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                                Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                                break;
+                                            }
+                                        }
+                                        Log(srv.name + " Selected successfully!");
+                                        Thread.Sleep(100);
+                                        if (control.Operate((int)ic.value))
+                                        {
+                                            Log(srv.name + " Operated successfully!");
+                                        }
+                                        else
+                                        {
+                                            Log(srv.name + " Operate failed!");
+                                            Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                            Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                        }
+                                        break;
+                                    case MmsType.MMS_FLOAT:
+                                        if (ic.useSelectWithValue)
+                                        {
+                                            Log(srv.name + " Selecting with value...");
+                                            if (!control.SelectWithValue((float)ic.value))
+                                            {
+                                                Log(srv.name + " Select with value failed!");
+                                                Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                                Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Log(srv.name + " Selecting without value...");
+                                            if (!control.Select())
+                                            {
+                                                Log(srv.name + " Select without value failed!");
+                                                Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                                Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                                break;
+                                            }
+                                        }
+                                        Log(srv.name + " Selected successfully!");
+                                        Thread.Sleep(100);
+                                        if (control.Operate((float)ic.value))
+                                        {
+                                            Log(srv.name + " Operated successfully!");
+                                        }
+                                        else
+                                        {
+                                            Log(srv.name + " Operate failed!");
+                                            Log(srv.name + " Error: " + control.GetLastApplError().error);
+                                            Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
+                                        }
+                                        break;
+                                    default:
+                                        Log(srv.name + " Unsupported Command Type!");
+                                        break;
                                 }
-                                else
-                                    Log("Select failed!");
                                 break;
                         }
                         control.Dispose();
                     }
                     catch (IedConnectionException ex)
                     {
-                        Log(srv.name + " Control object exception! " + oc.iecEntry.path);
+                        Log(srv.name + " Control object exception! " + ic.iecEntry.path);
                         return;
                     }
                 }
