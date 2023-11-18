@@ -36,7 +36,7 @@ namespace OSHMI_IEC61850_Client
 {
     class Program
     {
-        static public string Version = "OSHMI IEC61850 Client Driver Version 0.8";
+        static public string Version = "OSHMI IEC61850 Client Driver Version 0.9";
         static public string HmiConfigFile = "c:\\oshmi\\conf\\hmi.ini";
         static public string OtherHmiIp = "";
         static public string ConfigFile = "c:\\oshmi\\conf\\iec61850_client.conf";
@@ -778,6 +778,12 @@ namespace OSHMI_IEC61850_Client
 
                     do
                     {
+                        // when device disconnected, will abort and keep trying to reconnect
+                        if (con.GetState() != IedConnectionState.IED_STATE_CONNECTED)
+                        {
+                            throw new Exception(srv.name + " Connection error detected!");
+                        }
+
                         // foreach (IEC61850_entry entry in srv.entries)
                         for (int i = 0; i < srv.entries.Count; i++)
                         {
@@ -1314,7 +1320,7 @@ namespace OSHMI_IEC61850_Client
                                                 Log(srv.name + " Error: " + control.GetLastApplError().error);
                                                 Log(srv.name + " Addit.Cause: " + control.GetLastApplError().addCause);
                                                 break;
-                                            }                                            
+                                            }
                                         }
                                         Log(srv.name + " Selected successfully!");
                                         Thread.Sleep(100);
