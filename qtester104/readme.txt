@@ -1,4 +1,4 @@
-QTester104 Copyright © 2010-2019 Ricardo L. Olsen.
+QTester104 Copyright 2010-2024 Ricardo L. Olsen.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,9 +16,11 @@ QTester104 Copyright © 2010-2019 Ricardo L. Olsen.
 This software implements an IEC 60870-5-104 protocol tester.
 IEC 60870-5-104 is a commonly used protocol for data acquisition and control of power substations.
 
+Version 2.4.1: Fixes problem with command types C_RC_TA_1 and C_RC_NA_1.
+
 Directories:
-src - multiplatform qt sources, compile with QT 5.13.1 or later on any supported platform.
-bin - win32 binaries built with QT 5.13.1.
+src - multiplatform qt sources, compile with QT 5.12.2 or later on any supported platform.
+bin - win32 binaries built with QT 5.12.2.
 conf - configuration file
 
 Can be used to poll substation data and issuing commands.

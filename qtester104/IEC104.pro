@@ -12,7 +12,6 @@ SOURCES += main.cpp \
     qiec104.cpp
 HEADERS += mainwindow.h \
     iec104_types.h \
-    bdtr.h \
     iec104_class.h \
     logmsg.h \
     qiec104.h

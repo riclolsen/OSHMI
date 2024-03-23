@@ -197,6 +197,7 @@ class iec104_class {
   int tout_supervisory;  // countdown to send supervisory window control
   int tout_gi; // countdown to send general interrogation
   int tout_testfr; // countdown to send test frame
+  bool broken_msg = false;
   bool connectedTCP; // tcp connection state
   bool seq_order_check; // if set: test message order, disconnect if out of order
   unsigned char masterAddress; // master link address (primary address, originator address, oa)
@@ -214,7 +215,7 @@ class iec104_class {
 
  protected:
   void LogFrame(char* frame, int size, bool is_send);
-  void LogPoint(int address, double val, char* qualifier, cp56time2a* timetag);
+  void LogPoint(char* buf, int address, double val, char* qualifier, cp56time2a* timetag);
   void parseAPDU(iec_apdu* papdu, int sz, bool accountandrespond = true);  // parse APDU, ( accountandrespond == false : process the apdu out of the normal handshake )
   char* trim(char* s);
 
@@ -225,6 +226,8 @@ class iec104_class {
 
   // ---- pure virtual funcions, user defined on derived class (mandatory)---
 
+  // wait milliseconds for data bytes
+  virtual void waitBytes(int bytes, int msTout) = 0;
   // make tcp connection, user provided
   virtual void connectTCP() = 0;
   // tcp disconnect, user provided

@@ -40,8 +40,8 @@
 
 using namespace std;
 
-#define QTESTER_VERSION "v2.1"
-#define QTESTER_COPYRIGHT "Copyright © 2010-2019 Ricardo Lastra Olsen"
+#define QTESTER_VERSION "v2.4.1"
+#define QTESTER_COPYRIGHT "Copyright © 2010-2024 Ricardo Lastra Olsen"
 #define CURDIRINIFILENAME "/qtester104.ini"
 #define CONFDIRINIFILENAME "../conf/qtester104.ini"
 
@@ -325,9 +325,9 @@ void MainWindow::slot_I104M_ready_to_read() {
         break;
       case iec104_class::C_RC_TA_1: // regulating step command with time tag
       case iec104_class::C_RC_NA_1: // regulating step command
-        sprintf(buf, "R--> I104M: regulating step command %f", double(pmsg->setpoint));
+        sprintf(buf, "R--> I104M: regulating step command %s", pmsg->setpoint==0?"LOWER":"RAISE");
         I104M_Loga(buf);
-        obj.rcs = static_cast<unsigned char>(pmsg->setpoint);
+        obj.rcs = pmsg->setpoint==0?1:2;
         i104.sendCommand(&obj);
         LastCommandAddress = obj.address;
         break;
@@ -447,7 +447,7 @@ void MainWindow::on_pbSendCommandsButton_clicked() {
       break;
     case iec104_class::P_AC_NA_1:
       obj.value = ui->leCmdValue->text().toInt();
-      obj.qpa =static_cast<unsigned char>(ui->leCmdValue->text().toUInt());
+      obj.qpa = ui->leCmdValue->text().toInt();
       break;
   }
   obj.qu = static_cast<unsigned char>(ui->cbCmdDuration->currentText().left(1).toUInt());
@@ -1004,7 +1004,7 @@ void MainWindow::on_pbCopyVals_clicked() {
 }
 
 void MainWindow::I104M_processPoints(iec_obj* obj, unsigned numpoints) {
-  static t_msgsupsq msg;
+  t_msgsupsq msg;
 
   switch (obj->type) {
     case iec104_class::M_DP_TB_1: { // double state with time tag
